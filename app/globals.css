@@ -1,0 +1,419 @@
+@import "tailwindcss";
+
+/*
+  DESIGN TOKENS — Cristal Pet
+  No Tailwind v4 o equivalente do `tailwind.config` é o bloco @theme: cada
+  variável vira utilitário (--color-teal-deep → bg-teal-deep, text-teal-deep…)
+  e também fica disponível como variável CSS. Mexer na marca = mexer aqui.
+
+  Contrastes medidos (WCAG), para saber o que pode ser texto:
+    ink sobre cream 16,5 · ink-soft sobre cream 6,4 · teal-deep sobre cream 5,7
+    magenta sobre cream 4,7 · ink sobre teal 7,8 · teal sobre ink 7,8
+  ATENÇÃO: teal sobre cream = 2,1 e branco sobre teal = 2,2 → REPROVAM.
+  O teal puro só entra em preenchimentos, ícones e faixas, sempre com texto
+  escuro por cima. Para texto e palavra-acento use teal-deep.
+*/
+@theme {
+  /* Cores */
+  --color-cream: #faf9f5; /* fundo da página */
+  --color-sand: #f1eee6; /* seções tonais */
+  --color-line: #e2ddd2; /* bordas decorativas (1,3:1: nunca como único indicador) */
+  --color-ink: #1a1a1a; /* texto, botão escuro, faixas escuras */
+  --color-ink-soft: #5f5b55; /* texto secundário */
+  --color-teal: #4bc0af; /* marca: preenchimentos, ícones, faixas */
+  --color-teal-deep: #1f6f63; /* marca: texto, links, palavra-acento */
+  --color-teal-mist: #e3f3f0; /* tinta de fundo */
+  --color-magenta: #c82d91; /* selos e promoções (texto branco por cima) */
+  --color-magenta-mist: #fbeaf5; /* tinta decorativa, nunca com texto magenta */
+
+  /* Escala tipográfica (fluida) */
+  --text-display: clamp(2.5rem, 1.5rem + 4.4vw, 4.5rem);
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.02em;
+  --text-title: clamp(1.875rem, 1.35rem + 2.2vw, 2.875rem);
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.015em;
+  --text-subtitle: 1.5rem;
+  --text-subtitle--line-height: 1.3;
+  --text-lead: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  --text-lead--line-height: 1.6;
+  --text-eyebrow: 0.75rem;
+  --text-eyebrow--line-height: 1rem;
+  --text-eyebrow--letter-spacing: 0.2em;
+
+  /* Forma */
+  --radius-card: 1rem;
+  --radius-soft: 0.75rem;
+
+  /* Sombras quase imperceptíveis */
+  --shadow-soft:
+    0 1px 2px rgb(26 26 26 / 0.05), 0 10px 28px -14px rgb(26 26 26 / 0.14);
+  --shadow-lift:
+    0 2px 4px rgb(26 26 26 / 0.06), 0 22px 44px -18px rgb(26 26 26 / 0.26);
+}
+
+/* Fontes: as variáveis são definidas pelo next/font no layout */
+@theme inline {
+  --font-display:
+    var(--font-fraunces), "Iowan Old Style", "Palatino Linotype", Georgia,
+    serif;
+  --font-sans:
+    var(--font-nunito-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+}
+
+/* Ritmo e largura: usados pelos componentes Section e Container */
+@utility container-page {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: clamp(1rem, 0.4rem + 2.4vw, 3rem);
+}
+
+@utility section-y {
+  padding-block: clamp(4rem, 2.6rem + 5.4vw, 7rem);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* header fixo: as âncoras não podem ficar escondidas atrás dele */
+    scroll-padding-top: 5rem;
+    /* reserva a barra de rolagem: abrir o lightbox não faz a página "pular" */
+    scrollbar-gutter: stable;
+    /* permite animar de 0 até a altura natural (acordeão) */
+    interpolate-size: allow-keywords;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* Trava a rolagem do fundo enquanto um diálogo modal está aberto */
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background-color: var(--color-teal);
+    color: var(--color-ink);
+  }
+
+  /* Foco SEMPRE visível (AA): 5,7:1 sobre fundos claros, 7,8:1 sobre escuros */
+  :focus-visible {
+    outline: 3px solid var(--color-teal-deep);
+    outline-offset: 3px;
+  }
+
+  [data-surface="dark"] :focus-visible,
+  dialog.lightbox :focus-visible {
+    outline-color: var(--color-teal);
+  }
+
+  /* faixa teal: o foco é ink (7,8:1); teal-deep sobre teal daria 2,7:1 */
+  [data-surface="teal"] :focus-visible {
+    outline-color: var(--color-ink);
+  }
+
+  /* card claro dentro de faixa escura: teal sobre branco só daria 2,1:1 */
+  [data-surface="light"] :focus-visible,
+  [data-surface="light"]:focus-visible {
+    outline-color: var(--color-teal-deep);
+  }
+}
+
+/*
+  ENTRADA POR ROLAGEM — só CSS, sem JavaScript.
+  Sem suporte (Firefox) ou com "reduzir movimento", o conteúdo simplesmente
+  aparece: nada fica escondido esperando um script.
+*/
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry 0% entry 50%)) {
+    @keyframes reveal-up {
+      from {
+        opacity: 0;
+        translate: 0 1.5rem;
+      }
+    }
+
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+
+    /* Na impressão não há rolagem: sem isto, os blocos sairiam invisíveis */
+    @media print {
+      .reveal {
+        animation: none;
+      }
+    }
+  }
+}
+
+@layer components {
+  /* ───────── Acordeão (<details name>) ─────────
+     Exclusivo e sem JavaScript; as respostas ficam no HTML, então o Google
+     e a busca da página (Ctrl+F) enxergam o texto mesmo fechado. */
+  .accordion {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .accordion details {
+    background-color: #fff;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+    transition: background-color 0.25s ease;
+  }
+
+  .accordion details[open] {
+    background-color: var(--color-teal-mist);
+    border-color: var(--color-teal);
+  }
+
+  .accordion summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3.5rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 700;
+    line-height: 1.35;
+    border-radius: var(--radius-card);
+  }
+
+  .accordion summary::-webkit-details-marker {
+    display: none;
+  }
+
+  /* chevron desenhado em CSS: o sinal visual de aberto/fechado */
+  .accordion summary::after {
+    content: "";
+    flex-shrink: 0;
+    width: 0.625rem;
+    height: 0.625rem;
+    margin-top: -0.25rem;
+    border-right: 2px solid var(--color-teal-deep);
+    border-bottom: 2px solid var(--color-teal-deep);
+    rotate: 45deg;
+    transition:
+      rotate 0.25s ease,
+      margin 0.25s ease;
+  }
+
+  .accordion details[open] > summary::after {
+    margin-top: 0.25rem;
+    rotate: 225deg;
+  }
+
+  .accordion .accordion-answer {
+    padding: 0 1.25rem 1.25rem;
+    color: var(--color-ink-soft);
+    line-height: 1.65;
+  }
+
+  /* melhoria progressiva: altura animada (Chrome/Edge; os demais abrem direto) */
+  @supports selector(::details-content) {
+    .accordion details::details-content {
+      block-size: 0;
+      overflow: clip;
+      transition:
+        block-size 0.3s ease,
+        content-visibility 0.3s allow-discrete;
+    }
+
+    .accordion details[open]::details-content {
+      block-size: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .accordion details,
+    .accordion summary::after,
+    .accordion details::details-content {
+      transition: none;
+    }
+  }
+
+  /* ───────── Lightbox (<dialog>) ─────────
+     O diálogo tem o tamanho do conteúdo; o ::backdrop cobre a tela e é ele
+     que recebe o clique de "fechar ao clicar fora". */
+  dialog.lightbox {
+    width: min(96vw, 64rem);
+    max-width: none;
+    max-height: 96dvh;
+    margin: auto;
+    padding: 0;
+    overflow: hidden;
+    color: var(--color-cream);
+    background-color: var(--color-ink);
+    border: 0;
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-lift);
+
+    opacity: 0;
+    scale: 0.96;
+    transition:
+      opacity 0.25s ease-out,
+      scale 0.25s ease-out,
+      display 0.25s allow-discrete,
+      overlay 0.25s allow-discrete;
+  }
+
+  dialog.lightbox[open] {
+    opacity: 1;
+    scale: 1;
+
+    @starting-style {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+
+  dialog.lightbox::backdrop {
+    background-color: rgb(26 26 26 / 0);
+    backdrop-filter: blur(2px);
+    transition:
+      background-color 0.25s ease-out,
+      display 0.25s allow-discrete,
+      overlay 0.25s allow-discrete;
+  }
+
+  dialog.lightbox[open]::backdrop {
+    background-color: rgb(26 26 26 / 0.82);
+
+    @starting-style {
+      background-color: rgb(26 26 26 / 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    dialog.lightbox {
+      scale: 1;
+      transition-duration: 0.1s;
+    }
+
+    dialog.lightbox[open] {
+      @starting-style {
+        scale: 1;
+      }
+    }
+  }
+
+  /* ───────── Menu do celular (popover) ─────────
+     Painel logo abaixo do cabeçalho de 4rem. O estado aberto vem do próprio
+     navegador (:popover-open): sem classe e sem estado em JavaScript. */
+  .mobile-menu {
+    position: fixed;
+    inset: 4rem 0 auto 0;
+    width: 100%;
+    max-height: calc(100dvh - 4rem);
+    margin: 0;
+    padding: 0.75rem 1rem 1.25rem;
+    overflow-y: auto;
+    color: var(--color-ink);
+    background-color: var(--color-cream);
+    border: 0;
+    border-bottom: 1px solid var(--color-line);
+    box-shadow: var(--shadow-lift);
+
+    opacity: 0;
+    translate: 0 -0.5rem;
+    transition:
+      opacity 0.2s ease-out,
+      translate 0.2s ease-out,
+      display 0.2s allow-discrete,
+      overlay 0.2s allow-discrete;
+  }
+
+  .mobile-menu:popover-open {
+    opacity: 1;
+    translate: 0 0;
+
+    @starting-style {
+      opacity: 0;
+      translate: 0 -0.5rem;
+    }
+  }
+
+  .mobile-menu::backdrop {
+    background-color: transparent;
+  }
+
+  /* o botão troca o ícone conforme o painel (irmão seguinte) está aberto */
+  .mobile-menu-button .icon-close {
+    display: none;
+  }
+
+  .mobile-menu-button:has(+ .mobile-menu:popover-open) .icon-open {
+    display: none;
+  }
+
+  .mobile-menu-button:has(+ .mobile-menu:popover-open) .icon-close {
+    display: block;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .mobile-menu {
+      translate: 0 0;
+      transition-duration: 0.01s;
+    }
+  }
+
+  /* ───────── Botão flutuante de WhatsApp ───────── */
+  .whatsapp-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 9999px;
+    background-color: #25d366;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .whatsapp-ring {
+      animation: whatsapp-ring 2.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes whatsapp-ring {
+      0% {
+        opacity: 0.5;
+        scale: 1;
+      }
+      70%,
+      100% {
+        opacity: 0;
+        scale: 1.8;
+      }
+    }
+  }
+}
