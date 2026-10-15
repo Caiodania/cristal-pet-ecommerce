@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRef } from "react";
-import { legalLinks, nav, navSecondary } from "@/content/site";
+import { legalLinks, nav } from "@/content/site";
 import { CloseIcon, MenuIcon } from "@/components/ui/icons";
 
-const links = [...nav, ...navSecondary];
+const links = [...nav, { label: "Meus pedidos", href: "/meus-pedidos" }];
 
 /**
  * Menu do celular em popover nativo: abre pelo botão, fecha com Esc, com um

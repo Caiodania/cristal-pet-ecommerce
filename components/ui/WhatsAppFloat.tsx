@@ -17,7 +17,7 @@ type WhatsAppFloatProps = {
  * visitante não pediu para reduzir movimento.
  */
 export function WhatsAppFloat({
-  message = site.whatsapp.defaultMessage,
+  message = site.whatsapp.messages.duvida,
   label = "Falar no WhatsApp",
   className,
 }: WhatsAppFloatProps) {

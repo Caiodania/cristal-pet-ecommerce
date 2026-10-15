@@ -1,8 +1,7 @@
 import { FaWhatsapp } from "react-icons/fa6";
-import { site } from "@/content/site";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { Button, type ButtonSize, type ButtonVariant } from "./Button";
-import { ArrowRightIcon, CubeIcon } from "./icons";
+import { ArrowRightIcon } from "./icons";
 
 type CtaProps = {
   variant?: ButtonVariant;
@@ -37,41 +36,24 @@ export function WhatsAppButton({
   );
 }
 
-/**
- * CTA da escultura. Com a loja ligada (`site.store.enabled`) leva ao
- * configurador; antes disso abre o WhatsApp com a mensagem de escultura, para
- * o botão nunca apontar para uma página que ainda não existe.
- */
-export function SculptureButton({
+/** CTA principal da loja: leva ao configurador. `tamanho` já chega escolhido. */
+export function CreateButton({
   variant = "primary",
   size = "lg",
   className,
-  children,
-}: CtaProps & { children?: string }) {
-  if (site.store.enabled) {
-    return (
-      <Button
-        href="/personalizar"
-        variant={variant}
-        size={size}
-        className={className}
-        icon={<ArrowRightIcon className="text-lg" />}
-        iconPosition="end"
-      >
-        {children ?? "Criar minha escultura"}
-      </Button>
-    );
-  }
-
+  children = "Criar minha escultura",
+  sizeId,
+}: CtaProps & { children?: string; sizeId?: string }) {
   return (
     <Button
-      href={buildWhatsAppUrl(site.whatsapp.messages.escultura)}
+      href={sizeId ? `/personalizar?tamanho=${encodeURIComponent(sizeId)}` : "/personalizar"}
       variant={variant}
       size={size}
       className={className}
-      icon={<CubeIcon className="text-xl" />}
+      icon={<ArrowRightIcon className="text-lg" />}
+      iconPosition="end"
     >
-      {children ?? "Quero minha escultura"}
+      {children}
     </Button>
   );
 }

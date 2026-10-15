@@ -2,10 +2,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { FaFacebookF, FaInstagram, FaWhatsapp } from "react-icons/fa6";
 import { images } from "@/content/images";
-import { legalLinks, nav, navSecondary, site } from "@/content/site";
+import { legalLinks, nav, site } from "@/content/site";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
-const institutional = [...nav, ...navSecondary];
+const shop = [
+  { label: "Criar minha escultura", href: "/personalizar" },
+  { label: "Carrinho", href: "/carrinho" },
+  { label: "Meus pedidos", href: "/meus-pedidos" },
+  ...nav,
+];
 
 const linkClass =
   "inline-flex min-h-11 items-center text-cream/80 underline-offset-4 hover:text-cream hover:underline";
@@ -13,7 +18,7 @@ const linkClass =
 const socialClass =
   "grid size-11 place-items-center rounded-full border border-cream/30 text-lg text-cream transition-colors hover:bg-cream hover:text-ink";
 
-/** Rodapé em quatro colunas, em faixa escura. Horário real, nunca "24h". */
+/** Rodapé da loja em faixa escura: loja, políticas e atendimento. Horário real, nunca "24h". */
 export function SiteFooter() {
   return (
     <footer data-surface="dark" className="bg-ink text-cream">
@@ -28,19 +33,19 @@ export function SiteFooter() {
               className="size-14 rounded-full bg-cream p-1"
             />
             <span className="font-display text-xl font-semibold">
-              Cristal Pet <span className="font-normal italic text-teal">Móvel</span>
+              Cristal Pet <span className="font-normal italic text-teal">Esculturas</span>
             </span>
           </Link>
-          <p className="mt-4 max-w-xs text-cream/80">{site.slogan}</p>
+          <p className="mt-4 max-w-xs text-cream/80">{site.tagline}.</p>
           <p className="mt-2 max-w-xs text-sm text-cream/80">
-            Banho e tosa móvel e esculturas 3D do seu pet em {site.cities.join(", ")}.
+            Envie a foto, veja a prévia e peça. Pagamento e entrega combinados pelo WhatsApp.
           </p>
         </div>
 
-        <nav aria-label="Institucional">
-          <h2 className="font-display text-lg font-medium">Institucional</h2>
+        <nav aria-label="Loja">
+          <h2 className="font-display text-lg font-medium">Loja</h2>
           <ul className="mt-3">
-            {institutional.map((item) => (
+            {shop.map((item) => (
               <li key={item.href}>
                 <Link href={item.href} className={linkClass}>
                   {item.label}
@@ -68,7 +73,7 @@ export function SiteFooter() {
           <ul className="mt-3 grid gap-1 text-cream/80">
             <li>
               <a
-                href={buildWhatsAppUrl()}
+                href={buildWhatsAppUrl(site.whatsapp.messages.duvida)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`${linkClass} gap-2`}
@@ -83,14 +88,9 @@ export function SiteFooter() {
                 {site.email}
               </a>
             </li>
-            <li className="mt-2">
-              {site.address.street}, {site.address.city} - {site.address.region}
-              <span className="block text-sm">({site.address.note})</span>
-            </li>
             {site.hours.map((line) => (
               <li key={line.days} className="text-sm">
-                <span className="font-semibold text-cream">{line.days}:</span>{" "}
-                {line.time}
+                <span className="font-semibold text-cream">{line.days}:</span> {line.time}
               </li>
             ))}
           </ul>
@@ -120,7 +120,7 @@ export function SiteFooter() {
       <div className="border-t border-cream/15">
         <p className="container-page py-5 text-sm text-cream/80">
           © {new Date().getFullYear()} {site.name}. Todos os direitos reservados.
-          {/* TODO-CLIENTE: CNPJ e razão social */}
+          {/* TODO-CLIENTE: CNPJ, razão social e endereço (obrigatórios na loja) */}
         </p>
       </div>
     </footer>

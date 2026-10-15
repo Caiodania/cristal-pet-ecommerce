@@ -125,3 +125,48 @@ export function PlayIcon(props: SVGProps<SVGSVGElement>) {
     </Icon>
   );
 }
+
+export function HomeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M4 11l8-7 8 7v9H4v-9z" />
+      <path d="M10 20v-6h4v6" />
+    </Icon>
+  );
+}
+
+export function UploadIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M12 16V4M7 9l5-5 5 5" />
+      <path d="M4 16v4h16v-4" />
+    </Icon>
+  );
+}
+
+export function TrashIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M4 7h16M10 11v6M14 11v6" />
+      <path d="M6 7l1 13h10l1-13M9 7V4h6v3" />
+    </Icon>
+  );
+}
+
+export function DownloadIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M12 4v12M7 11l5 5 5-5" />
+      <path d="M4 20h16" />
+    </Icon>
+  );
+}
+
+export function RefreshIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M20 11a8 8 0 1 0-2.3 5.7" />
+      <path d="M20 4v7h-7" />
+    </Icon>
+  );
+}

@@ -1,0 +1,18 @@
+# Configuração da Netlify.
+# Site estático (pasta out/) + uma função que atende toda a API (/api/*).
+# Cabeçalhos de segurança e cache: public/_headers.
+
+[build]
+  command = "npm run build"
+  publish = "out"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# A função api.ts se publica sozinha em /api/* (veja `config.path` nela).
+# Variáveis de ambiente (senha do painel, Supabase, provedores de IA…):
+# Site configuration > Environment variables. Lista completa em .env.example.

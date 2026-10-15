@@ -49,7 +49,7 @@ export function LegalPage({ title, intro, topics }: LegalPageProps) {
           <WhatsAppButton
             variant="secondary"
             size="md"
-            message={site.whatsapp.defaultMessage}
+            message={site.whatsapp.messages.duvida}
             className="mt-4"
           >
             Falar no WhatsApp

@@ -57,8 +57,9 @@ const variants: Record<Variant, string> = {
 };
 
 const isHttp = (href: string) => /^https?:\/\//i.test(href);
+// Links comuns (sem next/link): externos, mailto/tel e a API (downloads de arquivo).
 const isExternal = (href: string) =>
-  isHttp(href) || href.startsWith("mailto:") || href.startsWith("tel:");
+  isHttp(href) || href.startsWith("mailto:") || href.startsWith("tel:") || href.startsWith("/api/");
 
 export function Button({
   variant = "primary",

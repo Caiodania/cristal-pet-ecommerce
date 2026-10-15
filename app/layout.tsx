@@ -1,15 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Nunito_Sans } from "next/font/google";
-import { MobileTabBar } from "@/components/layout/MobileTabBar";
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { WhatsAppFloat } from "@/components/ui/WhatsAppFloat";
 import { site } from "@/content/site";
 import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
 // Títulos: serifa suave com itálico (a palavra-acento). Texto: Nunito Sans, a
-// fonte atual da marca. Só estas duas famílias são carregadas.
+// fonte da marca. Só estas duas famílias são carregadas.
 const fraunces = Fraunces({
   subsets: ["latin"],
   style: ["normal", "italic"],
@@ -27,12 +23,12 @@ const nunitoSans = Nunito_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${site.name} | Banho e tosa móvel e esculturas 3D do seu pet`,
+    default: `${site.name} | ${site.tagline}`,
     template: `%s | ${site.name}`,
   },
-  // Provisório: o texto final de SEO entra na etapa 4.
+  // Provisório: o texto final de SEO entra na etapa de SEO.
   description:
-    "Banho e tosa móvel com método Low Stress, na porta da sua casa, em Indaiatuba, Campinas, Valinhos e Vinhedo.",
+    "Envie a foto do seu pet, veja a prévia e peça uma escultura 3D feita sob medida. Pedido e pagamento combinados pelo WhatsApp.",
   openGraph: {
     type: "website",
     locale: "pt_BR",
@@ -44,30 +40,24 @@ export const viewport: Viewport = {
   themeColor: "#4bc0af",
 };
 
+// Layout mínimo: fontes e "pular para o conteúdo". Cada área monta o seu
+// próprio cabeçalho: (loja) tem vitrine, barra de abas e rodapé; admin tem o
+// painel do dono.
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="pt-BR"
-      className={`${fraunces.variable} ${nunitoSans.variable}`}
-    >
-      {/* no celular a barra de abas fixa ocupa 4rem no rodapé */}
-      <body className="pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
+    <html lang="pt-BR" className={`${fraunces.variable} ${nunitoSans.variable}`}>
+      <body>
         <a
           href="#conteudo"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:font-semibold focus:text-cream"
         >
           Pular para o conteúdo
         </a>
-        <SiteHeader />
         {children}
-        <SiteFooter />
-        <MobileTabBar />
-        {/* no celular, "Ajuda" da barra de abas já abre o WhatsApp */}
-        <WhatsAppFloat className="max-md:hidden" />
       </body>
     </html>
   );

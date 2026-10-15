@@ -1,52 +1,59 @@
-# Cristal Pet Móvel — site e loja
+# Cristal Pet Esculturas
 
-Novo site da Cristal Pet Móvel (Indaiatuba-SP): banho e tosa móvel e, na fase 2,
-escultura 3D do pet gerada a partir da foto do cliente. A estrutura segue o
-ritmo do site de referência Nobre Pata; o conteúdo, a marca e as imagens são da
-Cristal Pet. Detalhes em [`docs/`](docs/).
+Loja de **esculturas 3D de pets**: o cliente envia a foto, vê a prévia e pede; a escultura é impressa em 3D pelo dono; pagamento e entrega são combinados pelo **WhatsApp**. Sem login de cliente. Tem **painel do dono** para tocar os pedidos e baixar o arquivo de impressão.
 
-**Stack:** Next.js (App Router) + TypeScript + Tailwind v4, export estático
-(`out/`) publicado na Netlify.
+É um projeto **comercial** (loja). O que é institucional da Cristal Pet (banho e tosa móvel) fica no outro site.
 
-## Comandos
+**Stack:** Next.js (App Router) + TypeScript + Tailwind v4, export estático (`out/`) publicado na **Netlify**; uma **Netlify Function** para a API; **Supabase** (Postgres + Storage) em produção; dois **provedores de IA** plugáveis (hoje simulados).
+
+## Começar
 
 ```bash
 npm install
-npm run dev        # desenvolvimento
-npm run build      # gera o site estático em out/
-npm run lint
-npm run typecheck
+npm run build
+ADMIN_PASSWORD=uma-senha npm run dev:full     # http://localhost:8888  (loja)  /admin  (painel)
 ```
 
-## Estrutura
+Sem mais configuração: dados em memória e IA simulada ("modo demonstração"). Dá para percorrer a loja inteira.
+
+| Comando | O que faz |
+|---|---|
+| `npm run build` | gera o site estático em `out/` |
+| `npm run dev:full` | serve o site + a API juntos, como a Netlify |
+| `npm run dev` | só o site, com recarga instantânea (a API precisa estar no `dev:full`; veja `docs/backend.md`) |
+| `npm test` | testes do servidor |
+| `npm run test:e2e` | teste de ponta a ponta em Chrome real (veja o cabeçalho do arquivo) |
+| `npm run check:supabase` | verifica a ligação com o **seu** Supabase |
+| `npm run lint` · `npm run typecheck` | verificações de código |
+
+## Onde está o quê
 
 | Pasta | O que tem |
 |---|---|
-| `app/` | rotas (`/`, `/esculturas`, `/banho-e-tosa`, `/franquias`, `/contato` e 4 páginas legais) e `globals.css`, onde ficam os **tokens de design** (`@theme`) |
-| `app/styleguide/` | página de trabalho para validar tokens e componentes. Fora do Google; **remover antes do lançamento** |
-| `components/ui/` | base: Button, Section, Card, Accordion, Lightbox, WhatsAppFloat, Carousel, InstagramFacade, Placeholder, CtaButtons |
-| `components/layout/` | cabeçalho, menu do celular (popover), barra de abas inferior, rodapé |
-| `components/sections/` | as seções das páginas (hero, galeria, filhotes, FAQ…), reaproveitadas entre rotas |
-| `content/` | textos e dados (`site.ts`, `banho-e-tosa.ts`, `estatua.ts`, `faq.ts`, `instagram.ts`, `images.ts`, `gallery.ts`): trocar conteúdo não exige mexer em componentes |
-| `lib/` | utilitários (WhatsApp, contraste, URL do site) |
-| `scripts/` | pós-build do export estático |
-| `public/images/` | imagens com nomes descritivos |
-| `docs/` | análise do Nobre Pata, mapa de equivalência, **modelo do sistema da loja** (fluxo, dados, API, roadmap), [pendências do cliente](docs/pendencias.md) e prints de referência |
+| `app/(loja)/` | páginas públicas: vitrine, personalizar, carrinho, pedidos, contato, políticas |
+| `app/admin/` | painel do dono (login, lista, detalhe do pedido) |
+| `app/globals.css` | **tokens de design** (`@theme`) |
+| `components/ui/` | base: Button, Section, Card, Accordion, Carousel, Lightbox, Field, Status… |
+| `components/layout/` | cabeçalho, menu do celular, barra de abas, rodapé |
+| `components/sections/` | seções da vitrine |
+| `components/store/` | configurador, carrinho, pedidos |
+| `components/admin/` | painel do dono |
+| `content/` | textos e dados: `site.ts`, `estatua.ts` (**catálogo**), `faq.ts`, `images.ts` |
+| `lib/loja/` | tipos compartilhados, estimativa de preço, API do navegador, carrinho |
+| `server/` | a API: `router.ts`, `services/`, `store/` (memória e Supabase), `storage/`, **`providers/` (as IAs)** |
+| `netlify/functions/api.ts` | entrada da função na Netlify |
+| `supabase/migrations/` | esquema do banco |
+| `scripts/` | servidor local, verificação do Supabase, pós-build |
+| `tests/` | teste de ponta a ponta e fotos de teste |
+| `public/_headers` | cabeçalhos de segurança (CSP) e cache |
+| `docs/` | **leia nesta ordem:** `modelo-do-sistema.md` → `backend.md` → `pendencias.md` |
 
 ## Convenções
 
-- **Cores:** o teal `#4BC0AF` só em preenchimentos, ícones e faixas; para texto
-  use `teal-deep`. O contraste de cada par está na página `/styleguide`.
-- **Pendências:** `TODO-CLIENTE` (informação que falta) e `TODO-FOTO` (foto que falta).
-  A lista completa está em [`docs/pendencias.md`](docs/pendencias.md). No HTML, cada
-  espaço reservado leva `data-todo`; antes do lançamento nenhum pode restar.
-- **Chave da loja:** `site.store.enabled` em `content/site.ts`. Com `false`, os botões
-  "Criar minha escultura" abrem o WhatsApp com a mensagem pronta (a loja ainda não
-  existe); com `true`, levam a `/personalizar` e a barra de abas ganha Pedidos e Carrinho.
-- **Pós-build:** `scripts/fix-segment-files.mjs` roda sozinho depois do `npm run build`.
-  O Next 16 grava os arquivos de pré-carregamento em pasta, mas o navegador pede com
-  pontos no nome; sem o script, cada link gera um 404 no console em host estático.
-- **Domínio:** não fica fixo no código. Vem de `NEXT_PUBLIC_SITE_URL` ou, na
-  Netlify, da variável `URL` (ver `next.config.ts` e `.env.example`).
-- **Export estático:** sem Route Handlers de servidor nem Server Actions. O que
-  for dinâmico (upload, geração 3D, pedidos) vai para Netlify Functions e/ou Supabase.
+- **Preço e catálogo** em `content/estatua.ts`. `null` = "a definir": o total aparece como "A combinar". O servidor recalcula o preço; nada que o navegador mande vale.
+- **Pendências:** `TODO-CLIENTE` (informação) e `TODO-FOTO` (imagem). No HTML, cada espaço reservado leva `data-todo`; antes do lançamento nenhum pode restar. Lista em [`docs/pendencias.md`](docs/pendencias.md).
+- **IA:** só se mexe em `server/providers/`. Passo a passo em [`docs/backend.md`](docs/backend.md#como-ligar-uma-ia-de-verdade).
+- **Cores:** o teal `#4BC0AF` só em preenchimentos, ícones e faixas; para texto use `teal-deep`. O contraste de cada par está em `/styleguide` (página de trabalho, **remover antes do lançamento**).
+- **Export estático:** sem Route Handlers nem Server Actions do Next. O dinâmico vive na Netlify Function. Páginas de pedido usam query string.
+- **Pós-build:** `scripts/fix-segment-files.mjs` roda sozinho; sem ele o Next 16 gera 404 de pré-carregamento em host estático.
+- **Domínio:** nunca fixo no código: `NEXT_PUBLIC_SITE_URL` ou a variável `URL` da Netlify.

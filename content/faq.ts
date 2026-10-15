@@ -1,82 +1,19 @@
-// Perguntas frequentes. Ficam em dados (e não no componente) porque o build
-// também as usa para gerar o FAQPage do Google (etapa 4): as respostas são
-// texto simples, sem JSX. Cada pergunta aparece em UMA página, para não
-// repetir conteúdo entre URLs.
+// Perguntas frequentes da loja. Ficam em dados (e não no componente) porque o
+// build também as usa para gerar o FAQPage do Google (etapa de SEO): as
+// respostas são texto simples, sem JSX.
 //
-// Os textos do banho e tosa vêm do site atual da Cristal Pet (validados com o
-// cliente). Os da escultura só dizem o que já está decidido; prazo, material,
-// tamanho e preço entram quando o cliente passar (TODO-CLIENTE).
+// Só dizem o que já está decidido. Prazo, material, tamanho e preço entram
+// quando o cliente passar (TODO-CLIENTE).
 
 import { site } from "./site";
 
 export type FaqItem = { question: string; answer: string };
 
-/** FAQ da home: perguntas gerais. */
-export const faqHome: FaqItem[] = [
+export const faq: FaqItem[] = [
   {
-    question: "Quais cidades vocês atendem?",
+    question: "Como funciona o pedido da escultura?",
     answer:
-      "Atendemos atualmente Indaiatuba, Campinas, Valinhos e Vinhedo. Se você mora em outra região, fale com a gente pelo WhatsApp: estamos sempre avaliando novas áreas de cobertura.",
-  },
-  {
-    question: "Minha cidade não está na lista de atendimento, e agora?",
-    answer:
-      "Mesmo assim, entre em contato! Estamos sempre expandindo nossa área de cobertura e talvez já estejamos chegando perto de você.",
-  },
-  {
-    question: "Como entro em contato com a Cristal Pet?",
-    answer: `Você pode falar com a gente pelo WhatsApp ${site.whatsapp.display}. Atendemos ${site.hoursSentence}.`,
-  },
-  {
-    question: "Onde fica a sede da Cristal Pet?",
-    answer: `Nossa base fica na ${site.address.street}, em ${site.address.city} - ${site.address.region}, de onde saem nossas unidades móveis para atender você na sua casa.`,
-  },
-  {
-    question: "Como funciona a escultura 3D do meu pet?",
-    answer:
-      "Você envia uma foto do seu pet, vê a prévia da escultura em 3D e combina o pedido com a gente pelo WhatsApp. A peça é impressa em 3D pela nossa equipe.",
-  },
-];
-
-/** FAQ da página de banho e tosa. */
-export const faqBanho: FaqItem[] = [
-  {
-    question: "Como funciona o agendamento?",
-    answer: `O agendamento é feito direto pelo WhatsApp. Você entra em contato, informa a cidade, o serviço desejado e a raça do seu pet, e a gente confirma o melhor dia e horário para o atendimento. Nosso atendimento é ${site.hoursSentence}.`,
-  },
-  {
-    question: "Como funciona o atendimento da unidade móvel?",
-    answer:
-      "Nossa van totalmente equipada vai até a porta da sua casa. O banho e a tosa acontecem dentro do veículo, sem a necessidade de levar o seu pet até uma loja física. Para o atendimento, precisamos apenas de um ponto de água e de uma tomada 220 volts próximos ao local onde a van vai estacionar.",
-  },
-  {
-    question: "Preciso estar em casa durante o atendimento?",
-    answer:
-      "Recomendamos que o tutor esteja em casa ou por perto durante o serviço, principalmente no momento da entrega do pet ao final do atendimento.",
-  },
-  {
-    question: "Quais serviços vocês oferecem?",
-    answer:
-      "Trabalhamos com banho, tosa, hidratação, corte de unha e escovação de dente, adaptados às necessidades de cada pet. Fale com a gente para saber qual o serviço ideal para o seu companheiro.",
-  },
-  {
-    question: "Quanto tempo dura o atendimento?",
-    answer:
-      "O tempo varia de acordo com a raça, o tipo de pelagem e o serviço escolhido. Em geral, o atendimento completo leva entre 40 minutos e 1 hora e meia.",
-  },
-  {
-    question: "Posso remarcar ou cancelar meu horário?",
-    answer:
-      "Sim! Basta entrar em contato pelo WhatsApp com pelo menos 24 horas de antecedência para reagendar ou cancelar o seu horário sem problemas.",
-  },
-];
-
-/** FAQ da página de esculturas. */
-export const faqEscultura: FaqItem[] = [
-  {
-    question: "Como faço o pedido da escultura?",
-    answer:
-      "Você envia a foto do seu pet, escolhe as opções e vê a prévia em 3D. Depois, o pedido segue para o nosso WhatsApp, onde combinamos pagamento e entrega diretamente com você.",
+      "Você escolhe as opções, envia a foto do seu pet e vê a prévia da escultura. Se gostar, adiciona ao carrinho e envia o pedido para o nosso WhatsApp, onde combinamos pagamento e entrega diretamente com você.",
   },
   {
     question: "Como devo tirar a foto do meu pet?",
@@ -84,13 +21,37 @@ export const faqEscultura: FaqItem[] = [
       "Use uma foto com um pet só, de preferência de corpo inteiro, com boa iluminação e fundo simples. Quanto mais nítida a foto, mais fiel fica a escultura.",
   },
   {
+    question: "A prévia é igual à escultura final?",
+    answer:
+      "A prévia é uma representação de como a escultura vai ficar. Antes de imprimir, conferimos tudo com você pelo WhatsApp, e o lado do pet que a foto não mostra é estimado.",
+  },
+  {
     question: "Quem faz a escultura?",
     answer:
-      "A escultura é impressa em 3D pela própria equipe da Cristal Pet, a partir do modelo gerado com a foto do seu pet.",
+      "A escultura é impressa em 3D pela própria equipe da Cristal Pet, a partir do modelo criado com a foto do seu pet.",
   },
   {
     question: "Como é feito o pagamento?",
     answer:
       "O pagamento é combinado diretamente com a gente pelo WhatsApp, depois que você envia o pedido. Não é preciso criar conta nem cadastrar cartão no site.",
+  },
+  {
+    question: "E o prazo e a entrega?",
+    answer:
+      "Informamos o prazo de produção e combinamos a entrega com você quando fechamos o pedido pelo WhatsApp.",
+  },
+  {
+    question: "Posso gerar mais de uma prévia?",
+    answer:
+      "Sim. Se não gostar do resultado, você pode gerar outra prévia, dentro do limite diário de prévias por visitante. Só pede a escultura quem gostar.",
+  },
+  {
+    question: "O que acontece com a foto do meu pet?",
+    answer:
+      "A foto é usada apenas para gerar a prévia e a escultura do seu pedido. Os detalhes estão na política de privacidade.",
+  },
+  {
+    question: "Como acompanho o meu pedido?",
+    answer: `Em "Meus pedidos" você vê o histórico deste aparelho e, com o link ou o código do pedido, o andamento de qualquer pedido. Para falar com a gente: WhatsApp ${site.whatsapp.display}, ${site.hoursSentence}.`,
   },
 ];

@@ -25,6 +25,8 @@
   --color-teal-mist: #e3f3f0; /* tinta de fundo */
   --color-magenta: #c82d91; /* selos e promoções (texto branco por cima) */
   --color-magenta-mist: #fbeaf5; /* tinta decorativa, nunca com texto magenta */
+  --color-danger: #b3261e; /* erros: 6,3:1 sobre creme, 6,9:1 sobre branco */
+  --color-field: #86817a; /* borda de campo de formulário: 3,9:1 sobre branco (mín. 3:1) */
 
   /* Escala tipográfica (fluida) */
   --text-display: clamp(2.5rem, 1.5rem + 4.4vw, 4.5rem);
@@ -389,6 +391,50 @@
     }
   }
 
+  /* ───────── Indicador de carregamento ─────────
+     <progress> sem value é "indeterminado": o leitor de tela anuncia como
+     ocupado. O anel gira devagar (e bem mais devagar com "reduzir movimento",
+     sem parar, para a pessoa saber que continua trabalhando). */
+  progress.spinner {
+    appearance: none;
+    flex-shrink: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 3px solid var(--color-line);
+    border-top-color: var(--color-teal-deep);
+    border-radius: 9999px;
+    background: none;
+    animation: spinner-turn 0.9s linear infinite;
+  }
+
+  progress.spinner::-webkit-progress-bar,
+  progress.spinner::-webkit-progress-value {
+    display: none;
+    background: none;
+  }
+
+  progress.spinner::-moz-progress-bar {
+    display: none;
+    background: none;
+  }
+
+  [data-surface="dark"] progress.spinner {
+    border-color: rgb(250 249 245 / 0.25);
+    border-top-color: var(--color-teal);
+  }
+
+  @keyframes spinner-turn {
+    to {
+      rotate: 1turn;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    progress.spinner {
+      animation-duration: 4s;
+    }
+  }
+
   /* ───────── Botão flutuante de WhatsApp ───────── */
   .whatsapp-ring {
     position: absolute;
@@ -415,5 +461,94 @@
         scale: 1.8;
       }
     }
+  }
+}
+
+/*
+  TABELA DE PEDIDOS (painel do dono)
+  Tabela de verdade (<table>, cabeçalhos <th>): leitor de tela navega por
+  células. Quando o CONTÊINER fica estreito (e não a tela: serve também numa
+  coluna apertada), vira uma lista de cartões, e cada célula traz o próprio
+  rótulo (.cell-label, escondido na tabela larga).
+*/
+.table-wrapper {
+  container-type: inline-size;
+  overflow: auto;
+  max-inline-size: 100%;
+}
+
+.orders-table {
+  inline-size: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 0.875rem 1rem;
+  text-align: start;
+  vertical-align: middle;
+  border-block-end: 1px solid var(--color-line);
+}
+
+.orders-table thead th {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  background: var(--color-cream);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+}
+
+.orders-table tbody tr:last-child > * {
+  border-block-end: 0;
+}
+
+.orders-table .cell-label {
+  display: none;
+}
+
+@container (width < 44rem) {
+  .orders-table,
+  .orders-table tbody,
+  .orders-table tr,
+  .orders-table th,
+  .orders-table td {
+    display: block;
+  }
+
+  .orders-table thead {
+    display: none;
+  }
+
+  .orders-table tr {
+    margin: 0.75rem;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
+  .orders-table tbody th {
+    background: var(--color-sand);
+  }
+
+  .orders-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .orders-table td:last-child {
+    border-block-end: 0;
+  }
+
+  .orders-table .cell-label {
+    display: inline;
+    font-weight: 700;
+    color: var(--color-ink-soft);
   }
 }

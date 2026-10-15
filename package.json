@@ -8,9 +8,14 @@
     "postbuild": "node scripts/fix-segment-files.mjs",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test \"server/**/*.test.ts\" \"lib/**/*.test.ts\"",
+    "dev:full": "tsx scripts/dev-server.ts",
+    "test:e2e": "node tests/e2e/loja.mjs",
+    "check:supabase": "tsx scripts/check-supabase.mts"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.117.3",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -24,6 +29,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
