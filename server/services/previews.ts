@@ -1,7 +1,10 @@
 // Prévia: foto do cliente → imagem da escultura (IA de imagem).
 //
+// Só quem tem conta gera prévia (cada conta tem uma cota, contada no banco).
+//
 // Fluxo (cada passo é uma chamada da API):
-//   1. createPreview   cria o registro, confere cotas e limite de gasto
+//   1. createPreview   reserva uma prévia da cota da conta, confere o limite por
+//                      rede e o teto de gasto
 //   2. uploadPhoto     recebe a foto (já reduzida pelo navegador)
 //   3. startPreview    manda a foto para a IA de imagem
 //   4. getPreview      o site consulta a cada poucos segundos; aqui o servidor
@@ -13,9 +16,11 @@ import { randomToken, sha256Hex } from "../crypto";
 import type { Ctx } from "../context";
 import { HttpError } from "../http";
 import { buildStatuePrompt } from "../providers/prompts";
+import { loadStyleReferences } from "../providers/style-references";
 import type { FileRef, StatueOptions } from "../providers/types";
-import type { PreviewRecord } from "../store/types";
+import { QuotaExceededError, type NewPreview, type PreviewRecord, type ProfileRecord } from "../store/types";
 import { sniffImage } from "../validate";
+import { quotaOf } from "./accounts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const URL_TTL_SECONDS = 60 * 60;
@@ -45,29 +50,9 @@ export async function resolveFile(file: FileRef): Promise<Uint8Array> {
   throw new Error("o provedor não devolveu bytes nem link");
 }
 
-async function verifyTurnstile(ctx: Ctx, token: string | undefined, ip: string) {
-  if (!ctx.config.turnstileSecret) return;
-  if (!token) throw new HttpError(400, "captcha_required", "Confirme que você não é um robô.");
-  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ secret: ctx.config.turnstileSecret, response: token, remoteip: ip }),
-  });
-  const result = (await response.json()) as { success?: boolean };
-  if (!result.success) throw new HttpError(400, "captcha_failed", "Não foi possível confirmar que você não é um robô. Tente de novo.");
-}
-
-/** Cotas por visitante e por rede, e teto diário de gasto com IA. */
-async function enforceQuotas(ctx: Ctx, sessionId: string, ipHash: string): Promise<number> {
+/** Limite diário por rede (corta quem abre várias contas na mesma conexão) e teto diário de gasto com IA. */
+async function enforceQuotas(ctx: Ctx, ipHash: string): Promise<void> {
   const since = new Date(ctx.now().getTime() - DAY_MS);
-  const perSession = await ctx.store.countPreviews({ sessionId, since });
-  if (perSession >= ctx.config.previewsPerDay) {
-    throw new HttpError(
-      429,
-      "quota_exceeded",
-      `Você já gerou ${ctx.config.previewsPerDay} prévias hoje. Tente amanhã ou fale com a gente pelo WhatsApp.`,
-    );
-  }
   const perIp = await ctx.store.countPreviews({ ipHash, since });
   if (perIp >= ctx.config.previewsPerDayPerIp) {
     throw new HttpError(429, "quota_exceeded", "Muitas prévias desta rede hoje. Tente amanhã ou fale com a gente pelo WhatsApp.");
@@ -82,7 +67,22 @@ async function enforceQuotas(ctx: Ctx, sessionId: string, ipHash: string): Promi
       );
     }
   }
-  return ctx.config.previewsPerDay - perSession - 1;
+}
+
+/** A conta já usou todas as prévias: a mensagem manda para o WhatsApp, onde o dono pode liberar mais. */
+const quotaMessage = (limit: number) =>
+  limit === 1
+    ? "Você já usou a prévia da sua conta. Fale com a gente pelo WhatsApp que a gente ajuda você."
+    : `Você já usou as ${limit} prévias da sua conta. Fale com a gente pelo WhatsApp que a gente ajuda você.`;
+
+/** Reserva uma prévia da cota da conta (atômico no banco). */
+async function reserve(ctx: Ctx, input: NewPreview): Promise<PreviewRecord> {
+  try {
+    return await ctx.store.reservePreview(input, ctx.config.previewsPerAccount);
+  } catch (error) {
+    if (error instanceof QuotaExceededError) throw new HttpError(403, "quota_exceeded", quotaMessage(error.limit));
+    throw error;
+  }
 }
 
 export function statueOptions(rec: PreviewRecord): StatueOptions {
@@ -111,9 +111,10 @@ export async function previewDto(ctx: Ctx, rec: PreviewRecord, remaining?: numbe
   };
 }
 
-async function mustGet(ctx: Ctx, publicId: string): Promise<PreviewRecord> {
+/** A prévia, só se for da conta (outra conta recebe "não encontrada", sem saber que existe). */
+async function mustGet(ctx: Ctx, publicId: string, user: ProfileRecord): Promise<PreviewRecord> {
   const rec = await ctx.store.getPreview(publicId);
-  if (!rec) throw new HttpError(404, "not_found", "Prévia não encontrada.");
+  if (!rec || rec.userId !== user.id) throw new HttpError(404, "not_found", "Prévia não encontrada.");
   return rec;
 }
 
@@ -121,25 +122,29 @@ async function mustGet(ctx: Ctx, publicId: string): Promise<PreviewRecord> {
 
 export async function createPreview(
   ctx: Ctx,
-  input: { sessionId: string; options: PreviewRecord["options"]; ip: string; turnstileToken?: string },
+  input: { user: ProfileRecord; options: PreviewRecord["options"]; ip: string },
 ): Promise<PreviewDto> {
-  await verifyTurnstile(ctx, input.turnstileToken, input.ip);
   const ipHash = ipHashOf(ctx, input.ip);
-  const remaining = await enforceQuotas(ctx, input.sessionId, ipHash);
-  const rec = await ctx.store.createPreview({
+  await enforceQuotas(ctx, ipHash);
+  const rec = await reserve(ctx, {
     publicId: randomToken(18),
-    sessionId: input.sessionId,
+    userId: input.user.id,
     ipHash,
     options: input.options,
     imageProvider: ctx.providers.image.name,
   });
-  return previewDto(ctx, rec, remaining);
+  return previewDto(ctx, rec, (await quotaOf(ctx, input.user)).remaining);
 }
 
 // ───────── 2. foto ─────────
 
-export async function uploadPhoto(ctx: Ctx, publicId: string, bytes: Uint8Array): Promise<PreviewDto> {
-  const rec = await mustGet(ctx, publicId);
+export async function uploadPhoto(
+  ctx: Ctx,
+  publicId: string,
+  bytes: Uint8Array,
+  user: ProfileRecord,
+): Promise<PreviewDto> {
+  const rec = await mustGet(ctx, publicId, user);
   if (rec.status !== "queued" || rec.photoPath) {
     throw new HttpError(409, "conflict", "Esta prévia já recebeu uma foto.");
   }
@@ -158,11 +163,16 @@ export async function uploadPhoto(ctx: Ctx, publicId: string, bytes: Uint8Array)
 
 // ───────── 3. gerar ─────────
 
-export async function startPreview(ctx: Ctx, publicId: string): Promise<PreviewDto> {
-  const rec = await mustGet(ctx, publicId);
+export async function startPreview(ctx: Ctx, publicId: string, user: ProfileRecord): Promise<PreviewDto> {
+  const rec = await mustGet(ctx, publicId, user);
   const retryable = rec.status === "failed" && rec.errorCode !== "rejected";
   if (rec.status !== "queued" && !retryable) {
     throw new HttpError(409, "conflict", "Esta prévia já foi iniciada.");
+  }
+  if (retryable) {
+    // prévia que falhou não conta na cota; ao tentar de novo ela volta a contar, então confere
+    const quota = await quotaOf(ctx, user);
+    if (quota.remaining < 1) throw new HttpError(403, "quota_exceeded", quotaMessage(quota.limit));
   }
   if (!rec.photoPath) throw new HttpError(409, "photo_missing", "Envie a foto antes de gerar a prévia.");
 
@@ -170,13 +180,15 @@ export async function startPreview(ctx: Ctx, publicId: string): Promise<PreviewD
   if (!photo) throw new HttpError(409, "photo_missing", "A foto não foi encontrada. Envie de novo.");
 
   const options = statueOptions(rec);
+  const styleReferences = await loadStyleReferences(ctx.config.styleReferenceFiles);
   const job = await ctx.providers.image.submit({
     photo: {
       url: await ctx.files.signedUrl(rec.photoPath, URL_TTL_SECONDS),
       bytes: photo.bytes,
       contentType: photo.contentType,
     },
-    prompt: buildStatuePrompt(options),
+    prompt: buildStatuePrompt(options, { hasStyleReference: styleReferences.length > 0 }),
+    styleReferences,
     options,
   });
 
@@ -194,8 +206,8 @@ export async function startPreview(ctx: Ctx, publicId: string): Promise<PreviewD
 
 // ───────── 4. acompanhar ─────────
 
-export async function getPreview(ctx: Ctx, publicId: string): Promise<PreviewDto> {
-  let rec = await mustGet(ctx, publicId);
+export async function getPreview(ctx: Ctx, publicId: string, user: ProfileRecord): Promise<PreviewDto> {
+  let rec = await mustGet(ctx, publicId, user);
 
   if (rec.status === "generating" && rec.imageJobId) {
     const startedAt = rec.startedAt ? new Date(rec.startedAt).getTime() : ctx.now().getTime();
@@ -233,25 +245,23 @@ export async function getPreview(ctx: Ctx, publicId: string): Promise<PreviewDto
 export async function regeneratePreview(
   ctx: Ctx,
   publicId: string,
-  input: { sessionId: string; ip: string; options?: PreviewRecord["options"]; turnstileToken?: string },
+  input: { user: ProfileRecord; ip: string; options?: PreviewRecord["options"] },
 ): Promise<PreviewDto> {
-  const source = await mustGet(ctx, publicId);
-  if (source.sessionId !== input.sessionId) throw new HttpError(404, "not_found", "Prévia não encontrada.");
+  const source = await mustGet(ctx, publicId, input.user);
   if (!source.photoPath) throw new HttpError(409, "photo_missing", "Esta prévia não tem foto.");
 
-  await verifyTurnstile(ctx, input.turnstileToken, input.ip);
   const ipHash = ipHashOf(ctx, input.ip);
-  const remaining = await enforceQuotas(ctx, input.sessionId, ipHash);
+  await enforceQuotas(ctx, ipHash);
 
-  const created = await ctx.store.createPreview({
+  const created = await reserve(ctx, {
     publicId: randomToken(18),
-    sessionId: input.sessionId,
+    userId: input.user.id,
     ipHash,
     options: input.options ?? source.options,
     imageProvider: ctx.providers.image.name,
     photoPath: source.photoPath,
     photoContentType: source.photoContentType,
   });
-  const started = await startPreview(ctx, created.publicId);
-  return { ...started, remaining };
+  const started = await startPreview(ctx, created.publicId, input.user);
+  return { ...started, remaining: (await quotaOf(ctx, input.user)).remaining };
 }

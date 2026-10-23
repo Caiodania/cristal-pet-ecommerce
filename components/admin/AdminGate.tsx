@@ -49,7 +49,7 @@ function LoginForm({ onLogin, notice }: { onLogin: () => void; notice?: string }
         className="grid w-full max-w-sm gap-5 rounded-card border border-line bg-white p-6 shadow-soft sm:p-8"
       >
         <div>
-          <h1 className="font-display text-3xl font-medium">Painel</h1>
+          <h1 className="font-display text-3xl font-extrabold">Painel</h1>
           <p className="mt-1 text-ink-soft">Cristal Pet Esculturas · área do dono</p>
         </div>
         <TextField
@@ -124,10 +124,22 @@ export function AdminBar() {
   return (
     <header className="border-b border-line bg-white">
       <div className="container-page flex h-16 items-center justify-between gap-4">
-        <Link href="/admin" className="font-display text-lg font-semibold">
-          Painel <span className="font-normal italic text-teal-deep">Cristal Pet</span>
+        <Link href="/admin" className="font-display text-lg font-extrabold">
+          Painel <span className="font-semibold text-teal-deep">Cristal Pet</span>
         </Link>
         <nav aria-label="Painel" className="flex items-center gap-1">
+          <Link
+            href="/admin"
+            className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-ink-soft hover:bg-sand hover:text-ink"
+          >
+            Pedidos
+          </Link>
+          <Link
+            href="/admin/contas"
+            className="inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-ink-soft hover:bg-sand hover:text-ink"
+          >
+            Contas
+          </Link>
           <Link
             href="/"
             target="_blank"

@@ -1,17 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Nunito_Sans } from "next/font/google";
+import { Nunito, Nunito_Sans } from "next/font/google";
 import { site } from "@/content/site";
 import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
-// Títulos: serifa suave com itálico (a palavra-acento). Texto: Nunito Sans, a
-// fonte da marca. Só estas duas famílias são carregadas.
-const fraunces = Fraunces({
+// Identidade da Cristal Pet (igual ao site institucional): títulos em Nunito pesado,
+// texto em Nunito Sans. Só estas duas famílias são carregadas.
+const nunito = Nunito({
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  axes: ["opsz"],
   display: "swap",
-  variable: "--font-fraunces",
+  variable: "--font-nunito",
 });
 
 const nunitoSans = Nunito_Sans({
@@ -49,7 +47,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR" className={`${fraunces.variable} ${nunitoSans.variable}`}>
+    <html lang="pt-BR" className={`${nunito.variable} ${nunitoSans.variable}`}>
       <body>
         <a
           href="#conteudo"

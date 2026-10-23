@@ -12,7 +12,7 @@ export function DemoBanner() {
   const config = useConfig();
   if (config?.mode !== "demo") return null;
   return (
-    <div role="status" className="bg-magenta px-4 py-2 text-center text-sm font-semibold text-white">
+    <div role="status" className="bg-ink px-4 py-2 text-center text-sm font-semibold text-cream">
       Modo demonstração: as prévias e os arquivos 3D são simulados e não valem como pedido real.
     </div>
   );

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { ArrowRightIcon } from "@/components/ui/icons";
 import { LightboxGallery } from "@/components/ui/LightboxGallery";
 import { Accent, Section, SectionHeader } from "@/components/ui/Section";
-import { images } from "@/content/images";
+import { exemplos } from "@/content/exemplos";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { contrastRatio, wcagLevel } from "@/lib/contrast";
 import { palette, type PaletteName } from "@/lib/palette";
@@ -183,7 +183,7 @@ export default function StyleGuide() {
             <p className="mb-2 text-eyebrow font-bold uppercase text-ink-soft">
               text-display · Fraunces
             </p>
-            <p className="font-display text-display font-medium">
+            <p className="font-display text-display font-extrabold">
               Conforto, segurança e zero estresse, <Accent>na porta da sua casa.</Accent>
             </p>
           </div>
@@ -191,7 +191,7 @@ export default function StyleGuide() {
             <p className="mb-2 text-eyebrow font-bold uppercase text-ink-soft">
               text-title · Fraunces
             </p>
-            <p className="font-display text-title font-medium">
+            <p className="font-display text-title font-extrabold">
               Seu pet em uma escultura <Accent>única</Accent>
             </p>
           </div>
@@ -199,7 +199,7 @@ export default function StyleGuide() {
             <p className="mb-2 text-eyebrow font-bold uppercase text-ink-soft">
               text-subtitle · Fraunces
             </p>
-            <p className="font-display text-subtitle font-medium">
+            <p className="font-display text-subtitle font-extrabold">
               Escolha o tamanho ideal
             </p>
           </div>
@@ -298,7 +298,7 @@ export default function StyleGuide() {
         <ul className="mt-12 grid gap-6 md:grid-cols-3">
           <li>
             <Card className="reveal h-full">
-              <h3 className="font-display text-subtitle font-medium">Card branco</h3>
+              <h3 className="font-display text-subtitle font-extrabold">Card branco</h3>
               <p className="mt-3 text-ink-soft">
                 Borda de 1 px, cantos de 16 px e sombra quase imperceptível.
               </p>
@@ -306,7 +306,7 @@ export default function StyleGuide() {
           </li>
           <li>
             <Card tone="sand" className="reveal h-full">
-              <h3 className="font-display text-subtitle font-medium">Card tonal</h3>
+              <h3 className="font-display text-subtitle font-extrabold">Card tonal</h3>
               <p className="mt-3 text-ink-soft">
                 Para blocos dentro de seções claras, sem competir com o fundo.
               </p>
@@ -314,7 +314,7 @@ export default function StyleGuide() {
           </li>
           <li>
             <Card tone="ink" interactive className="reveal h-full">
-              <h3 className="font-display text-subtitle font-medium">Card escuro, interativo</h3>
+              <h3 className="font-display text-subtitle font-extrabold">Card escuro, interativo</h3>
               <p className="mt-3 text-cream/80">
                 Sobe de leve ao passar o mouse (desligado com movimento reduzido).
               </p>
@@ -352,7 +352,7 @@ export default function StyleGuide() {
         />
         <div className="mt-12">
           <LightboxGallery
-            items={Object.values(images.exemplos).map((photo) => ({ alt: photo.alt, thumb: { src: photo.src, width: photo.width, height: photo.height }, full: { src: photo.src, width: photo.width, height: photo.height } }))}
+            items={exemplos.slice(0, 3).map(({ photo }) => ({ alt: photo.alt, thumb: { src: photo.src, width: photo.width, height: photo.height }, full: { src: photo.src, width: photo.width, height: photo.height } }))}
             label="Fotos de exemplo"
           />
         </div>

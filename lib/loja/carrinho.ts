@@ -1,6 +1,8 @@
 "use client";
 
-// Carrinho e histórico de pedidos, guardados neste aparelho (sem login).
+// Carrinho e atalho dos pedidos, guardados neste aparelho. As prévias do
+// carrinho são da conta que as gerou: ao sair (ou entrar em outra conta) o
+// carrinho é esvaziado. Os pedidos de verdade ficam na conta (Meus pedidos).
 
 import { useSyncExternalStore } from "react";
 import { createLocalStore } from "./armazenamento";
@@ -19,6 +21,9 @@ export type CartItem = {
 
 const EMPTY_CART: CartItem[] = [];
 const cartStore = createLocalStore<CartItem[]>("cp:carrinho:v1", EMPTY_CART);
+
+/** Esvazia o carrinho (troca de conta). */
+export const clearCart = () => cartStore.set(EMPTY_CART);
 
 export function useCart() {
   const items = useSyncExternalStore(cartStore.subscribe, cartStore.get, cartStore.getServerSnapshot);
@@ -68,19 +73,3 @@ export function useOrderHistory() {
   };
 }
 
-// ───────── Sessão anônima ─────────
-
-/** Identifica o visitante (sem conta) para a cota diária de prévias. */
-export function getSessionId(): string {
-  const key = "cp:sessao";
-  try {
-    const saved = window.localStorage.getItem(key);
-    if (saved && /^[A-Za-z0-9_-]{16,64}$/.test(saved)) return saved;
-    const created = crypto.randomUUID().replace(/-/g, "");
-    window.localStorage.setItem(key, created);
-    return created;
-  } catch {
-    // sem armazenamento: um id por carregamento da página
-    return (globalThis as { __cpSession?: string }).__cpSession ??= crypto.randomUUID().replace(/-/g, "");
-  }
-}

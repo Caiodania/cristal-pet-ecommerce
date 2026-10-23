@@ -19,6 +19,12 @@ export type FileRef = {
   contentType: string;
 };
 
+/** Imagem que mostra o ESTILO desejado (acabamento, base, luz), não o pet. */
+export type StyleReference = {
+  bytes: Uint8Array;
+  contentType: string;
+};
+
 /** A imagem de entrada, nos dois formatos (cada fornecedor pede um). */
 export type SourceImage = {
   /** Link temporário (1 h) para o provedor buscar sozinho. */
@@ -60,6 +66,11 @@ export interface ImageProvider {
     photo: SourceImage;
     /** Prompt já montado (veja providers/prompts.ts, é o lugar de afinar o resultado). */
     prompt: string;
+    /**
+     * Imagens de referência de estilo, na ordem em que o prompt as cita (a foto do
+     * cliente é a primeira imagem; estas vêm depois). Vazio = nenhuma.
+     */
+    styleReferences?: StyleReference[];
     options: StatueOptions;
   }): Promise<{ jobId: string; costCents?: number }>;
   poll(jobId: string): Promise<ImagePoll>;

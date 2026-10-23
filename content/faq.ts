@@ -5,6 +5,7 @@
 // Só dizem o que já está decidido. Prazo, material, tamanho e preço entram
 // quando o cliente passar (TODO-CLIENTE).
 
+import { previewsPerAccount } from "./estatua";
 import { site } from "./site";
 
 export type FaqItem = { question: string; answer: string };
@@ -13,7 +14,7 @@ export const faq: FaqItem[] = [
   {
     question: "Como funciona o pedido da escultura?",
     answer:
-      "Você escolhe as opções, envia a foto do seu pet e vê a prévia da escultura. Se gostar, adiciona ao carrinho e envia o pedido para o nosso WhatsApp, onde combinamos pagamento e entrega diretamente com você.",
+      "Você escolhe as opções, cria uma conta grátis, envia a foto do seu pet e vê a prévia da escultura. Se gostar, adiciona ao carrinho e envia o pedido para o nosso WhatsApp, onde combinamos pagamento e entrega diretamente com você.",
   },
   {
     question: "Como devo tirar a foto do meu pet?",
@@ -33,7 +34,7 @@ export const faq: FaqItem[] = [
   {
     question: "Como é feito o pagamento?",
     answer:
-      "O pagamento é combinado diretamente com a gente pelo WhatsApp, depois que você envia o pedido. Não é preciso criar conta nem cadastrar cartão no site.",
+      "O pagamento é combinado diretamente com a gente pelo WhatsApp, depois que você envia o pedido. Você não cadastra cartão no site. A conta serve para gerar as prévias e acompanhar os pedidos.",
   },
   {
     question: "E o prazo e a entrega?",
@@ -41,17 +42,16 @@ export const faq: FaqItem[] = [
       "Informamos o prazo de produção e combinamos a entrega com você quando fechamos o pedido pelo WhatsApp.",
   },
   {
-    question: "Posso gerar mais de uma prévia?",
-    answer:
-      "Sim. Se não gostar do resultado, você pode gerar outra prévia, dentro do limite diário de prévias por visitante. Só pede a escultura quem gostar.",
+    question: "Preciso criar conta? Quantas prévias posso gerar?",
+    answer: `Você navega pelo site sem conta. Para gerar a prévia, cria uma conta grátis (e-mail e senha, ou Google). Cada conta pode gerar até ${previewsPerAccount} prévias sem pagar nada: se não gostar do resultado, gera outra. Precisa de mais? É só falar com a gente pelo WhatsApp. Só pede a escultura quem gostar.`,
   },
   {
     question: "O que acontece com a foto do meu pet?",
     answer:
-      "A foto é usada apenas para gerar a prévia e a escultura do seu pedido. Os detalhes estão na política de privacidade.",
+      "A foto fica ligada à sua conta e é usada apenas para gerar a prévia e a escultura do seu pedido. Os detalhes estão na política de privacidade.",
   },
   {
     question: "Como acompanho o meu pedido?",
-    answer: `Em "Meus pedidos" você vê o histórico deste aparelho e, com o link ou o código do pedido, o andamento de qualquer pedido. Para falar com a gente: WhatsApp ${site.whatsapp.display}, ${site.hoursSentence}.`,
+    answer: `Em "Meus pedidos", na sua conta, você vê todos os pedidos e o andamento de cada um, em qualquer aparelho. O link que enviamos no WhatsApp também abre o pedido direto. Para falar com a gente: WhatsApp ${site.whatsapp.display}, ${site.hoursSentence}.`,
   },
 ];

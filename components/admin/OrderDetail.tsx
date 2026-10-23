@@ -270,7 +270,7 @@ export function OrderDetail() {
           <>
             <div className="grid gap-4">
               <div className="flex flex-wrap items-center gap-3">
-                <h1 className="font-display text-4xl font-medium">{order.code}</h1>
+                <h1 className="font-display text-4xl font-extrabold">{order.code}</h1>
                 <StatusBadge status={order.status} />
                 <span className="text-ink-soft">Recebido em {formatDateTime(order.createdAt)}</span>
               </div>
@@ -308,7 +308,7 @@ export function OrderDetail() {
                 {order.items.map((item) => (
                   <Card as="li" key={item.id} className="grid gap-4">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <h3 className="font-display text-2xl font-medium">
+                      <h3 className="font-display text-2xl font-extrabold">
                         {item.petName ? `Escultura de ${item.petName}` : "Escultura do pet"}
                       </h3>
                       <p className="font-semibold">{formatCents(item.unitCents)}</p>
@@ -352,7 +352,7 @@ export function OrderDetail() {
 
               <div className="grid gap-6">
                 <Card className="grid gap-2">
-                  <h2 className="font-display text-xl font-medium">Cliente</h2>
+                  <h2 className="font-display text-xl font-extrabold">Cliente</h2>
                   <p className="font-semibold">{order.customerName ?? "—"}</p>
                   {order.city && <p className="text-ink-soft">{order.city}</p>}
                   {order.customerPhone ? (
@@ -401,7 +401,7 @@ export function OrderDetail() {
                 </Card>
 
                 <Card>
-                  <h2 className="mb-4 font-display text-xl font-medium">Andamento</h2>
+                  <h2 className="mb-4 font-display text-xl font-extrabold">Andamento</h2>
                   <Timeline events={order.timeline} />
                 </Card>
               </div>

@@ -10,7 +10,9 @@ import { Alert, Loading } from "@/components/ui/Status";
 import { ArrowRightIcon, TrashIcon } from "@/components/ui/icons";
 import { catalog } from "@/content/estatua";
 import { ApiError, api, fileUrl } from "@/lib/loja/api";
-import { getSessionId, useCart, useOrderHistory, type CartItem } from "@/lib/loja/carrinho";
+import { LoginPrompt } from "@/components/conta/LoginPrompt";
+import { useCart, useOrderHistory, type CartItem } from "@/lib/loja/carrinho";
+import { account, useAccount } from "@/lib/loja/conta";
 import { estimate, formatCents } from "@/lib/loja/estimativa";
 import { fallbackMessage, orderMessage, whatsappUrl } from "@/lib/loja/pedido-whatsapp";
 import type { OrderDto } from "@/lib/loja/tipos";
@@ -74,7 +76,7 @@ function CartItemRow({
         )}
       </div>
       <div className="grid min-w-0 flex-1 content-start gap-1">
-        <h3 className="font-display text-xl font-medium">
+        <h3 className="font-display text-xl font-extrabold">
           {options.petName ? `Escultura de ${options.petName}` : "Escultura do seu pet"}
         </h3>
         <p className="text-ink-soft">
@@ -112,7 +114,7 @@ function Sent({ order, token, items }: { order: OrderDto; token: string; items: 
       <Alert tone="success">Pedido registrado!</Alert>
       <div>
         <p className="text-ink-soft">O código do seu pedido é</p>
-        <p className="font-display text-5xl font-medium text-teal-deep">{order.code}</p>
+        <p className="font-display text-5xl font-extrabold text-teal-deep">{order.code}</p>
       </div>
       <p className="text-lead text-ink-soft">
         Falta só um passo: toque no botão abaixo e envie o pedido pelo WhatsApp. Lá combinamos o pagamento e a
@@ -127,7 +129,7 @@ function Sent({ order, token, items }: { order: OrderDto; token: string; items: 
         </Button>
       </div>
       <p className="text-sm text-ink-soft">
-        Guarde o código. O pedido também fica em <Link href="/meus-pedidos" className="font-semibold text-teal-deep underline underline-offset-4">Meus pedidos</Link> neste aparelho.
+        Guarde o código. O pedido também fica em <Link href="/meus-pedidos" className="font-semibold text-teal-deep underline underline-offset-4">Meus pedidos</Link>, na sua conta, em qualquer aparelho.
       </p>
     </div>
   );
@@ -140,8 +142,11 @@ type Errors = Partial<Record<"name" | "phone" | "consent", string>>;
 export function CartView() {
   const cart = useCart();
   const history = useOrderHistory();
+  const { status, user } = useAccount();
 
-  const [name, setName] = useState("");
+  // o nome já vem da conta; só vira "do formulário" quando a pessoa digita
+  const [typedName, setName] = useState<string>();
+  const name = typedName ?? user?.name ?? "";
   const [phone, setPhone] = useState("");
   const [city, setCity] = useState("");
   const [notes, setNotes] = useState("");
@@ -157,10 +162,22 @@ export function CartView() {
 
   if (sent) return <Sent {...sent} />;
 
+  // as prévias do carrinho são da conta: sem login não dá para ver nem enviar
+  if (cart.count > 0 && status === "loading") return <Loading>Carregando o carrinho…</Loading>;
+  if (cart.count > 0 && status === "ready" && !user) {
+    return (
+      <LoginPrompt
+        title="Entre para ver o seu carrinho"
+        text="As suas prévias ficam guardadas na sua conta. Faça login para ver o carrinho e enviar o pedido."
+        className="mx-auto max-w-2xl"
+      />
+    );
+  }
+
   if (cart.count === 0) {
     return (
       <div className="mx-auto grid max-w-md justify-items-center gap-4 text-center">
-        <p className="font-display text-2xl font-medium">Seu carrinho está vazio</p>
+        <p className="font-display text-2xl font-extrabold">Seu carrinho está vazio</p>
         <p className="text-ink-soft">Crie a escultura do seu pet e ela aparece aqui.</p>
         <CreateButton />
       </div>
@@ -199,7 +216,6 @@ export function CartView() {
     try {
       const items = cart.items;
       const { order, token } = await api.createOrder({
-        sessionId: getSessionId(),
         previewIds: items.map((i) => i.previewId),
         customer: {
           name: name.trim(),
@@ -213,6 +229,7 @@ export function CartView() {
       cart.clear();
       setSent({ order, token, items });
     } catch (error) {
+      if (error instanceof ApiError && error.code === "login_required") void account.refresh(); // sessão vencida: o carrinho pede o login
       const offline = !(error instanceof ApiError) || error.status === 0 || error.status >= 500;
       setFailure({
         message: error instanceof ApiError ? error.message : "Não foi possível enviar o pedido.",
@@ -248,7 +265,7 @@ export function CartView() {
         noValidate
         className="grid gap-5 rounded-card border border-line bg-white p-5 shadow-soft sm:p-6 lg:sticky lg:top-24"
       >
-        <h2 className="font-display text-2xl font-medium">Enviar o pedido</h2>
+        <h2 className="font-display text-2xl font-extrabold">Enviar o pedido</h2>
 
         <div className="grid gap-1 border-b border-line pb-4">
           {totals.discountCents > 0 && (

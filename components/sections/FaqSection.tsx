@@ -5,9 +5,9 @@ import { faq } from "@/content/faq";
 import { site } from "@/content/site";
 
 /** Perguntas frequentes em acordeão nativo, com o WhatsApp para quem não achou a resposta. */
-export function FaqSection({ tone = "sand" }: { tone?: "cream" | "sand" }) {
+export function FaqSection({ tone = "cream", wave }: { tone?: "cream" | "sand"; wave?: "cream" | "sand" | "teal" | "magenta" }) {
   return (
-    <Section id="faq" tone={tone} labelledBy="faq-titulo">
+    <Section id="faq" tone={tone} wave={wave} labelledBy="faq-titulo">
       <SectionHeader
         eyebrow="Perguntas frequentes"
         titleId="faq-titulo"

@@ -1,21 +1,25 @@
 import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/cn";
+import { ClawMark, WaveDivider } from "./decor";
 
-export type SectionTone = "cream" | "sand" | "mist" | "ink" | "teal";
+export type SectionTone = "cream" | "sand" | "mist" | "teal" | "magenta" | "ink";
 
+// Pares de cor já medidos (texto sobre fundo): ink/cream 16,5 · ink/teal 7,8 ·
+// branco/magenta 4,95 · cream/ink 16,5.
 const tones: Record<SectionTone, string> = {
   cream: "bg-cream text-ink",
   sand: "bg-sand text-ink",
   mist: "bg-teal-mist text-ink",
-  ink: "bg-ink text-cream",
-  // faixa de marca: texto sempre ink (7,8:1). Sem eyebrow nem Accent aqui:
-  // teal-deep sobre teal só daria 2,7:1.
   teal: "bg-teal text-ink",
+  magenta: "bg-magenta text-white",
+  ink: "bg-ink text-cream",
 };
 
-const surfaces: Partial<Record<SectionTone, "dark" | "teal">> = {
+// Faixas coloridas trocam a cor do foco, do destaque do título e dos botões.
+const surfaces: Partial<Record<SectionTone, "dark" | "teal" | "magenta">> = {
   ink: "dark",
   teal: "teal",
+  magenta: "magenta",
 };
 
 type SectionProps = {
@@ -25,16 +29,19 @@ type SectionProps = {
   labelledBy?: string;
   /** false = sem container interno (carrosséis que sangram até a borda). */
   contained?: boolean;
+  /** Onda na base, na cor da PRÓXIMA seção (o contorno ondulado da marca). */
+  wave?: SectionTone;
   className?: string;
   children: ReactNode;
 };
 
-/** Seção da página: fundo, ritmo vertical e largura do conteúdo. */
+/** Seção da página: fundo, ritmo vertical, largura do conteúdo e onda opcional. */
 export function Section({
   id,
   tone = "cream",
   labelledBy,
   contained = true,
+  wave,
   className,
   children,
 }: SectionProps) {
@@ -42,18 +49,18 @@ export function Section({
     <section
       id={id}
       aria-labelledby={labelledBy}
-      // faixas escuras e de marca trocam a cor do foco, do acento e dos botões
       data-surface={surfaces[tone]}
-      className={cn("section-y", tones[tone], className)}
+      className={cn(wave ? "section-y-wave relative" : "section-y", tones[tone], className)}
     >
       {contained ? <div className="container-page">{children}</div> : children}
+      {wave && <WaveDivider tone={wave} />}
     </section>
   );
 }
 
 type SectionHeaderProps = {
   eyebrow?: string;
-  /** Use <Accent> em uma palavra para o itálico de destaque. */
+  /** Use <Accent> em uma palavra para o destaque colorido. */
   title: ReactNode;
   description?: ReactNode;
   titleId?: string;
@@ -77,7 +84,7 @@ export function SectionHeader({
   return (
     <header
       className={cn(
-        "max-w-3xl",
+        "reveal max-w-3xl",
         centered ? "mx-auto text-center" : "text-start",
         className,
       )}
@@ -85,32 +92,28 @@ export function SectionHeader({
       {eyebrow && (
         <p
           className={cn(
-            "mb-4 flex items-center gap-3 text-eyebrow font-bold uppercase",
-            "text-teal-deep [[data-surface=dark]_&]:text-teal",
+            "mb-3 flex items-center gap-2 text-eyebrow font-extrabold uppercase",
+            // eyebrow pequeno precisa de 4,5:1: teal-deep no claro, ink no teal,
+            // branco no magenta, teal no escuro
+            "text-teal-deep [[data-surface=teal]_&]:text-ink [[data-surface=magenta]_&]:text-white [[data-surface=dark]_&]:text-teal",
             centered && "justify-center",
           )}
         >
-          <span aria-hidden="true" className="h-px w-6 bg-current opacity-50" />
+          <ClawMark className="size-5 shrink-0" />
           {eyebrow}
-          <span
-            aria-hidden="true"
-            className={cn("h-px w-6 bg-current opacity-50", !centered && "hidden")}
-          />
         </p>
       )}
       <Heading
         id={titleId}
-        className={cn(
-          "font-medium",
-          Heading === "h1" ? "text-display" : "text-title",
-        )}
+        className={cn("font-extrabold", Heading === "h1" ? "text-display" : "text-title")}
       >
         {title}
       </Heading>
       {description && (
         <p
           className={cn(
-            "mt-5 text-lead text-ink-soft [[data-surface=dark]_&]:text-cream/80",
+            "mt-5 text-lead text-ink-soft",
+            "[[data-surface=teal]_&]:text-ink/85 [[data-surface=magenta]_&]:text-white [[data-surface=dark]_&]:text-cream/80",
             centered && "mx-auto max-w-2xl",
           )}
         >
@@ -121,10 +124,22 @@ export function SectionHeader({
   );
 }
 
-/** Palavra de destaque do título: itálico na cor da marca (teal-deep, AA). */
+/**
+ * Palavra de destaque do título, como no site da Cristal Pet. Magenta no fundo
+ * claro (título grande: 4,7:1); sobre o verde-água o magenta reprovaria, então
+ * vira uma "etiqueta" magenta com texto branco (4,95:1); no escuro, teal; no
+ * magenta, sublinhado ondulado.
+ */
 export function Accent({ children }: { children: ReactNode }) {
   return (
-    <em className="font-medium italic text-teal-deep [[data-surface=dark]_&]:text-teal">
+    <em
+      className={cn(
+        "font-extrabold not-italic text-magenta",
+        "[[data-surface=teal]_&]:rounded-xl [[data-surface=teal]_&]:bg-magenta [[data-surface=teal]_&]:px-2 [[data-surface=teal]_&]:text-white [[data-surface=teal]_&]:[box-decoration-break:clone]",
+        "[[data-surface=dark]_&]:text-teal",
+        "[[data-surface=magenta]_&]:text-white [[data-surface=magenta]_&]:underline [[data-surface=magenta]_&]:decoration-wavy [[data-surface=magenta]_&]:decoration-2 [[data-surface=magenta]_&]:underline-offset-8",
+      )}
+    >
       {children}
     </em>
   );

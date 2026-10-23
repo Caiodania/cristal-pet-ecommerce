@@ -14,6 +14,7 @@ export default function TermosDeUsoPage() {
       intro="As regras para usar o site da Cristal Pet Móvel e pedir uma escultura 3D do seu pet."
       topics={[
         "Uso do site e das fotos enviadas",
+        "A conta gratuita e o limite de prévias por conta",
         "A prévia em 3D como representação da escultura",
         "Como funciona o pedido pelo WhatsApp",
         "Direitos sobre as imagens e as esculturas",

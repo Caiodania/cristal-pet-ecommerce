@@ -1,5 +1,6 @@
 "use client";
 
+import { SculptureIllustration } from "@/components/ui/illustrations";
 import { catalog } from "@/content/estatua";
 import { estimate, formatCents } from "@/lib/loja/estimativa";
 import type { ItemConfig } from "@/lib/loja/tipos";
@@ -17,10 +18,14 @@ type SummaryCardProps = {
 const labelOf = <T extends { id: string; label: string }>(list: T[], id?: string) =>
   list.find((item) => item.id === id)?.label;
 
-/** Resumo sempre à vista: o que já foi escolhido e quanto custa (estimado). */
+/**
+ * Resumo sempre à vista: uma ilustração que muda a cada escolha (cor, tipo e o
+ * nome em relevo na base), o que já foi escolhido e quanto custa (estimado).
+ */
 export function SummaryCard({ chosen, photoUrl, previewUrl }: SummaryCardProps) {
   const complete = chosen.sizeId && chosen.poseId && chosen.colorId;
   const total = complete ? estimate([chosen as ItemConfig]).totalCents : undefined;
+  const color = catalog.colors.find((c) => c.id === chosen.colorId);
   const rows: [string, string | undefined][] = [
     ["Tamanho", labelOf(catalog.sizes, chosen.sizeId)],
     ["Tipo", labelOf(catalog.poses, chosen.poseId)],
@@ -33,7 +38,17 @@ export function SummaryCard({ chosen, photoUrl, previewUrl }: SummaryCardProps) 
       aria-label="Resumo da sua escultura"
       className="rounded-card border border-line bg-white p-5 shadow-soft lg:sticky lg:top-24"
     >
-      <h2 className="font-display text-xl font-medium">Sua escultura</h2>
+      <h2 className="font-display text-xl font-extrabold">Sua escultura</h2>
+
+      <div className="mt-3 rounded-soft bg-gradient-to-b from-teal-mist to-sand px-4 pb-1 pt-3">
+        <SculptureIllustration
+          pose={chosen.poseId ?? "sentado"}
+          tint={color?.swatch ?? "#f3f0e8"}
+          name={chosen.petName}
+          label="Ilustração da sua escolha, com a cor, o tipo e o nome"
+        />
+      </div>
+      <p className="mt-1 text-center text-xs text-ink-soft">Ilustração: muda conforme você escolhe.</p>
 
       {(photoUrl || previewUrl) && (
         <div className="mt-4 grid grid-cols-2 gap-2">

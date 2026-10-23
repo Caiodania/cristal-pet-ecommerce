@@ -1,6 +1,7 @@
-import { Section, SectionHeader } from "@/components/ui/Section";
 import { WhatsAppButton } from "@/components/ui/CtaButtons";
 import { CheckIcon } from "@/components/ui/icons";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Section } from "@/components/ui/Section";
 import { site } from "@/content/site";
 
 type LegalPageProps = {
@@ -17,16 +18,14 @@ type LegalPageProps = {
 export function LegalPage({ title, intro, topics }: LegalPageProps) {
   return (
     <main id="conteudo">
-      <Section tone="cream" labelledBy="legal-titulo">
+      <PageHeader titleId="legal-titulo" title={title} description={intro} />
+      <Section tone="cream" className="pt-6!">
         <div className="mx-auto max-w-3xl">
-          <SectionHeader as="h1" align="start" titleId="legal-titulo" title={title} />
-          <p className="mt-5 text-lead text-ink-soft">{intro}</p>
-
           <div
             data-todo="TODO-CLIENTE: texto jurídico revisado"
-            className="mt-8 rounded-card border border-dashed border-ink-soft/40 bg-sand p-6"
+            className="rounded-card border border-dashed border-ink-soft/40 bg-sand p-6"
           >
-            <p className="font-display text-xl font-medium">
+            <p className="font-display text-xl font-extrabold">
               Texto completo em elaboração
             </p>
             <p className="mt-2 text-ink-soft">

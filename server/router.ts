@@ -4,8 +4,10 @@
 
 import {
   ORDER_STATUSES,
+  type AuthResultDto,
   type ConfigDto,
   type OrderStatus,
+  type SessionDto,
 } from "../lib/loja/tipos";
 import { catalog } from "../content/estatua";
 import { assertSameOrigin, checkPassword, clearCookie, isAdmin, requireAdmin, sessionCookie } from "./auth";
@@ -13,6 +15,25 @@ import { getContext, type Ctx } from "./context";
 import { clientIp, errorResponse, HttpError, json, readJson, baseHeaders } from "./http";
 import { allow } from "./ratelimit";
 import { getModel, startModel } from "./services/model";
+import {
+  accountDto,
+  clearUserCookie,
+  confirm,
+  currentUser,
+  forgotPassword,
+  grantPreviews,
+  listUsers,
+  login,
+  logout,
+  myOrders,
+  quotaOf,
+  register,
+  requireUser,
+  resendConfirmation,
+  resetPassword,
+  userSessionCookie,
+  type SessionResult,
+} from "./services/accounts";
 import {
   adminStats,
   createOrder,
@@ -30,9 +51,11 @@ import {
 } from "./services/previews";
 import {
   cleanText,
+  parseAccountName,
   parseCustomer,
+  parseEmail,
   parseItemConfig,
-  parseSessionId,
+  parsePassword,
   requireRecord,
 } from "./validate";
 
@@ -46,6 +69,7 @@ type Route = {
 };
 
 const HOUR = 60 * 60 * 1000;
+const QUARTER_HOUR = 15 * 60 * 1000;
 
 function limit(key: string, max: number, windowMs: number, message?: string) {
   if (!allow(key, max, windowMs)) {
@@ -54,6 +78,20 @@ function limit(key: string, max: number, windowMs: number, message?: string) {
 }
 
 const optionalString = (v: unknown) => (typeof v === "string" ? v : undefined);
+
+/** Resposta de quem acabou de entrar: dados da conta e a cota, com o cookie da sessão. */
+function signedIn(ctx: Ctx, req: Request, result: SessionResult, status = 200): Response {
+  const body: AuthResultDto = { user: accountDto(result.profile), quota: result.quota, needsVerification: false };
+  return json(body, { status, headers: { "Set-Cookie": userSessionCookie(ctx, req, result.token) } });
+}
+
+/** O token que o Supabase põe no link do e-mail (letras, números e _-. : o tamanho varia). */
+function parseAccessToken(value: unknown): string {
+  if (typeof value !== "string" || value.length < 16 || value.length > 4096 || /\s/.test(value)) {
+    throw new HttpError(400, "invalid_token", "Este link é inválido ou venceu. Peça um novo.");
+  }
+  return value;
+}
 
 const routes: Route[] = [
   // ───────── Público ─────────
@@ -71,25 +109,131 @@ const routes: Route[] = [
         mode: image.mode === "mock" || model.mode === "mock" ? "demo" : "live",
         imageProvider: { name: image.name, mode: image.mode },
         modelProvider: { name: model.name, mode: model.mode },
-        previewsPerDay: ctx.config.previewsPerDay,
+        previewsPerAccount: ctx.config.previewsPerAccount,
         turnstileSiteKey: ctx.config.turnstileSiteKey,
+        googleLoginUrl:
+          ctx.config.authGoogle && ctx.config.supabaseUrl
+            ? `${ctx.config.supabaseUrl.replace(/\/$/, "")}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(`${ctx.config.siteUrl}/confirmar`)}`
+            : undefined,
         catalogVersion: catalog.version,
       };
       return json(body);
     },
   },
+  // ───────── Conta do cliente ─────────
+  {
+    method: "POST",
+    pattern: /^\/api\/auth\/signup$/,
+    handler: async ({ ctx, req, ip }) => {
+      limit(`signup:${ip}`, 6, HOUR, "Muitos cadastros desta rede. Tente de novo mais tarde.");
+      const body = requireRecord(await readJson(req));
+      const result = await register(ctx, {
+        name: parseAccountName(body.name),
+        email: parseEmail(body.email),
+        password: parsePassword(body.password),
+        ip,
+        turnstileToken: optionalString(body.turnstileToken),
+      });
+      if (result.needsVerification) {
+        const pending: AuthResultDto = { user: null, needsVerification: true };
+        return json(pending, { status: 202 });
+      }
+      return signedIn(ctx, req, result, 201);
+    },
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/auth\/login$/,
+    handler: async ({ ctx, req, ip }) => {
+      const body = requireRecord(await readJson(req));
+      const email = parseEmail(body.email);
+      limit(`ulogin:${ip}`, 20, QUARTER_HOUR, "Muitas tentativas de login. Aguarde 15 minutos.");
+      limit(`ulogin:${email}`, 8, QUARTER_HOUR, "Muitas tentativas de login nesta conta. Aguarde 15 minutos.");
+      // senha vazia ou curta cai aqui como "e-mail ou senha incorretos", sem ensinar regra de senha
+      const password = typeof body.password === "string" ? body.password : "";
+      return signedIn(ctx, req, await login(ctx, { email, password }));
+    },
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/auth\/logout$/,
+    handler: async ({ ctx, req }) => {
+      await logout(ctx, req);
+      return json({ ok: true }, { headers: { "Set-Cookie": clearUserCookie(ctx, req) } });
+    },
+  },
+  {
+    method: "GET",
+    pattern: /^\/api\/auth\/me$/,
+    handler: async ({ ctx, req }) => {
+      const user = await currentUser(ctx, req);
+      const body: SessionDto = user ? { user: accountDto(user), quota: await quotaOf(ctx, user) } : { user: null };
+      return json(body);
+    },
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/auth\/forgot$/,
+    handler: async ({ ctx, req, ip }) => {
+      const body = requireRecord(await readJson(req));
+      const email = parseEmail(body.email);
+      limit(`forgot:${ip}`, 6, HOUR, "Muitos pedidos de recuperação. Tente de novo mais tarde.");
+      limit(`forgot:${email}`, 3, HOUR, "Já enviamos o e-mail de recuperação. Aguarde um pouco para pedir outro.");
+      await forgotPassword(ctx, { email, ip, turnstileToken: optionalString(body.turnstileToken) });
+      // a resposta é a mesma exista ou não conta com este e-mail
+      return json({ ok: true }, { status: 202 });
+    },
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/auth\/resend$/,
+    handler: async ({ ctx, req, ip }) => {
+      const body = requireRecord(await readJson(req));
+      const email = parseEmail(body.email);
+      limit(`resend:${ip}`, 6, HOUR, "Muitos pedidos de reenvio. Tente de novo mais tarde.");
+      limit(`resend:${email}`, 3, HOUR, "Já reenviamos o e-mail. Aguarde um pouco para pedir outro.");
+      await resendConfirmation(ctx, { email });
+      return json({ ok: true }, { status: 202 });
+    },
+  },
+  {
+    // o link do e-mail de confirmação (ou o retorno do Google) cai numa página do site, que manda o token para cá
+    method: "POST",
+    pattern: /^\/api\/auth\/confirm$/,
+    handler: async ({ ctx, req, ip }) => {
+      limit(`confirm:${ip}`, 30, HOUR);
+      const body = requireRecord(await readJson(req));
+      return signedIn(ctx, req, await confirm(ctx, parseAccessToken(body.accessToken)));
+    },
+  },
+  {
+    method: "POST",
+    pattern: /^\/api\/auth\/reset$/,
+    handler: async ({ ctx, req, ip }) => {
+      limit(`reset:${ip}`, 10, HOUR);
+      const body = requireRecord(await readJson(req));
+      const result = await resetPassword(ctx, {
+        accessToken: parseAccessToken(body.accessToken),
+        password: parsePassword(body.password),
+      });
+      return signedIn(ctx, req, result);
+    },
+  },
+  {
+    method: "GET",
+    pattern: /^\/api\/me\/orders$/,
+    handler: async ({ ctx, req }) => json({ orders: await myOrders(ctx, await requireUser(ctx, req)) }),
+  },
+
+  // ───────── Prévias (exigem conta) ─────────
   {
     method: "POST",
     pattern: /^\/api\/previews$/,
     handler: async ({ ctx, req, ip }) => {
+      const user = await requireUser(ctx, req);
       limit(`preview:${ip}`, 30, HOUR);
       const body = requireRecord(await readJson(req));
-      const dto = await createPreview(ctx, {
-        sessionId: parseSessionId(body.sessionId),
-        options: parseItemConfig(body.options),
-        ip,
-        turnstileToken: optionalString(body.turnstileToken),
-      });
+      const dto = await createPreview(ctx, { user, options: parseItemConfig(body.options), ip });
       return json(dto, { status: 201 });
     },
   },
@@ -97,33 +241,35 @@ const routes: Route[] = [
     method: "PUT",
     pattern: /^\/api\/previews\/(?<id>[\w-]+)\/photo$/,
     handler: async ({ ctx, req, params }) => {
+      const user = await requireUser(ctx, req);
       const declared = Number(req.headers.get("content-length") ?? 0);
       if (declared > ctx.config.maxPhotoBytes) {
         throw new HttpError(413, "photo_too_large", "A foto é grande demais. Envie uma de até 5 MB.");
       }
       const bytes = new Uint8Array(await req.arrayBuffer());
-      return json(await uploadPhoto(ctx, params.id, bytes));
+      return json(await uploadPhoto(ctx, params.id, bytes, user));
     },
   },
   {
     method: "POST",
     pattern: /^\/api\/previews\/(?<id>[\w-]+)\/start$/,
-    handler: async ({ ctx, params, ip }) => {
+    handler: async ({ ctx, req, params, ip }) => {
+      const user = await requireUser(ctx, req);
       limit(`start:${ip}`, 40, HOUR);
-      return json(await startPreview(ctx, params.id));
+      return json(await startPreview(ctx, params.id, user));
     },
   },
   {
     method: "POST",
     pattern: /^\/api\/previews\/(?<id>[\w-]+)\/regenerate$/,
     handler: async ({ ctx, req, params, ip }) => {
+      const user = await requireUser(ctx, req);
       limit(`preview:${ip}`, 30, HOUR);
       const body = requireRecord(await readJson(req));
       const dto = await regeneratePreview(ctx, params.id, {
-        sessionId: parseSessionId(body.sessionId),
+        user,
         ip,
         options: body.options === undefined ? undefined : parseItemConfig(body.options),
-        turnstileToken: optionalString(body.turnstileToken),
       });
       return json(dto, { status: 201 });
     },
@@ -131,12 +277,13 @@ const routes: Route[] = [
   {
     method: "GET",
     pattern: /^\/api\/previews\/(?<id>[\w-]+)$/,
-    handler: async ({ ctx, params }) => json(await getPreview(ctx, params.id)),
+    handler: async ({ ctx, req, params }) => json(await getPreview(ctx, params.id, await requireUser(ctx, req))),
   },
   {
     method: "POST",
     pattern: /^\/api\/orders$/,
     handler: async ({ ctx, req, ip }) => {
+      const user = await requireUser(ctx, req);
       limit(`order:${ip}`, 10, HOUR);
       const body = requireRecord(await readJson(req));
       if (body.consent !== true) {
@@ -144,7 +291,7 @@ const routes: Route[] = [
       }
       const previewIds = Array.isArray(body.previewIds) ? body.previewIds.map(String) : [];
       const { order, token } = await createOrder(ctx, {
-        sessionId: parseSessionId(body.sessionId),
+        user,
         previewIds,
         customer: parseCustomer(body.customer),
       });
@@ -199,6 +346,29 @@ const routes: Route[] = [
     pattern: /^\/api\/admin\/stats$/,
     admin: true,
     handler: async ({ ctx }) => json(await adminStats(ctx)),
+  },
+  {
+    method: "GET",
+    pattern: /^\/api\/admin\/users$/,
+    admin: true,
+    handler: async ({ ctx, url }) => {
+      const page = Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1);
+      return json(await listUsers(ctx, { q: cleanText(url.searchParams.get("q"), 60), page }));
+    },
+  },
+  {
+    // o dono libera prévias extras para uma conta (soma ao limite padrão)
+    method: "PATCH",
+    pattern: /^\/api\/admin\/users\/(?<id>[\w-]+)$/,
+    admin: true,
+    handler: async ({ ctx, req, params }) => {
+      const body = requireRecord(await readJson(req));
+      const bonus = body.bonusPreviews;
+      if (typeof bonus !== "number" || !Number.isInteger(bonus) || bonus < 0 || bonus > 100) {
+        throw new HttpError(400, "invalid_input", "Informe um número inteiro de prévias extras, de 0 a 100.");
+      }
+      return json(await grantPreviews(ctx, params.id, bonus));
+    },
   },
   {
     method: "GET",

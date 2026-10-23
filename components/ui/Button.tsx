@@ -42,18 +42,26 @@ const sizes: Record<Size, string> = {
   lg: "min-h-14 px-9 text-base",
 };
 
-// Pares de cor já medidos: primary 16,5:1 · accent 7,8:1 · inverse 16,5:1
+// Pares de cor já medidos: primary (branco sobre magenta) 4,95:1 · accent (ink
+// sobre teal) 7,8:1 · inverse (ink sobre branco) 16,5:1. O magenta é a cor de
+// ação da marca, como no site institucional. Sobre uma faixa magenta o botão
+// principal inverte (magenta sobre branco) para não sumir.
 const variants: Record<Variant, string> = {
-  primary: "bg-ink text-cream hover:bg-ink/85 hover:shadow-soft",
-  accent: "bg-teal text-ink hover:bg-teal/85 hover:shadow-soft",
+  primary:
+    "btn-sheen bg-magenta text-white shadow-soft hover:brightness-110 hover:shadow-lift " +
+    "[[data-surface=magenta]_&]:bg-white [[data-surface=magenta]_&]:text-magenta",
+  accent: "btn-sheen bg-teal text-ink hover:brightness-95 hover:shadow-soft",
   secondary:
     "border-2 border-ink text-ink hover:bg-ink hover:text-cream " +
     "[[data-surface=dark]_&]:border-cream [[data-surface=dark]_&]:text-cream " +
-    "[[data-surface=dark]_&]:hover:bg-cream [[data-surface=dark]_&]:hover:text-ink",
-  inverse: "bg-cream text-ink hover:bg-white hover:shadow-soft",
+    "[[data-surface=dark]_&]:hover:bg-cream [[data-surface=dark]_&]:hover:text-ink " +
+    "[[data-surface=magenta]_&]:border-white [[data-surface=magenta]_&]:text-white " +
+    "[[data-surface=magenta]_&]:hover:bg-white [[data-surface=magenta]_&]:hover:text-magenta",
+  inverse: "bg-white text-ink shadow-soft hover:bg-cream hover:shadow-lift",
   ghost:
-    "text-teal-deep underline decoration-2 underline-offset-4 hover:decoration-teal " +
-    "[[data-surface=dark]_&]:text-teal",
+    "text-teal-deep underline decoration-2 underline-offset-4 hover:decoration-magenta " +
+    "[[data-surface=dark]_&]:text-teal [[data-surface=teal]_&]:text-ink " +
+    "[[data-surface=magenta]_&]:text-white",
 };
 
 const isHttp = (href: string) => /^https?:\/\//i.test(href);

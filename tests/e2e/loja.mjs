@@ -54,6 +54,9 @@ let id = 0
 const pending = new Map()
 const problems = []
 let phase = 'carga'
+const stamp = Date.now()
+const accountEmail = `e2e-${stamp}@exemplo.com`
+const accountPassword = 'senha-e2e-2026'
 ws.onmessage = ({ data }) => {
   const m = JSON.parse(data)
   if (m.id && pending.has(m.id)) { pending.get(m.id)(m); pending.delete(m.id); return }
@@ -117,7 +120,9 @@ const SCAN = `(() => {
   const bgOf = (el) => { let e = el; while (e) { const s = getComputedStyle(e); if (s.backgroundImage !== 'none' && !s.backgroundImage.startsWith('radial')) return null; const c = parse(s.backgroundColor); if (c && c.a > 0.5) return c; e = e.parentElement } return { r: 250, g: 249, b: 245, a: 1 } };
   const contrast = [], seen = new Set();
   for (const el of document.querySelectorAll('body *')) {
-    if (el.closest('video, dialog:not([open])')) continue;
+    // componentes inativos (desabilitados) e enfeites escondidos da leitura (aria-hidden: números
+    // em marca-d'água, faixa que rola, selo giratório) não têm requisito de contraste (WCAG 1.4.3)
+    if (el.closest('video, dialog:not([open]), :disabled, [aria-disabled="true"], [aria-hidden="true"]')) continue;
     if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
     const r = el.getBoundingClientRect(); if (r.width === 0 || r.height === 0) continue;
     const s = getComputedStyle(el); if (s.visibility === 'hidden' || s.display === 'none') continue;
@@ -170,10 +175,22 @@ try {
   const home = await evaluate(`({ h1: document.querySelectorAll('h1').length, title: document.title, cta: [...document.querySelectorAll('a')].filter(a => /Criar minha escultura/.test(a.textContent)).map(a => a.getAttribute('href')), banner: document.querySelector('[role=status]')?.textContent || '', text: document.body.innerText })`)
   check('vitrine: 1 h1 e CTA "Criar minha escultura" leva a /personalizar', home.h1 === 1 && home.cta.length >= 2 && home.cta.every((h) => h.startsWith('/personalizar')), JSON.stringify(home.cta))
   check('vitrine: sem conteúdo institucional (banho e tosa, franquia, filhotes…)', !/banho e tosa|franquia|filhote|unidade móvel|IPOPE/i.test(home.text.replace(/Agendar/g, '')))
+  await waitFor(`!!document.querySelector('header button[aria-label="Faça login"]')`, 8000, 'botão "Faça login" no cabeçalho')
+  check('visitante navega sem conta: o cabeçalho mostra "Faça login" (e não "Minha conta")', !(await evaluate(`!!document.querySelector('header button[aria-label="Minha conta"]')`)))
   await waitFor(`document.querySelector('[role=status]')?.textContent.includes('Modo demonstração')`, 8000)
   check('banner "Modo demonstração" aparece (IA simulada)', true)
-  const tamanho = await evaluate(`[...document.querySelectorAll('#tamanhos a')].map(a => a.getAttribute('href'))`)
-  check('cartões de tamanho levam ao configurador já com o tamanho', tamanho.length === 3 && tamanho.every((h) => /personalizar\?tamanho=/.test(h)), JSON.stringify(tamanho))
+  // "Monte a sua": as escolhas da vitrine viram o link do configurador
+  const ctaHref = () => evaluate(`document.querySelector('#tamanhos a')?.getAttribute('href')`)
+  check('vitrine: "Monte a sua" já vem com escolhas e leva ao configurador', (await ctaHref()) === '/personalizar?tamanho=media&tipo=sentado&cor=branco', await ctaHref())
+  await click('#tamanhos label:has(input[value=grande])')
+  await click('#tamanhos label:has(input[value=busto])')
+  await click('#tamanhos label:has(input[value=preto])')
+  check('vitrine: trocar tamanho, tipo e cor atualiza o link', (await ctaHref()) === '/personalizar?tamanho=grande&tipo=busto&cor=preto', await ctaHref())
+  check('vitrine: a prévia mostra a escolha em texto', /Grande · Busto · Preto/.test(await evaluate(`document.querySelector('#tamanhos figcaption')?.textContent`)))
+  await shot('00b-monte-a-sua')
+  await go('/personalizar?tamanho=grande&tipo=busto&cor=preto')
+  check('configurador: tamanho, tipo e cor vindos da vitrine já começam no passo do nome', /Qual é o nome do seu pet/.test(await text()) && /Grande/.test(await evaluate(`document.querySelector('aside[aria-label^="Resumo"]')?.innerText`)) && /Preto/.test(await evaluate(`document.querySelector('aside[aria-label^="Resumo"]')?.innerText`)))
+  await go('/')
 
   // ───────── 2. configurador ─────────
   phase = 'configurador'
@@ -183,13 +200,17 @@ try {
   await shot('01-tamanho')
   const next = () => click('button', 'Continuar')
   await next() // → tipo
+  await shot('01b-tipo')
   const noPose = await evaluate(find('button', 'Continuar'))
   check('"Continuar" fica desabilitado até escolher o tipo', noPose.disabled === true)
   await click('label:has(input[value=sentado])') ; await next() // → cor
+  await shot('01c-cor')
   await click('label:has(input[value=cinza])'); await next() // → nome
-  await type('input[maxlength="30"]', 'Thor'); await next() // → foto
+  await type('input[maxlength="30"]', 'Thor')
+  await shot('01d-nome')
+  await next() // → foto
   await shot('02-foto-vazia')
-  check('chegou à etapa da foto', (await text()).includes('Envie a foto do seu pet'))
+  check('chegou à etapa da foto', /Envie (a|uma) foto/.test(await text()))
   check('sem foto, o botão "Gerar a prévia" fica desabilitado', (await evaluate(find('button', 'Gerar a prévia'))).disabled === true)
   await setFile('input[type=file]', photoPath)
   await waitFor(`!!document.querySelector('img[alt="A foto que você escolheu"]')`, 15000, 'miniatura da foto')
@@ -199,7 +220,24 @@ try {
   const summary = await evaluate(`document.querySelector('aside[aria-label^="Resumo"]')?.innerText`)
   check('resumo mostra tamanho, tipo, cor e nome', /Média/.test(summary) && /Sentado/.test(summary) && /Cinza/.test(summary) && /Thor/.test(summary), summary?.replace(/\n/g, ' | '))
 
+  check('sem login: o passo da foto avisa que a prévia precisa de conta', /Crie a sua conta grátis para ver a prévia/.test(await text()))
   await click('button', 'Gerar a prévia')
+  await waitFor(`!!document.querySelector('dialog[open]')`, 8000, 'diálogo de login')
+  await sleep(400)
+  const dialogText = await evaluate(`document.querySelector('dialog[open]').innerText`)
+  check('sem login: "Gerar a prévia" abre o diálogo "Faça login ou crie a sua conta para poder gerar a sua prévia"', /Faça login ou crie a sua conta para poder gerar a sua prévia/.test(dialogText), dialogText.slice(0, 120))
+  check('o diálogo abre sem sair da página (as escolhas e a foto ficam)', (await evaluate('location.pathname')) === '/personalizar' && !!(await evaluate(`!!document.querySelector('img[alt="A foto que você escolheu"]')`)))
+  await shot('03b-dialogo-conta')
+  // cadastro dentro do diálogo
+  await click('dialog[open] button', 'Criar conta grátis') // envia vazio: mostra os erros
+  check('cadastro vazio: mostra os erros e não fecha o diálogo', /Informe o seu nome/.test(await evaluate(`document.querySelector('dialog[open]')?.innerText ?? ''`)))
+  await type('dialog[open] input[autocomplete="name"]', 'Maria Teste')
+  await type('dialog[open] input[type=email]', accountEmail)
+  await type('dialog[open] input[autocomplete="new-password"]', accountPassword)
+  await click('dialog[open] input[type=checkbox]')
+  await click('dialog[open] button', 'Criar conta grátis')
+  await waitFor(`!document.querySelector('dialog[open]')`, 10000, 'diálogo fecha depois do cadastro')
+  check('depois do cadastro o cabeçalho mostra "Minha conta"', await evaluate(`!!document.querySelector('header button[aria-label="Minha conta"]')`))
   await waitFor(`document.body.innerText.includes('Gerando a prévia') || document.body.innerText.includes('Enviando a foto')`, 8000, 'estado de geração')
   await shot('04-gerando')
   check('mostra o progresso da geração (anunciado por role=status)', await evaluate(`!!document.querySelector('[role=status] progress')`))
@@ -210,7 +248,7 @@ try {
   check('a prévia pronta aparece, com alt descritivo', prev.ok && /Thor/.test(prev.alt), JSON.stringify(prev))
   check('a imagem vem do servidor por link assinado', /\/api\/files\//.test(prev.src))
   check('aviso de imagem de demonstração', (await text()).includes('Imagem de demonstração'))
-  check('mostra quantas prévias ainda restam hoje', /Você ainda pode gerar 2 prévias hoje/.test(await text()), (await text()).match(/Você ainda[^.]*\./)?.[0])
+  check('mostra quantas prévias ainda restam na conta', /Você ainda pode gerar 2 prévias nesta conta/.test(await text()), (await text()).match(/Você ainda[^.]*\./)?.[0])
 
   // gerar outra (mesma foto, sem novo upload)
   const uploadsBefore = await evaluate(`performance.getEntriesByType('resource').filter(r => /\\/photo$/.test(r.name)).length`)
@@ -219,7 +257,7 @@ try {
   await waitFor(`[...document.querySelectorAll('button')].some(b => b.textContent.includes('Gostei'))`, 30000)
   const uploadsAfter = await evaluate(`performance.getEntriesByType('resource').filter(r => /\\/photo$/.test(r.name)).length`)
   check('"Gerar outra" reaproveita a foto (nenhum novo upload)', uploadsAfter === uploadsBefore, `uploads ${uploadsBefore}→${uploadsAfter}`)
-  check('a contagem de prévias restantes cai para 1', /ainda pode gerar 1 prévia hoje/.test(await text()))
+  check('a contagem de prévias restantes cai para 1', /ainda pode gerar 1 prévia nesta conta/.test(await text()))
 
   // mudar opções invalida a prévia antiga
   await click('button', 'Mudar as opções')
@@ -244,6 +282,9 @@ try {
   await waitFor(`!!document.querySelector('img[alt^="Prévia da escultura"]')`, 10000, 'imagem do item no carrinho')
   await shot('06-carrinho')
   check('carrinho mostra a escultura com imagem', (await text()).includes('Escultura de Thor'))
+  check('o nome já vem preenchido com o da conta', (await evaluate(`document.querySelector('input[name=name]')?.value`)) === 'Maria Teste')
+  // apaga o nome (como o React enxerga: valor nativo + evento de input) para testar o erro
+  await evaluate(`(() => { const i = document.querySelector('input[name=name]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(i, ''); i.dispatchEvent(new Event('input', { bubbles: true })) })()`)
   await click('button', 'Enviar pedido')
   await sleep(500)
   const errs = await evaluate(`({ invalid: [...document.querySelectorAll('[aria-invalid=true]')].map(e => e.name || e.type), alerts: [...document.querySelectorAll('[role=alert]')].map(a => a.textContent), focusedName: document.activeElement?.name })`)
@@ -356,6 +397,13 @@ try {
 
   // ───────── 6. falhas pelo nome do pet (gatilhos do modo demonstração) ─────────
   phase = 'falhas'
+  // o painel limpou os cookies (aparelho "novo"): a conta entra de novo pela página de login
+  await go('/entrar?proximo=/personalizar')
+  await type('input[type=email]', accountEmail)
+  await type('input[autocomplete="current-password"]', accountPassword)
+  await click('button[type=submit]', 'Entrar')
+  await waitFor(`location.pathname === '/personalizar'`, 10000, 'volta para onde ia depois do login (?proximo=)')
+  check('login por /entrar?proximo=/personalizar volta para a página pedida', true)
   await go('/personalizar?tamanho=grande')
   await click('button', 'Continuar'); await click('label:has(input[value=busto])'); await click('button', 'Continuar')
   await click('label:has(input[value=preto])'); await click('button', 'Continuar')
@@ -366,8 +414,83 @@ try {
   await waitFor(`document.body.innerText.includes('Foto recusada')`, 30000, 'foto recusada')
   await shot('14-foto-recusada')
   check('foto recusada: explica e oferece "Escolher outra foto" (sem "Tentar de novo")', /Escolher outra foto/.test(await text()) && !/Tentar de novo/.test(await text()))
+
+  // ───────── 7. conta: menu, cota, sair e entrar ─────────
+  phase = 'conta'
+  await go('/')
+  await waitFor(`!!document.querySelector('header button[aria-label="Minha conta"]')`, 8000, 'menu da conta (sessão guardada no cookie)')
+  check('a sessão continua depois de recarregar a página (cookie)', true)
+  await click('header button[aria-label="Minha conta"]')
+  const menu = await evaluate(`document.querySelector('header [id]:not(svg)')?.closest('div.relative')?.innerText ?? ''`)
+  check('menu da conta: nome, e-mail, prévias que sobram, minha conta, meus pedidos e sair', /Olá, Maria/.test(menu) && menu.includes(accountEmail) && /prévia/.test(menu) && /Minha conta/.test(menu) && /Meus pedidos/.test(menu) && /Sair/.test(menu), menu.replace(/\n/g, ' | ').slice(0, 200))
+  await shot('15-menu-conta')
+  await click('header a[href="/minha-conta"]')
+  await waitFor(`document.body.innerText.includes('Prévias de escultura')`, 8000, 'página Minha conta')
+  const mine = await text()
+  check('Minha conta: dados do cadastro e as prévias usadas', mine.includes('Maria Teste') && mine.includes(accountEmail) && /2 de 3 usadas/.test(mine), mine.match(/\(\d de \d usadas\)/)?.[0])
+  await shot('16-minha-conta')
+
+  // sair: volta a ser visitante, o carrinho some, navegar continua livre
+  await click('button', 'Sair da conta')
+  await waitFor(`!!document.querySelector('header button[aria-label="Faça login"]')`, 8000, 'visitante de novo')
+  check('sair devolve o cabeçalho "Faça login"', true)
+  await go('/carrinho')
+  check('sem login o carrinho/pedidos pedem a conta, sem quebrar a página', /Entre para ver/.test(await text()) || /Seu carrinho está vazio/.test(await text()))
+  await go('/meus-pedidos')
+  check('"Meus pedidos" sem login oferece entrar ou criar conta', /Entre para ver os seus pedidos/.test(await text()))
+  await shot('17-pedidos-sem-login')
+
+  // entrar: senha errada (mensagem genérica) e depois a certa
+  await go('/entrar')
+  await type('input[type=email]', accountEmail)
+  await type('input[autocomplete="current-password"]', 'senha-errada-123')
+  await click('button[type=submit]', 'Entrar')
+  await waitFor(`document.body.innerText.includes('E-mail ou senha incorretos')`, 8000, 'erro de login')
+  check('senha errada: "E-mail ou senha incorretos" (não diz qual dos dois)', true)
+  await shot('18-entrar-erro')
+  await type('input[autocomplete="current-password"]', accountPassword)
+  await click('button[type=submit]', 'Entrar')
+  await waitFor(`!!document.querySelector('header button[aria-label="Minha conta"]')`, 8000, 'logado de novo')
+  check('entrar com a senha certa leva à conta e mostra "Minha conta"', true)
+  await waitFor(`location.pathname === '/minha-conta'`, 8000, 'redireciona para a conta')
+
+  // "Meus pedidos" logado lista o pedido feito antes (vem do servidor, não do aparelho)
+  await go('/meus-pedidos')
+  await waitFor(`/CP-[A-Z0-9]{6}/.test(document.body.innerText)`, 8000, 'pedido da conta na lista')
+  check('"Meus pedidos" logado lista os pedidos da conta (do servidor)', true)
+
+  // esqueci a senha: a resposta é a mesma exista ou não a conta
+  await go('/esqueci-a-senha')
+  await type('input[type=email]', 'ninguem-aqui@exemplo.com')
+  await click('button[type=submit]', 'Enviar o link')
+  await waitFor(`document.body.innerText.includes('Se existir uma conta')`, 8000, 'aviso de recuperação')
+  check('esqueci a senha: resposta neutra (não revela se o e-mail tem conta)', true)
+  await shot('19-esqueci-senha')
+
+  // cota esgotada: uma segunda conta gasta as 3 prévias e a tela explica
+  await evaluate(`fetch('/api/auth/logout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }).then((r) => r.status)`)
+  await go('/criar-conta')
+  await type('input[autocomplete="name"]', 'Segunda Conta')
+  await type('input[type=email]', `e2e-segunda-${stamp}@exemplo.com`)
+  await type('input[autocomplete="new-password"]', accountPassword)
+  await click('input[type=checkbox]')
+  await shot('20-criar-conta')
+  await click('button[type=submit]', 'Criar conta grátis')
+  await waitFor(`!!document.querySelector('header button[aria-label="Minha conta"]')`, 10000, 'segunda conta criada')
+  const burst = await evaluate(`(async () => { const out = []; for (let i = 0; i < 4; i++) { const r = await fetch('/api/previews', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ options: { sizeId: 'media', poseId: 'sentado', colorId: 'branco' } }) }); out.push(r.status) } return out })()`)
+  check('o servidor recusa a 4ª prévia da conta (403) depois de 3 criadas', JSON.stringify(burst) === '[201,201,201,403]', JSON.stringify(burst))
+  await go('/personalizar?tamanho=media&tipo=sentado&cor=branco')
+  await click('button', 'Continuar') // nome → foto
+  await setFile('input[type=file]', photoPath)
+  await waitFor(`!!document.querySelector('img[alt="A foto que você escolheu"]')`, 15000)
+  await waitFor(`document.body.innerText.includes('Você já usou todas as prévias da sua conta')`, 8000, 'aviso de cota esgotada')
+  check('cota esgotada: a tela explica e manda para o WhatsApp', /Falar no WhatsApp/.test(await text()))
+  check('cota esgotada: "Gerar a prévia" fica desabilitado', (await evaluate(find('button', 'Gerar a prévia'))).disabled === true)
+  await shot('21-cota-esgotada')
 } catch (error) {
   check('execução sem exceção', false, String(error.message))
+  // ajuda a depurar: o que havia na tela quando quebrou
+  try { await shot('zz-falha'); console.log('TELA NA FALHA [' + phase + ']:', (await text()).replace(/s+/g, ' ').slice(0, 600)) } catch {}
 }
 
 const fails = results.filter((r) => !r.ok)

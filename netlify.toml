@@ -12,6 +12,9 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  # Imagem de referência de estilo que a função envia à IA junto com a foto do
+  # cliente (STYLE_REFERENCE_FILES; veja server/providers/style-references.ts).
+  included_files = ["public/images/esculturas/mel.webp"]
 
 # A função api.ts se publica sozinha em /api/* (veja `config.path` nela).
 # Variáveis de ambiente (senha do painel, Supabase, provedores de IA…):

@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { legalLinks, nav } from "@/content/site";
-import { CloseIcon, MenuIcon } from "@/components/ui/icons";
+import { CloseIcon, MenuIcon, UserIcon } from "@/components/ui/icons";
+import { account, useAccount } from "@/lib/loja/conta";
+import { openAuth } from "@/lib/loja/dialogo-conta";
 
 const links = [...nav, { label: "Meus pedidos", href: "/meus-pedidos" }];
 
@@ -15,9 +17,11 @@ const links = [...nav, { label: "Meus pedidos", href: "/meus-pedidos" }];
  */
 export function MobileMenu() {
   const panelRef = useRef<HTMLDivElement>(null);
+  const { status, user } = useAccount();
+  const rowClass = "flex min-h-12 w-full items-center gap-3 rounded-soft px-3 text-start text-lg font-semibold hover:bg-sand";
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       <button
         type="button"
         popoverTarget="menu-celular"
@@ -44,14 +48,45 @@ export function MobileMenu() {
           <ul className="grid gap-1">
             {links.map((item) => (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="flex min-h-12 items-center rounded-soft px-3 text-lg font-semibold hover:bg-sand"
-                >
+                <Link href={item.href} className={rowClass}>
                   {item.label}
                 </Link>
               </li>
             ))}
+            {status === "ready" && (
+              <li className="mt-1 border-t border-line pt-1">
+                {user ? (
+                  <>
+                    <Link href="/minha-conta" className={rowClass}>
+                      <UserIcon className="text-xl text-magenta" />
+                      Minha conta
+                    </Link>
+                    <button
+                      type="button"
+                      className={`${rowClass} text-ink-soft`}
+                      onClick={() => {
+                        panelRef.current?.hidePopover();
+                        void account.logout();
+                      }}
+                    >
+                      Sair
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    className={rowClass}
+                    onClick={() => {
+                      panelRef.current?.hidePopover();
+                      openAuth({ tab: "login" });
+                    }}
+                  >
+                    <UserIcon className="text-xl text-magenta" />
+                    Faça login ou crie sua conta
+                  </button>
+                )}
+              </li>
+            )}
           </ul>
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-line px-3 pt-3 text-sm text-ink-soft">
             {legalLinks.map((item) => (

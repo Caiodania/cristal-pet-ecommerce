@@ -10,6 +10,7 @@
 // Gatilhos de teste (pelo NOME do pet): "falhaimg" faz a imagem falhar,
 // "recusar" simula foto recusada, "falha3d" faz o arquivo 3D falhar.
 
+import { ILUSTRACAO_VIEWBOX, sculptureSvgBody } from "../../lib/loja/ilustracao";
 import type { ImageProvider, ModelPoll, PrintModelProvider } from "./types";
 
 type Job = { t: number; d: number; name: string; hex: string; pose: string; h: number | null };
@@ -21,48 +22,24 @@ function decodeJob(jobId: string): Job {
   return JSON.parse(Buffer.from(jobId.slice(5), "base64url").toString("utf8")) as Job;
 }
 
-const xmlEscape = (s: string) =>
-  s.replace(/[<>&"']/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[c]!);
-
-/** Clareia (amount > 0) ou escurece (amount < 0) uma cor #rrggbb. */
-function shade(hex: string, amount: number): string {
-  const n = Number.parseInt(hex.replace("#", ""), 16);
-  const channel = (shift: number) => {
-    const value = (n >> shift) & 255;
-    const mixed = amount >= 0 ? value + (255 - value) * amount : value * (1 + amount);
-    return Math.max(0, Math.min(255, Math.round(mixed)));
-  };
-  return `#${[16, 8, 0].map((s) => channel(s).toString(16).padStart(2, "0")).join("")}`;
-}
-
+/**
+ * A imagem da prévia simulada: a ilustração da escultura (a mesma do configurador,
+ * lib/loja/ilustracao.ts), na cor e na pose escolhidas e com o nome em relevo na
+ * base, sob a faixa "PRÉVIA DE DEMONSTRAÇÃO". O nome do cliente é escapado lá.
+ */
 function statueSvg({ hex, pose, name }: { hex: string; pose: string; name: string }): string {
-  const light = shade(hex, 0.25);
-  const dark = shade(hex, -0.25);
-  const bust = /busto/i.test(pose);
-  const body = bust
-    ? `<path d="M210 760 Q230 560 400 540 Q570 560 590 760 Z" fill="url(#m)"/>`
-    : `<ellipse cx="400" cy="650" rx="175" ry="195" fill="url(#m)"/>`;
-  const label = name ? xmlEscape(name) : "";
+  const sculpture = sculptureSvgBody({ pose: poseId(pose), tint: hex, name, uid: "m" });
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
-<defs>
-<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efede8"/><stop offset="1" stop-color="#d8d4cc"/></linearGradient>
-<linearGradient id="m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${light}"/><stop offset="1" stop-color="${dark}"/></linearGradient>
-<filter id="b"><feGaussianBlur stdDeviation="14"/></filter>
-</defs>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f6f3"/><stop offset="1" stop-color="#e4dccd"/></linearGradient></defs>
 <rect width="800" height="1000" fill="url(#bg)"/>
 <text x="400" y="64" text-anchor="middle" font-family="sans-serif" font-size="26" font-weight="700" fill="#4a463f">PRÉVIA DE DEMONSTRAÇÃO</text>
 <text x="400" y="98" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#5f5b55">Simulada: não é a escultura final</text>
-<ellipse cx="400" cy="880" rx="270" ry="38" fill="#000" opacity=".2" filter="url(#b)"/>
-<rect x="180" y="790" width="440" height="84" rx="18" fill="url(#m)"/>
-${body}
-<path d="M285 330 L240 175 L360 255 Z" fill="${dark}"/><path d="M515 330 L560 175 L440 255 Z" fill="${dark}"/>
-<circle cx="400" cy="400" r="140" fill="url(#m)"/>
-<ellipse cx="400" cy="455" rx="66" ry="48" fill="${light}"/>
-<ellipse cx="400" cy="436" rx="24" ry="15" fill="${dark}"/>
-<circle cx="350" cy="380" r="13" fill="${dark}"/><circle cx="450" cy="380" r="13" fill="${dark}"/>
-<text x="400" y="843" text-anchor="middle" font-family="sans-serif" font-size="32" font-weight="700" fill="${shade(hex, -0.65)}">${label}</text>
+<svg x="40" y="190" width="720" height="624" viewBox="${ILUSTRACAO_VIEWBOX}">${sculpture}</svg>
 </svg>`;
 }
+
+/** O provedor recebe o rótulo do tipo ("Busto"); a ilustração pede o id. */
+const poseId = (label: string) => (/busto/i.test(label) ? "busto" : /pose|foto/i.test(label) ? "na-pose" : "sentado");
 
 // ───────── STL de teste: base cilíndrica + dois "gomos" esféricos ─────────
 

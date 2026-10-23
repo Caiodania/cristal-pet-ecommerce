@@ -8,13 +8,17 @@ import type {
   AdminOrderDto,
   AdminOrderSummaryDto,
   AdminStatsDto,
+  AdminUserDto,
   ApiErrorBody,
+  AuthResultDto,
   ConfigDto,
   ItemConfig,
   ModelDto,
+  MyOrderDto,
   OrderDto,
   OrderStatus,
   PreviewDto,
+  SessionDto,
 } from "./tipos";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -84,17 +88,34 @@ const q = (params: Record<string, string | number | undefined>) => {
 export const api = {
   config: () => request<ConfigDto>("GET", "/api/config"),
 
-  createPreview: (input: { sessionId: string; options: ItemConfig; turnstileToken?: string }) =>
+  // ───────── Conta do cliente ─────────
+  auth: {
+    me: () => request<SessionDto>("GET", "/api/auth/me"),
+    signup: (input: { name: string; email: string; password: string; turnstileToken?: string }) =>
+      request<AuthResultDto>("POST", "/api/auth/signup", { json: input }),
+    login: (input: { email: string; password: string }) =>
+      request<AuthResultDto>("POST", "/api/auth/login", { json: input }),
+    logout: () => request<{ ok: true }>("POST", "/api/auth/logout", { json: {} }),
+    forgot: (input: { email: string; turnstileToken?: string }) =>
+      request<{ ok: true }>("POST", "/api/auth/forgot", { json: input }),
+    resend: (email: string) => request<{ ok: true }>("POST", "/api/auth/resend", { json: { email } }),
+    /** O token do link do e-mail de confirmação (ou do retorno do Google). */
+    confirm: (accessToken: string) => request<AuthResultDto>("POST", "/api/auth/confirm", { json: { accessToken } }),
+    reset: (input: { accessToken: string; password: string }) =>
+      request<AuthResultDto>("POST", "/api/auth/reset", { json: input }),
+  },
+  myOrders: () => request<{ orders: MyOrderDto[] }>("GET", "/api/me/orders"),
+
+  createPreview: (input: { options: ItemConfig }) =>
     request<PreviewDto>("POST", "/api/previews", { json: input }),
   uploadPhoto: (id: string, photo: Blob) =>
     request<PreviewDto>("PUT", `/api/previews/${id}/photo`, { body: photo, timeoutMs: 60_000 }),
   startPreview: (id: string) => request<PreviewDto>("POST", `/api/previews/${id}/start`, { json: {} }),
   getPreview: (id: string) => request<PreviewDto>("GET", `/api/previews/${id}`),
-  regeneratePreview: (id: string, input: { sessionId: string; options?: ItemConfig; turnstileToken?: string }) =>
+  regeneratePreview: (id: string, input: { options?: ItemConfig }) =>
     request<PreviewDto>("POST", `/api/previews/${id}/regenerate`, { json: input }),
 
   createOrder: (input: {
-    sessionId: string;
     previewIds: string[];
     customer: { name: string; phone?: string; city?: string; notes?: string };
     consent: boolean;
@@ -113,6 +134,10 @@ export const api = {
         `/api/admin/orders${q(params)}`,
       ),
     order: (id: string) => request<AdminOrderDto>("GET", `/api/admin/orders/${id}`),
+    users: (params: { q?: string; page?: number }) =>
+      request<{ users: AdminUserDto[]; total: number; pageSize: number }>("GET", `/api/admin/users${q(params)}`),
+    grantPreviews: (id: string, bonusPreviews: number) =>
+      request<AdminUserDto>("PATCH", `/api/admin/users/${id}`, { json: { bonusPreviews } }),
     updateOrder: (id: string, patch: { status?: OrderStatus; note?: string; adminNotes?: string }) =>
       request<AdminOrderDto>("PATCH", `/api/admin/orders/${id}`, { json: patch }),
     startModel: (id: string, itemId: string) =>

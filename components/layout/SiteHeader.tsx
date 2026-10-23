@@ -2,14 +2,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { images } from "@/content/images";
 import { nav, site } from "@/content/site";
+import { AccountMenu } from "@/components/conta/AccountMenu";
 import { CartLink } from "./CartLink";
+import { CreateButton } from "@/components/ui/CtaButtons";
 import { MobileMenu } from "./MobileMenu";
 import { NavLink } from "./NavLink";
 
 /**
- * Cabeçalho fixo no topo: fundo creme a 90% com desfoque, sem botão de ação
- * (os CTAs ficam nas seções, um por dobra). No desktop mostra o menu, "Meus
- * pedidos" e o carrinho; no celular, o logo, o carrinho e o menu em popover.
+ * Cabeçalho fixo no topo: fundo creme a 90% com desfoque. No desktop mostra o
+ * menu (a partir de lg), a conta ("Faça login" ou o menu "Minha conta"), o carrinho
+ * e, em tela larga (xl), "Meus pedidos" e o botão "Criar escultura"; no celular e
+ * no tablet, o logo, a conta, o carrinho e o menu em popover (o "Criar" fica na
+ * barra de abas de baixo).
  */
 export function SiteHeader() {
   return (
@@ -22,21 +26,21 @@ export function SiteHeader() {
             width={images.logo.width}
             height={images.logo.height}
             priority
-            className="size-11"
+            className="size-12 md:size-14"
           />
-          <span className="font-display text-lg font-semibold leading-none">
-            Cristal Pet <span className="font-normal italic text-teal-deep">Esculturas</span>
+          <span className="font-display text-lg font-extrabold leading-none">
+            Cristal Pet <span className="text-magenta">Esculturas</span>
             <span className="sr-only"> — {site.tagline}</span>
           </span>
         </Link>
 
-        <nav aria-label="Principal" className="hidden md:block">
+        <nav aria-label="Principal" className="hidden lg:block">
           <ul className="flex items-center gap-1">
             {nav.map((item) => (
               <li key={item.href}>
                 <NavLink
                   href={item.href}
-                  className="inline-flex min-h-11 items-center rounded-full px-4 text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-sand hover:text-ink"
+                  className="inline-flex min-h-11 items-center rounded-full px-4 whitespace-nowrap text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-sand hover:text-ink"
                   activeClassName="bg-sand text-ink"
                 >
                   {item.label}
@@ -49,12 +53,17 @@ export function SiteHeader() {
         <div className="flex items-center gap-1">
           <NavLink
             href="/meus-pedidos"
-            className="hidden min-h-11 items-center rounded-full px-4 text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-sand hover:text-ink md:inline-flex"
+            className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-4 text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-sand hover:text-ink xl:inline-flex"
             activeClassName="bg-sand text-ink"
           >
             Meus pedidos
           </NavLink>
+          <AccountMenu />
           <CartLink />
+          {/* num wrapper: "hidden" no próprio botão perde para o inline-flex dele */}
+          <div className="ml-1 hidden xl:block">
+            <CreateButton size="sm">Criar escultura</CreateButton>
+          </div>
           <MobileMenu />
         </div>
       </div>

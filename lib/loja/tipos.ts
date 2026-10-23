@@ -85,8 +85,60 @@ export type PreviewDto = {
   /** Código curto do problema, quando falhou ou foi recusada. */
   errorCode?: string;
   errorMessage?: string;
-  /** Quantas prévias ainda restam hoje para este visitante. */
+  /** Quantas prévias ainda restam nesta conta. */
   remaining?: number;
+};
+
+// ───────── Conta do cliente ─────────
+
+export type AccountDto = {
+  id: string;
+  email: string;
+  name?: string;
+  emailVerified: boolean;
+};
+
+/** Cota de prévias da conta (o limite padrão mais o que o dono liberou). */
+export type QuotaDto = {
+  limit: number;
+  used: number;
+  remaining: number;
+};
+
+/** `GET /api/auth/me`: quem está logado (ou ninguém) e a cota. */
+export type SessionDto = {
+  user: AccountDto | null;
+  quota?: QuotaDto;
+};
+
+/** Resposta de cadastro e de login. `needsVerification`: falta confirmar o e-mail. */
+export type AuthResultDto = {
+  user: AccountDto | null;
+  quota?: QuotaDto;
+  needsVerification: boolean;
+};
+
+/** Pedido na lista de "Meus pedidos" da conta (leva o token do link de acompanhamento). */
+export type MyOrderDto = {
+  code: string;
+  token: string;
+  status: OrderStatus;
+  createdAt: string;
+  itemCount: number;
+  estimateCents: number | null;
+};
+
+export type AdminUserDto = {
+  id: string;
+  email: string;
+  name?: string;
+  createdAt: string;
+  lastLoginAt?: string;
+  previewsUsed: number;
+  /** Limite padrão + bônus. */
+  previewsLimit: number;
+  bonusPreviews: number;
+  orderCount: number;
 };
 
 export type OrderEventDto = {
@@ -138,6 +190,8 @@ export type AdminOrderItemDto = OrderItemDto & {
 /** Visão do dono: tudo. */
 export type AdminOrderDto = Omit<OrderDto, "items"> & {
   id: string;
+  /** E-mail da conta que fez o pedido. */
+  accountEmail?: string;
   customerPhone?: string;
   notes?: string;
   adminNotes?: string;
@@ -168,8 +222,11 @@ export type ConfigDto = {
   mode: "demo" | "live";
   imageProvider: { name: string; mode: "mock" | "live" };
   modelProvider: { name: string; mode: "mock" | "live" };
-  previewsPerDay: number;
+  /** Quantas prévias cada conta pode gerar (o dono pode liberar mais a uma conta). */
+  previewsPerAccount: number;
   turnstileSiteKey?: string;
+  /** Endereço para entrar com Google (só aparece se estiver ligado). */
+  googleLoginUrl?: string;
   catalogVersion: string;
 };
 

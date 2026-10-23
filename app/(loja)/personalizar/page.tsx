@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Configurator } from "@/components/store/Configurator";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Accent, Section } from "@/components/ui/Section";
 import { Loading } from "@/components/ui/Status";
-import { Accent, Section, SectionHeader } from "@/components/ui/Section";
 
 export const metadata: Metadata = {
   title: "Criar minha escultura",
@@ -14,24 +15,20 @@ export const metadata: Metadata = {
 export default function PersonalizarPage() {
   return (
     <main id="conteudo">
-      <Section tone="cream" labelledBy="personalizar-titulo">
-        <SectionHeader
-          as="h1"
-          align="start"
-          titleId="personalizar-titulo"
-          title={
-            <>
-              Crie a sua <Accent>escultura</Accent>
-            </>
-          }
-          description="Seis passos rápidos. Você vê a prévia antes de pedir."
-        />
-        <div className="mt-10">
-          {/* useSearchParams (tamanho já escolhido na vitrine) exige Suspense no export estático */}
-          <Suspense fallback={<Loading>Carregando…</Loading>}>
-            <Configurator />
-          </Suspense>
-        </div>
+      <PageHeader
+        titleId="personalizar-titulo"
+        title={
+          <>
+            Crie a sua <Accent>escultura</Accent>
+          </>
+        }
+        description="Seis passos rápidos. Você vê a prévia antes de pedir."
+      />
+      <Section tone="cream" className="pt-6!">
+        {/* useSearchParams (tamanho já escolhido na vitrine) exige Suspense no export estático */}
+        <Suspense fallback={<Loading>Carregando…</Loading>}>
+          <Configurator />
+        </Suspense>
       </Section>
     </main>
   );

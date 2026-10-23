@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import { Alert, Loading } from "@/components/ui/Status";
-import { CameraIcon, UploadIcon } from "@/components/ui/icons";
+import { CameraIcon, CheckIcon, UploadIcon } from "@/components/ui/icons";
 import { photoTips } from "@/content/estatua";
 import { cn } from "@/lib/cn";
 import { PhotoError, preparePhoto } from "@/lib/loja/imagem";
@@ -12,13 +12,15 @@ export type ChosenPhoto = { blob: Blob; url: string; name: string };
 type PhotoDropzoneProps = {
   photo: ChosenPhoto | null;
   onChange: (photo: ChosenPhoto | null) => void;
+  /** Nome do pet, para personalizar o título. */
+  petName?: string;
 };
 
 /**
  * Escolha da foto: botão (abre galeria ou câmera) ou arrastar e soltar. A foto é
  * reduzida e recodificada aqui mesmo, no navegador, antes de qualquer envio.
  */
-export function PhotoDropzone({ photo, onChange }: PhotoDropzoneProps) {
+export function PhotoDropzone({ photo, onChange, petName }: PhotoDropzoneProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -41,16 +43,25 @@ export function PhotoDropzone({ photo, onChange }: PhotoDropzoneProps) {
   }
 
   return (
-    <div className="grid gap-4">
-      <h2 className="font-display text-2xl font-medium">Envie a foto do seu pet</h2>
-      <ul className="grid gap-2 text-ink-soft sm:grid-cols-2">
-        {photoTips.map((tip) => (
-          <li key={tip} className="flex items-start gap-2">
-            <CameraIcon className="mt-1 shrink-0 text-teal-deep" />
-            {tip}
-          </li>
-        ))}
-      </ul>
+    <div className="grid gap-5">
+      <div>
+        <h2 className="font-display text-2xl font-extrabold sm:text-3xl">
+          {petName ? `Envie uma foto de ${petName}` : "Envie a foto do seu pet"}
+        </h2>
+        <p className="mt-1 text-ink-soft">A prévia fica pronta em instantes e você só pede se gostar.</p>
+      </div>
+
+      <div className="rounded-card border border-teal/50 bg-teal-mist p-4 sm:p-5">
+        <p className="font-display font-extrabold">Dicas para uma escultura mais fiel</p>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          {photoTips.map((tip) => (
+            <li key={tip} className="flex items-start gap-2 text-sm">
+              <CheckIcon className="mt-0.5 shrink-0 text-base text-teal-deep" />
+              {tip}
+            </li>
+          ))}
+        </ul>
+      </div>
 
       <div
         onDragOver={(e) => {
@@ -64,9 +75,9 @@ export function PhotoDropzone({ photo, onChange }: PhotoDropzoneProps) {
           void handleFile(e.dataTransfer.files[0]);
         }}
         className={cn(
-          "grid place-items-center gap-4 rounded-card border-2 border-dashed p-6 text-center transition-colors",
-          "has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-teal-deep",
-          dragging ? "border-teal-deep bg-teal-mist" : "border-field bg-white",
+          "grid place-items-center gap-4 rounded-card border-2 border-dashed p-6 text-center transition-colors sm:p-8",
+          "has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-magenta",
+          dragging ? "border-magenta bg-magenta/5" : "border-magenta/50 bg-white",
         )}
       >
         <input
@@ -85,7 +96,7 @@ export function PhotoDropzone({ photo, onChange }: PhotoDropzoneProps) {
             <img
               src={photo.url}
               alt="A foto que você escolheu"
-              className="max-h-72 w-auto max-w-full rounded-soft object-contain shadow-soft"
+              className="max-h-80 w-auto max-w-full -rotate-1 rounded-soft border-4 border-white object-contain shadow-lift"
             />
             <p className="text-sm text-ink-soft">{photo.name}</p>
             <label
@@ -97,14 +108,19 @@ export function PhotoDropzone({ photo, onChange }: PhotoDropzoneProps) {
           </>
         ) : (
           <>
-            <UploadIcon className="text-5xl text-teal-deep" />
+            <span className="grid size-20 place-items-center rounded-full bg-magenta/10 text-magenta">
+              <UploadIcon className="text-4xl" />
+            </span>
+            <div>
+              <p className="font-display text-lg font-extrabold">Toque para enviar a foto</p>
+              <p className="mt-1 text-sm text-ink-soft">ou arraste e solte aqui. JPG, PNG ou WebP.</p>
+            </div>
             <label
               htmlFor={inputId}
-              className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-ink px-7 font-semibold text-cream hover:bg-ink/85"
+              className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-magenta px-7 font-semibold text-white shadow-soft hover:brightness-110 hover:shadow-lift"
             >
-              Escolher foto
+              <CameraIcon /> Escolher foto
             </label>
-            <p className="text-sm text-ink-soft">ou arraste e solte aqui. JPG, PNG ou WebP.</p>
           </>
         )}
       </div>

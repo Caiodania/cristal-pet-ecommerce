@@ -7,16 +7,16 @@ import { estimate, formatCents, priceItem } from "./estimativa";
 const priced: Catalog = {
   version: "teste",
   sizes: [
-    { id: "p", label: "P", cm: 10, priceCents: 10000 },
-    { id: "g", label: "G", cm: 20, priceCents: 20000 },
-    { id: "sem-preco", label: "?", cm: null, priceCents: null },
+    { id: "p", label: "P", blurb: "", scale: 0.5, cm: 10, priceCents: 10000 },
+    { id: "g", label: "G", blurb: "", scale: 1, cm: 20, priceCents: 20000 },
+    { id: "sem-preco", label: "?", blurb: "", scale: 1, cm: null, priceCents: null },
   ],
   poses: [
-    { id: "a", label: "A", priceDeltaCents: 0 },
-    { id: "b", label: "B", priceDeltaCents: 1500 },
-    { id: "c", label: "C", priceDeltaCents: null },
+    { id: "a", label: "A", description: "", priceDeltaCents: 0 },
+    { id: "b", label: "B", description: "", priceDeltaCents: 1500 },
+    { id: "c", label: "C", description: "", priceDeltaCents: null },
   ],
-  colors: [{ id: "x", label: "X", swatch: "#000000" }],
+  colors: [{ id: "x", label: "X", description: "", swatch: "#000000" }],
   secondPieceDiscountPct: null,
 };
 

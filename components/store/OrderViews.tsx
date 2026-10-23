@@ -8,11 +8,13 @@ import { Card } from "@/components/ui/Card";
 import { CreateButton } from "@/components/ui/CtaButtons";
 import { Alert, Loading, StatusBadge, Timeline, formatDateTime } from "@/components/ui/Status";
 import { catalog } from "@/content/estatua";
+import { LoginPrompt } from "@/components/conta/LoginPrompt";
 import { ApiError, api, fileUrl } from "@/lib/loja/api";
+import { useAccount } from "@/lib/loja/conta";
 import { useOrderHistory, type OrderRef } from "@/lib/loja/carrinho";
 import { formatCents } from "@/lib/loja/estimativa";
 import { orderSupportUrl } from "@/lib/loja/pedido-whatsapp";
-import type { OrderDto } from "@/lib/loja/tipos";
+import type { MyOrderDto, OrderDto } from "@/lib/loja/tipos";
 
 const labelOf = <T extends { id: string; label: string }>(list: T[], id: string) =>
   list.find((item) => item.id === id)?.label ?? id;
@@ -100,7 +102,7 @@ export function OrderView() {
                 ) : null}
               </div>
               <div className="grid content-start gap-1">
-                <h3 className="font-display text-xl font-medium">
+                <h3 className="font-display text-xl font-extrabold">
                   {item.petName ? `Escultura de ${item.petName}` : "Escultura do seu pet"}
                 </h3>
                 <p className="text-ink-soft">
@@ -123,10 +125,10 @@ export function OrderView() {
       <aside className="grid gap-6 rounded-card border border-line bg-white p-5 shadow-soft sm:p-6">
         <div>
           <p className="text-sm text-ink-soft">Pedido</p>
-          <p className="font-display text-3xl font-medium text-teal-deep">{o.code}</p>
+          <p className="font-display text-3xl font-extrabold text-teal-deep">{o.code}</p>
         </div>
         <div>
-          <h2 className="mb-3 font-display text-xl font-medium">Andamento</h2>
+          <h2 className="mb-3 font-display text-xl font-extrabold">Andamento</h2>
           <Timeline events={o.timeline} audience="customer" />
         </div>
         <Button href={orderSupportUrl(o.code)} variant="secondary" size="md">
@@ -144,7 +146,7 @@ function OrderRow({ order: ref }: { order: OrderRef }) {
   return (
     <Card as="li" className="flex flex-wrap items-center justify-between gap-4">
       <div className="grid gap-1">
-        <p className="font-display text-2xl font-medium text-teal-deep">{ref.code}</p>
+        <p className="font-display text-2xl font-extrabold text-teal-deep">{ref.code}</p>
         <p className="text-sm text-ink-soft">
           {formatDateTime(ref.createdAt)} · {ref.itemCount} {ref.itemCount === 1 ? "escultura" : "esculturas"}
           {loaded.state === "ok" && ` · ${formatCents(loaded.order.estimateCents)}`}
@@ -162,35 +164,114 @@ function OrderRow({ order: ref }: { order: OrderRef }) {
   );
 }
 
-export function MyOrders() {
-  const { orders } = useOrderHistory();
-
-  if (orders.length === 0) {
-    return (
-      <div className="mx-auto grid max-w-md justify-items-center gap-4 text-center">
-        <p className="font-display text-2xl font-medium">Nenhum pedido neste aparelho</p>
-        <p className="text-ink-soft">
-          Os pedidos que você enviar ficam aqui. Se fez o pedido em outro aparelho, abra o link que recebeu e ele
-          aparece neste também.
-        </p>
-        <CreateButton />
-      </div>
-    );
-  }
+/** Pedido da lista da conta: o servidor já manda o status, então não há uma consulta por pedido. */
+function AccountOrderRow({ order }: { order: MyOrderDto }) {
   return (
-    <div className="grid gap-6">
-      <ul className="grid gap-4" aria-label="Seus pedidos">
-        {orders.map((order) => (
-          <OrderRow key={order.code} order={order} />
-        ))}
-      </ul>
-      <p className="text-sm text-ink-soft">
-        Estes são os pedidos feitos neste aparelho. Para tirar dúvidas, fale com a gente pelo{" "}
-        <Link href="/contato" className="font-semibold text-teal-deep underline underline-offset-4">
-          contato
-        </Link>
-        .
-      </p>
+    <Card as="li" className="flex flex-wrap items-center justify-between gap-4">
+      <div className="grid gap-1">
+        <p className="font-display text-2xl font-extrabold text-teal-deep">{order.code}</p>
+        <p className="text-sm text-ink-soft">
+          {formatDateTime(order.createdAt)} · {order.itemCount} {order.itemCount === 1 ? "escultura" : "esculturas"} ·{" "}
+          {formatCents(order.estimateCents)}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <StatusBadge status={order.status} audience="customer" />
+        <Button href={`/pedido?c=${order.code}&t=${order.token}`} size="sm" variant="secondary">
+          Ver o pedido<span className="sr-only"> {order.code}</span>
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
+type Mine = { state: "loading" } | { state: "ok"; orders: MyOrderDto[] } | { state: "error"; message: string };
+
+export function MyOrders() {
+  const { status, user } = useAccount();
+  const { orders: local } = useOrderHistory();
+  const [mine, setMine] = useState<Mine & { for?: string }>({ state: "loading" });
+  const userId = user?.id;
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    api
+      .myOrders()
+      .then(({ orders }) => active && setMine({ state: "ok", orders, for: userId }))
+      .catch(
+        (error) =>
+          active &&
+          setMine({
+            state: "error",
+            message: error instanceof ApiError ? error.message : "Não foi possível carregar os seus pedidos.",
+            for: userId,
+          }),
+      );
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
+  if (status === "loading") return <Loading>Carregando os seus pedidos…</Loading>;
+
+  // pedidos que só existem neste aparelho (feitos antes de a conta existir): continuam acessíveis
+  const serverCodes = new Set(mine.state === "ok" ? mine.orders.map((o) => o.code) : []);
+  const localOnly = local.filter((o) => !serverCodes.has(o.code));
+
+  const list =
+    user && mine.state === "ok" && mine.for === userId ? mine.orders : [];
+  const nothing = list.length === 0 && localOnly.length === 0;
+
+  return (
+    <div className="grid gap-8">
+      {!user && (
+        <LoginPrompt
+          title="Entre para ver os seus pedidos"
+          text="Os pedidos ficam na sua conta e aparecem em qualquer aparelho. Se você tem o link de um pedido (o que enviamos no WhatsApp), ele abre direto, sem login."
+          className="mx-auto w-full max-w-2xl"
+        />
+      )}
+
+      {user && (mine.state === "loading" || mine.for !== userId) && <Loading>Carregando os seus pedidos…</Loading>}
+      {user && mine.state === "error" && mine.for === userId && <Alert>{mine.message}</Alert>}
+
+      {list.length > 0 && (
+        <ul className="grid gap-4" aria-label="Seus pedidos">
+          {list.map((order) => (
+            <AccountOrderRow key={order.code} order={order} />
+          ))}
+        </ul>
+      )}
+
+      {localOnly.length > 0 && (
+        <div className="grid gap-4">
+          <h2 className="font-display text-xl font-extrabold">Pedidos guardados neste aparelho</h2>
+          <ul className="grid gap-4" aria-label="Pedidos guardados neste aparelho">
+            {localOnly.map((order) => (
+              <OrderRow key={order.code} order={order} />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {user && mine.state === "ok" && mine.for === userId && nothing && (
+        <div className="mx-auto grid max-w-md justify-items-center gap-4 text-center">
+          <p className="font-display text-2xl font-extrabold">Você ainda não fez nenhum pedido</p>
+          <p className="text-ink-soft">Os pedidos que você enviar ficam aqui, na sua conta.</p>
+          <CreateButton />
+        </div>
+      )}
+
+      {user && (
+        <p className="text-sm text-ink-soft">
+          Para tirar dúvidas, fale com a gente pelo{" "}
+          <Link href="/contato" className="font-semibold text-teal-deep underline underline-offset-4">
+            contato
+          </Link>
+          .
+        </p>
+      )}
     </div>
   );
 }

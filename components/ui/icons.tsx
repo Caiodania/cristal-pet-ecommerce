@@ -99,6 +99,16 @@ export function BagIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+/** Pessoa: a conta. */
+export function UserIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7" />
+    </Icon>
+  );
+}
+
 /** Recibo: os pedidos. */
 export function ReceiptIcon(props: SVGProps<SVGSVGElement>) {
   return (

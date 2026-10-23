@@ -7,6 +7,8 @@ type CardProps = {
   tone?: "white" | "sand" | "ink";
   /** Sobe levemente ao passar o mouse; use em cards que são links. */
   interactive?: boolean;
+  /** Inclinação leve (cartões "soltos" da marca); só a partir do tablet e volta ao passar o mouse. */
+  tilt?: "left" | "right";
   /** false = sem padding (card com imagem até a borda). */
   padded?: boolean;
   className?: string;
@@ -23,6 +25,7 @@ export function Card({
   as: Component = "div",
   tone = "white",
   interactive = false,
+  tilt,
   padded = true,
   className,
   children,
@@ -35,6 +38,8 @@ export function Card({
         "overflow-hidden rounded-card border border-line shadow-soft",
         tones[tone],
         padded && "p-6 sm:p-8",
+        tilt === "left" && "shadow-lift transition-transform md:-rotate-2 md:hover:rotate-0",
+        tilt === "right" && "shadow-lift transition-transform md:rotate-2 md:hover:rotate-0",
         interactive &&
           "transition-[box-shadow,translate] motion-safe:duration-300 " +
             "hover:shadow-lift motion-safe:hover:-translate-y-1",

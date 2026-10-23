@@ -68,6 +68,49 @@ export function parseCustomer(raw: unknown): Customer {
   };
 }
 
+// ───────── Conta ─────────
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** E-mail em minúsculas e sem espaços nas pontas. */
+export function parseEmail(value: unknown): string {
+  const email = typeof value === "string" ? value.trim().toLowerCase() : "";
+  if (!email || email.length > 254 || !EMAIL.test(email)) throw bad("Informe um e-mail válido.");
+  return email;
+}
+
+// As senhas mais usadas no Brasil e no mundo: recusadas mesmo com 8 caracteres.
+const COMMON_PASSWORDS = new Set([
+  "12345678",
+  "123456789",
+  "1234567890",
+  "senha123",
+  "senha1234",
+  "password",
+  "password1",
+  "qwertyui",
+  "qwerty123",
+  "11111111",
+  "abc12345",
+  "brasil123",
+  "mudar123",
+]);
+
+/** Senha: de 8 a 72 caracteres (72 é o limite do bcrypt, usado pelo Supabase), com letra e sem ser das óbvias. */
+export function parsePassword(value: unknown): string {
+  if (typeof value !== "string" || value.length < 8) throw bad("A senha precisa ter pelo menos 8 caracteres.");
+  if (value.length > 72) throw bad("A senha pode ter no máximo 72 caracteres.");
+  if (!/\p{L}/u.test(value)) throw bad("Misture letras na senha: só números é fácil de adivinhar.");
+  if (COMMON_PASSWORDS.has(value.toLowerCase())) throw bad("Esta senha é muito comum. Escolha outra.");
+  return value;
+}
+
+export function parseAccountName(value: unknown): string {
+  const name = cleanText(value, 60);
+  if (!name || name.length < 2) throw bad("Informe o seu nome.");
+  return name;
+}
+
 export type ImageKind = { ext: "jpg" | "png" | "webp"; contentType: string };
 
 /** Identifica a imagem pelos primeiros bytes (não confia no que o navegador diz). */

@@ -1,5 +1,6 @@
 // Armazenamento no Supabase (Postgres). Usa a chave de SERVIÇO: só roda no
-// servidor. As tabelas e funções estão em supabase/migrations/0001_init.sql.
+// servidor. As tabelas e funções estão em supabase/migrations/0001_init.sql
+// (pedidos e prévias) e 0002_contas.sql (contas, sessões e a cota de prévias).
 //
 // STATUS: escrito conforme a migration, mas NÃO testado contra um projeto
 // Supabase real (ainda não há projeto). Quando houver, rode a verificação do
@@ -8,13 +9,16 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { ORDER_STATUSES, type OrderStatus } from "../../lib/loja/tipos";
 import { HttpError } from "../http";
-import type {
-  NewOrder,
-  NewPreview,
-  OrderListFilter,
-  OrderRecord,
-  PreviewRecord,
-  Store,
+import {
+  QuotaExceededError,
+  type NewOrder,
+  type NewPreview,
+  type OrderListFilter,
+  type OrderRecord,
+  type PreviewRecord,
+  type ProfileRecord,
+  type SessionRecord,
+  type Store,
 } from "./types";
 
 type Row = Record<string, unknown>;
@@ -25,7 +29,7 @@ function toPreview(r: Row): PreviewRecord {
   return {
     id: r.id as string,
     publicId: r.public_id as string,
-    sessionId: r.session_id as string,
+    userId: (r.user_id as string | null) ?? "",
     ipHash: r.ip_hash as string,
     status: r.status as PreviewRecord["status"],
     options: r.options as PreviewRecord["options"],
@@ -73,6 +77,17 @@ const PREVIEW_COLUMNS: Record<string, string> = {
   modelCostCents: "model_cost_cents",
 };
 
+function toProfile(r: Row): ProfileRecord {
+  return {
+    id: r.id as string,
+    email: r.email as string,
+    name: opt(r.name),
+    bonusPreviews: (r.bonus_previews as number) ?? 0,
+    createdAt: r.created_at as string,
+    lastLoginAt: opt(r.last_login_at),
+  };
+}
+
 function toOrder(r: Row): OrderRecord {
   const items = ((r.order_items as Row[] | null) ?? []).map((i) => ({
     id: i.id as string,
@@ -94,6 +109,7 @@ function toOrder(r: Row): OrderRecord {
   return {
     id: r.id as string,
     code: r.code as string,
+    userId: opt(r.user_id),
     viewToken: r.view_token as string,
     status: r.status as OrderStatus,
     customerName: opt(r.customer_name),
@@ -132,22 +148,161 @@ export function createSupabaseStore(url: string, serviceKey: string): Store {
   return {
     kind: "supabase",
 
-    async createPreview(input: NewPreview) {
+    // ───────── Contas ─────────
+
+    async upsertProfile({ id, email, name }) {
+      // o gatilho do Auth já cria o perfil; isto garante e mantém e-mail e nome em dia
       const { data, error } = await db
-        .from("previews")
-        .insert({
+        .from("profiles")
+        .upsert({ id, email, ...(name ? { name } : {}) }, { onConflict: "id" })
+        .select()
+        .single();
+      if (error) fail("gravar conta", error);
+      return toProfile(data as Row);
+    },
+
+    async getProfile(id) {
+      const { data, error } = await db.from("profiles").select().eq("id", id).maybeSingle();
+      if (error) fail("buscar conta", error);
+      return data ? toProfile(data as Row) : null;
+    },
+
+    async touchLogin(id) {
+      const { error } = await db.from("profiles").update({ last_login_at: new Date().toISOString() }).eq("id", id);
+      if (error) fail("registrar login", error);
+    },
+
+    async setBonusPreviews(id, bonus) {
+      const { data, error } = await db
+        .from("profiles")
+        .update({ bonus_previews: Math.max(0, Math.floor(bonus)) })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) fail("liberar prévias", error);
+      return toProfile(data as Row);
+    },
+
+    async listProfiles({ q, limit, offset }) {
+      let query = db
+        .from("profiles")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+      // só letras, números, espaço, ponto, arroba, hífen e + (evita quebrar o filtro .or)
+      const needle = q?.replace(/[^\p{L}\p{N} .@+_-]/gu, "").trim();
+      if (needle) query = query.or(`email.ilike.%${needle}%,name.ilike.%${needle}%`);
+      const { data, count, error } = await query;
+      if (error) fail("listar contas", error);
+      const profiles = (data as Row[]).map(toProfile);
+      const ids = profiles.map((p) => p.id);
+      const used = new Map<string, number>();
+      const orderCount = new Map<string, number>();
+      if (ids.length) {
+        const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+        const [previewRows, orderRows] = await Promise.all([
+          db.from("previews").select("user_id, status, created_at").in("user_id", ids),
+          db.from("orders").select("user_id").in("user_id", ids),
+        ]);
+        if (previewRows.error) fail("contar prévias das contas", previewRows.error);
+        if (orderRows.error) fail("contar pedidos das contas", orderRows.error);
+        for (const row of (previewRows.data ?? []) as Row[]) {
+          const counts =
+            ["ready", "generating", "expired"].includes(row.status as string) ||
+            (row.status === "queued" && (row.created_at as string) > since);
+          if (counts) used.set(row.user_id as string, (used.get(row.user_id as string) ?? 0) + 1);
+        }
+        for (const row of (orderRows.data ?? []) as Row[]) {
+          orderCount.set(row.user_id as string, (orderCount.get(row.user_id as string) ?? 0) + 1);
+        }
+      }
+      return {
+        rows: profiles.map((p) => ({ ...p, previewsUsed: used.get(p.id) ?? 0, orderCount: orderCount.get(p.id) ?? 0 })),
+        total: count ?? 0,
+      };
+    },
+
+    // ───────── Sessões ─────────
+
+    async createSession(session: SessionRecord) {
+      const { error } = await db.from("customer_sessions").insert({
+        token_hash: session.tokenHash,
+        user_id: session.userId,
+        created_at: session.createdAt,
+        expires_at: session.expiresAt,
+      });
+      if (error) fail("criar sessão", error);
+    },
+
+    async getSession(tokenHash) {
+      const { data, error } = await db.from("customer_sessions").select().eq("token_hash", tokenHash).maybeSingle();
+      if (error) fail("buscar sessão", error);
+      if (!data) return null;
+      const r = data as Row;
+      return {
+        tokenHash: r.token_hash as string,
+        userId: r.user_id as string,
+        createdAt: r.created_at as string,
+        expiresAt: r.expires_at as string,
+      };
+    },
+
+    async deleteSession(tokenHash) {
+      const { error } = await db.from("customer_sessions").delete().eq("token_hash", tokenHash);
+      if (error) fail("encerrar sessão", error);
+    },
+
+    async deleteUserSessions(userId) {
+      const { error } = await db.from("customer_sessions").delete().eq("user_id", userId);
+      if (error) fail("encerrar sessões da conta", error);
+    },
+
+    async deleteExpiredSessions() {
+      const { data, error } = await db
+        .from("customer_sessions")
+        .delete()
+        .lte("expires_at", new Date().toISOString())
+        .select("token_hash");
+      if (error) fail("limpar sessões", error);
+      return (data ?? []).length;
+    },
+
+    // ───────── Prévias ─────────
+
+    async reservePreview(input: NewPreview, limit: number) {
+      const { data, error } = await db.rpc("reserve_preview", {
+        p_preview: {
           public_id: input.publicId,
-          session_id: input.sessionId,
+          user_id: input.userId,
           ip_hash: input.ipHash,
           options: input.options,
           image_provider: input.imageProvider,
           photo_path: input.photoPath ?? null,
           photo_content_type: input.photoContentType ?? null,
-        })
-        .select()
-        .single();
-      if (error) fail("criar prévia", error);
-      return toPreview(data as Row);
+        },
+        p_limit: limit,
+      });
+      if (error) {
+        if (error.message?.includes("quota_exceeded")) {
+          const [used, allowed] = String((error as { details?: string }).details ?? "").split("/").map(Number);
+          throw new QuotaExceededError(Number.isFinite(used) ? used : limit, Number.isFinite(allowed) ? allowed : limit);
+        }
+        fail("criar prévia", error);
+      }
+      const { data: row, error: readError } = await db.from("previews").select().eq("id", data as string).single();
+      if (readError) fail("ler a prévia criada", readError);
+      return toPreview(row as Row);
+    },
+
+    async countUserPreviews(userId) {
+      const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count, error } = await db
+        .from("previews")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .or(`status.in.(ready,generating,expired),and(status.eq.queued,created_at.gt.${since})`);
+      if (error) fail("contar prévias da conta", error);
+      return count ?? 0;
     },
 
     async getPreview(publicId) {
@@ -178,14 +333,12 @@ export function createSupabaseStore(url: string, serviceKey: string): Store {
       return toPreview(data as Row);
     },
 
-    async countPreviews({ sessionId, ipHash, since }) {
-      let query = db
+    async countPreviews({ ipHash, since }) {
+      const { count, error } = await db
         .from("previews")
         .select("id", { count: "exact", head: true })
-        .gte("created_at", since.toISOString());
-      if (sessionId) query = query.eq("session_id", sessionId);
-      if (ipHash) query = query.eq("ip_hash", ipHash);
-      const { count, error } = await query;
+        .gte("created_at", since.toISOString())
+        .eq("ip_hash", ipHash);
       if (error) fail("contar prévias", error);
       return count ?? 0;
     },
@@ -201,6 +354,7 @@ export function createSupabaseStore(url: string, serviceKey: string): Store {
         p_order: {
           code: input.code,
           view_token: input.viewToken,
+          user_id: input.userId ?? null,
           customer_name: input.customerName ?? null,
           customer_phone: input.customerPhone ?? null,
           city: input.city ?? null,
@@ -251,6 +405,16 @@ export function createSupabaseStore(url: string, serviceKey: string): Store {
       const { data, count, error } = await query;
       if (error) fail("listar pedidos", error);
       return { rows: (data as Row[]).map(toOrder), total: count ?? 0 };
+    },
+
+    async listOrdersByUser(userId) {
+      const { data, error } = await db
+        .from("orders")
+        .select(ORDER_SELECT)
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+      if (error) fail("listar pedidos da conta", error);
+      return (data as Row[]).map(toOrder);
     },
 
     async countOrdersByStatus() {

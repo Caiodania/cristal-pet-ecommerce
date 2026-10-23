@@ -74,7 +74,7 @@ export function Dashboard() {
       <AdminBar />
       <main id="conteudo" className="container-page grid gap-6 py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <h1 className="font-display text-3xl font-medium">Pedidos</h1>
+          <h1 className="font-display text-3xl font-extrabold">Pedidos</h1>
           <Button variant="secondary" size="sm" onClick={() => setRefresh((n) => n + 1)}>
             Atualizar
           </Button>
@@ -225,7 +225,7 @@ function FilterCard({
       )}
     >
       <span className="text-sm font-semibold text-ink-soft">{label}</span>
-      <span className="font-display text-2xl font-medium">{count ?? "–"}</span>
+      <span className="font-display text-2xl font-extrabold">{count ?? "–"}</span>
     </button>
   );
 }

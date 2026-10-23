@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   CUSTOMER,
+  DEFAULT_USER,
   OPTIONS,
   SESSION,
   adminCookie,
@@ -18,7 +19,7 @@ describe("config", () => {
     assert.equal(res.status, 200);
     assert.equal(res.body.mode, "demo");
     assert.equal(res.body.imageProvider.name, "mock");
-    assert.equal(res.body.previewsPerDay, 3);
+    assert.equal(res.body.previewsPerAccount, 3);
   });
 
   it("recusa provedor que não existe, dizendo quais há", () => {
@@ -52,8 +53,8 @@ describe("prévia (foto → imagem da escultura)", () => {
     const id = await readyPreview(ctx, { options: { ...OPTIONS, petName: `<script>alert(1)</script>` } });
     const res = await call(ctx, "GET", `/api/previews/${id}`);
     const svg = await (await call(ctx, "GET", res.body.imageUrl)).raw.text();
-    assert.ok(!svg.includes("<script>"));
-    assert.ok(svg.includes("&lt;script&gt;"));
+    assert.ok(!/<script>/i.test(svg));
+    assert.match(svg, /&lt;script&gt;/i);
   });
 
   it("recusa opções que não existem no catálogo", async () => {
@@ -65,10 +66,12 @@ describe("prévia (foto → imagem da escultura)", () => {
     assert.equal(res.body.error.code, "invalid_input");
   });
 
-  it("recusa sessão inválida", async () => {
+  it("sem login não gera prévia: pede para entrar ou criar a conta", async () => {
     const { ctx } = makeCtx();
-    const res = await call(ctx, "POST", "/api/previews", { json: { sessionId: "x", options: OPTIONS } });
-    assert.equal(res.status, 400);
+    const res = await call(ctx, "POST", "/api/previews", { anonymous: true, json: { options: OPTIONS } });
+    assert.equal(res.status, 401);
+    assert.equal(res.body.error.code, "login_required");
+    assert.match(res.body.error.message, /login|conta/i);
   });
 
   it("valida a foto pelos bytes, não pelo que o navegador diz", async () => {
@@ -101,58 +104,91 @@ describe("prévia (foto → imagem da escultura)", () => {
     assert.equal(second.status, 409);
   });
 
-  it("aplica a cota diária por visitante e conta a que resta", async () => {
-    const { ctx } = makeCtx({ PREVIEWS_PER_DAY: "2" });
-    const first = await call(ctx, "POST", "/api/previews", { json: { sessionId: SESSION, options: OPTIONS } });
+  it("a cota é da CONTA: conta a que resta, bloqueia no limite e não afeta outra conta", async () => {
+    const { ctx } = makeCtx({ PREVIEWS_PER_ACCOUNT: "2" });
+    const first = await call(ctx, "POST", "/api/previews", { json: { options: OPTIONS } });
     assert.equal(first.body.remaining, 1);
-    const second = await call(ctx, "POST", "/api/previews", { json: { sessionId: SESSION, options: OPTIONS } });
+    const second = await call(ctx, "POST", "/api/previews", { json: { options: OPTIONS } });
     assert.equal(second.body.remaining, 0);
-    const third = await call(ctx, "POST", "/api/previews", { json: { sessionId: SESSION, options: OPTIONS } });
-    assert.equal(third.status, 429);
+    const third = await call(ctx, "POST", "/api/previews", { json: { options: OPTIONS } });
+    assert.equal(third.status, 403);
     assert.equal(third.body.error.code, "quota_exceeded");
-    // outro visitante não é afetado
-    const other = await call(ctx, "POST", "/api/previews", {
-      json: { sessionId: "outra-sessao-abcdef123456", options: OPTIONS },
-    });
+    assert.match(third.body.error.message, /2 prévias/);
+    assert.match(third.body.error.message, /WhatsApp/);
+    // outra conta tem a sua própria cota
+    const other = await call(ctx, "POST", "/api/previews", { as: "bia@exemplo.com", json: { options: OPTIONS } });
     assert.equal(other.status, 201);
   });
 
-  it("a cota volta depois de 24 horas", async () => {
-    const { ctx, clock } = makeCtx({ PREVIEWS_PER_DAY: "1" });
-    await call(ctx, "POST", "/api/previews", { json: { sessionId: SESSION, options: OPTIONS } });
-    const blocked = await call(ctx, "POST", "/api/previews", { json: { sessionId: SESSION, options: OPTIONS } });
-    assert.equal(blocked.status, 429);
-    clock.ms += 25 * 60 * 60 * 1000;
-    const again = await call(ctx, "POST", "/api/previews", { json: { sessionId: SESSION, options: OPTIONS } });
-    assert.equal(again.status, 201);
+  it("a cota da conta não volta com o tempo (são 3 prévias no total, não por dia)", async () => {
+    const { ctx, clock } = makeCtx({ PREVIEWS_PER_ACCOUNT: "1", USER_SESSION_TTL_DAYS: "400" });
+    await readyPreview(ctx);
+    clock.ms += 30 * 24 * 60 * 60 * 1000;
+    const blocked = await call(ctx, "POST", "/api/previews", { json: { options: OPTIONS } });
+    assert.equal(blocked.status, 403);
   });
 
-  it("aplica a cota por rede (IP), mesmo trocando de sessão", async () => {
-    const { ctx } = makeCtx({ PREVIEWS_PER_DAY_PER_IP: "2", PREVIEWS_PER_DAY: "10" });
+  it("falha do provedor e foto recusada NÃO gastam a cota", async () => {
+    const { ctx } = makeCtx({ PREVIEWS_PER_ACCOUNT: "1" });
+    // falha do provedor
+    const failed = (await call(ctx, "POST", "/api/previews", { json: { options: { ...OPTIONS, petName: "falhaimg" } } })).body.id;
+    await call(ctx, "PUT", `/api/previews/${failed}/photo`, { body: fakeJpeg() as BodyInit });
+    await call(ctx, "POST", `/api/previews/${failed}/start`);
+    assert.equal((await call(ctx, "GET", `/api/previews/${failed}`)).body.status, "failed");
+    const me = await call(ctx, "GET", "/api/auth/me", { as: DEFAULT_USER });
+    assert.equal(me.body.quota.used, 0);
+    assert.equal(me.body.quota.remaining, 1);
+    // foto recusada
+    const refused = (await call(ctx, "POST", "/api/previews", { json: { options: { ...OPTIONS, petName: "recusar" } } })).body.id;
+    await call(ctx, "PUT", `/api/previews/${refused}/photo`, { body: fakeJpeg() as BodyInit });
+    await call(ctx, "POST", `/api/previews/${refused}/start`);
+    assert.equal((await call(ctx, "GET", `/api/previews/${refused}`)).body.status, "rejected");
+    assert.equal((await call(ctx, "GET", "/api/auth/me", { as: DEFAULT_USER })).body.quota.remaining, 1);
+    // ainda dá para gerar uma de verdade
+    assert.equal((await call(ctx, "POST", "/api/previews", { json: { options: OPTIONS } })).status, 201);
+  });
+
+  it("tentar de novo uma prévia que falhou volta a contar na cota (e respeita o limite)", async () => {
+    const { ctx } = makeCtx({ PREVIEWS_PER_ACCOUNT: "1" });
+    const failed = (await call(ctx, "POST", "/api/previews", { json: { options: { ...OPTIONS, petName: "falhaimg" } } })).body.id;
+    await call(ctx, "PUT", `/api/previews/${failed}/photo`, { body: fakeJpeg() as BodyInit });
+    await call(ctx, "POST", `/api/previews/${failed}/start`);
+    await call(ctx, "GET", `/api/previews/${failed}`); // falhou: não conta
+    await readyPreview(ctx); // a única da cota vai para outra
+    const retry = await call(ctx, "POST", `/api/previews/${failed}/start`);
+    assert.equal(retry.status, 403);
+    assert.equal(retry.body.error.code, "quota_exceeded");
+  });
+
+  it("uma reserva que ficou sem foto por mais de 1 hora libera a vaga", async () => {
+    const { ctx, clock } = makeCtx({ PREVIEWS_PER_ACCOUNT: "1" });
+    assert.equal((await call(ctx, "POST", "/api/previews", { json: { options: OPTIONS } })).status, 201);
+    assert.equal((await call(ctx, "POST", "/api/previews", { json: { options: OPTIONS } })).status, 403);
+    clock.ms += 61 * 60 * 1000;
+    assert.equal((await call(ctx, "POST", "/api/previews", { json: { options: OPTIONS } })).status, 201);
+  });
+
+  it("aplica a cota por rede (IP), mesmo com várias contas na mesma conexão", async () => {
+    const { ctx } = makeCtx({ PREVIEWS_PER_DAY_PER_IP: "2" });
     for (let i = 0; i < 2; i++) {
-      const r = await call(ctx, "POST", "/api/previews", {
-        json: { sessionId: `sessao-numero-${i}-abcdefghij`, options: OPTIONS },
-      });
+      const r = await call(ctx, "POST", "/api/previews", { as: `conta${i}@exemplo.com`, json: { options: OPTIONS } });
       assert.equal(r.status, 201);
     }
-    const blocked = await call(ctx, "POST", "/api/previews", {
-      json: { sessionId: "sessao-numero-9-abcdefghij", options: OPTIONS },
-    });
+    const blocked = await call(ctx, "POST", "/api/previews", { as: "conta9@exemplo.com", json: { options: OPTIONS } });
     assert.equal(blocked.status, 429);
+    assert.match(blocked.body.error.message, /rede/);
   });
 
   it("corta quando o teto diário de gasto com IA é atingido", async () => {
     const { ctx } = makeCtx({ PREVIEW_DAILY_BUDGET_CENTS: "100" });
     // simula um gasto de R$ 1,00 já feito hoje
-    const created = await ctx.store.createPreview({
-      publicId: "gasto-anterior",
-      sessionId: "outra-sessao-abcdef123456",
-      ipHash: "x",
-      options: OPTIONS,
-      imageProvider: "mock",
-    });
+    const other = await ctx.store.upsertProfile({ id: "conta-anterior", email: "anterior@exemplo.com" });
+    const created = await ctx.store.reservePreview(
+      { publicId: "gasto-anterior", userId: other.id, ipHash: "x", options: OPTIONS, imageProvider: "mock" },
+      3,
+    );
     await ctx.store.updatePreview(created.publicId, { imageCostCents: 100 });
-    const res = await call(ctx, "POST", "/api/previews", { json: { sessionId: SESSION, options: OPTIONS } });
+    const res = await call(ctx, "POST", "/api/previews", { json: { options: OPTIONS } });
     assert.equal(res.status, 503);
     assert.equal(res.body.error.code, "budget_exceeded");
     assert.match(res.body.error.message, /WhatsApp/);
@@ -213,13 +249,14 @@ describe("prévia (foto → imagem da escultura)", () => {
     assert.equal(polled.body.status, "ready");
   });
 
-  it("não deixa outro visitante regerar a prévia de alguém", async () => {
+  it("outra conta não vê, não gera nem regera a prévia de alguém (404, como se não existisse)", async () => {
     const { ctx } = makeCtx();
     const id = await readyPreview(ctx);
-    const res = await call(ctx, "POST", `/api/previews/${id}/regenerate`, {
-      json: { sessionId: "intruso-abcdefghijklmnop" },
-    });
-    assert.equal(res.status, 404);
+    const intruso = { as: "intruso@exemplo.com" };
+    assert.equal((await call(ctx, "GET", `/api/previews/${id}`, intruso)).status, 404);
+    assert.equal((await call(ctx, "POST", `/api/previews/${id}/start`, intruso)).status, 404);
+    assert.equal((await call(ctx, "PUT", `/api/previews/${id}/photo`, { ...intruso, body: fakeJpeg() as BodyInit })).status, 404);
+    assert.equal((await call(ctx, "POST", `/api/previews/${id}/regenerate`, { ...intruso, json: {} })).status, 404);
   });
 });
 
@@ -281,7 +318,8 @@ describe("pedido", () => {
 
     const preview = await readyPreview(ctx);
     const stolen = await call(ctx, "POST", "/api/orders", {
-      json: { sessionId: "intruso-abcdefghijklmnop", previewIds: [preview], customer: CUSTOMER, consent: true },
+      as: "intruso@exemplo.com",
+      json: { previewIds: [preview], customer: CUSTOMER, consent: true },
     });
     assert.equal(stolen.status, 404);
 

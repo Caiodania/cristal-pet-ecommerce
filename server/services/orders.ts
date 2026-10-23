@@ -1,6 +1,7 @@
 // Pedidos: o cliente envia o carrinho; o dono acompanha no painel.
 //
 // Regras que o servidor impõe (o navegador não decide nenhuma delas):
+//  - só quem tem conta faz pedido, e só com prévias da própria conta;
 //  - as opções de cada escultura vêm da PRÉVIA gravada, não do que o navegador manda;
 //  - o preço é recalculado aqui, a partir do catálogo;
 //  - uma prévia só pode estar em um pedido;
@@ -24,7 +25,7 @@ import type { Ctx } from "../context";
 import { newOrderCode, randomToken, safeEqual } from "../crypto";
 import { HttpError } from "../http";
 import type { Customer } from "../validate";
-import type { OrderItemRecord, OrderRecord, PreviewRecord } from "../store/types";
+import type { OrderItemRecord, OrderRecord, PreviewRecord, ProfileRecord } from "../store/types";
 import { URL_TTL_SECONDS } from "./previews";
 import { downloadNameOf, modelDtoOf, startModel } from "./model";
 
@@ -69,6 +70,7 @@ export async function customerOrderDto(ctx: Ctx, order: OrderRecord): Promise<Or
 }
 
 export async function adminOrderDto(ctx: Ctx, order: OrderRecord): Promise<AdminOrderDto> {
+  const account = order.userId ? await ctx.store.getProfile(order.userId) : null;
   const items: AdminOrderItemDto[] = await Promise.all(
     order.items.map(async (item) => {
       const preview = await ctx.store.getPreviewById(item.previewId);
@@ -89,6 +91,7 @@ export async function adminOrderDto(ctx: Ctx, order: OrderRecord): Promise<Admin
   );
   return {
     id: order.id,
+    accountEmail: account?.email,
     code: order.code,
     status: order.status,
     createdAt: order.createdAt,
@@ -109,7 +112,7 @@ export async function adminOrderDto(ctx: Ctx, order: OrderRecord): Promise<Admin
 
 export async function createOrder(
   ctx: Ctx,
-  input: { sessionId: string; previewIds: string[]; customer: Customer },
+  input: { user: ProfileRecord; previewIds: string[]; customer: Customer },
 ): Promise<{ order: OrderDto; token: string }> {
   const ids = [...new Set(input.previewIds)];
   if (ids.length === 0) throw new HttpError(400, "invalid_input", "O carrinho está vazio.");
@@ -118,7 +121,7 @@ export async function createOrder(
   const previews: PreviewRecord[] = [];
   for (const id of ids) {
     const preview = await ctx.store.getPreview(id);
-    if (!preview || preview.sessionId !== input.sessionId) {
+    if (!preview || preview.userId !== input.user.id) {
       throw new HttpError(404, "preview_not_found", "Uma das esculturas do carrinho não foi encontrada. Gere a prévia de novo.");
     }
     if (preview.status !== "ready") {
@@ -139,6 +142,7 @@ export async function createOrder(
     try {
       order = await ctx.store.createOrder({
         code: newOrderCode(),
+        userId: input.user.id,
         viewToken: token,
         customerName: input.customer.name,
         customerPhone: input.customer.phone,

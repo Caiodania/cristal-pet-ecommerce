@@ -2,6 +2,7 @@
 // provedores de IA) a partir das variáveis de ambiente. Testes montam o seu
 // próprio contexto, com tudo em memória e relógio controlado.
 
+import { resolveAuth, type AuthProvider } from "./accounts";
 import { loadConfig, type ServerConfig } from "./env";
 import { resolveProviders, type Providers } from "./providers";
 import { createMemoryStore } from "./store/memory";
@@ -14,6 +15,8 @@ export type Ctx = {
   store: Store;
   files: FileStore;
   providers: Providers;
+  /** Login dos clientes (cadastro, entrar, recuperar senha). */
+  auth: AuthProvider;
   now: () => Date;
 };
 
@@ -43,7 +46,14 @@ export function createContext(
       ? createSupabaseFileStore(needSupabase().url, needSupabase().key, config.supabaseBucket)
       : createMemoryFileStore(config.sessionSecret));
 
-  return { config, store, files, providers: overrides.providers ?? resolveProviders(config), now };
+  return {
+    config,
+    store,
+    files,
+    providers: overrides.providers ?? resolveProviders(config),
+    auth: overrides.auth ?? resolveAuth(config, now),
+    now,
+  };
 }
 
 let shared: Ctx | undefined;
