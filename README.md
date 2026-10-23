@@ -47,7 +47,7 @@ Sem mais configuração: dados em memória e IA simulada ("modo demonstração")
 | `scripts/` | servidor local, verificação do Supabase, pós-build, `esculturas.mjs` (imagens da vitrine) |
 | `tests/` | teste de ponta a ponta e fotos de teste |
 | `public/_headers` | cabeçalhos de segurança (CSP) e cache |
-| `docs/` | **leia nesta ordem:** `modelo-do-sistema.md` → `backend.md` → `pendencias.md` |
+| `docs/` | **leia nesta ordem:** `modelo-do-sistema.md` → `backend.md` → `pendencias.md`; para ligar o banco na Netlify: `guia-supabase-netlify.md` |
 
 ## Convenções
 

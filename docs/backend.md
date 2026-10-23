@@ -1,6 +1,6 @@
 # Backend: guia de uso, publicação e plugues de IA
 
-O site é **estático** (pasta `out/`) e toda a parte dinâmica é **uma Netlify Function** que atende `/api/*` (`netlify/functions/api.ts` → `server/router.ts`), com **Supabase** (Postgres + Storage privado) como banco e **dois provedores de IA** plugáveis.
+O site é **estático** (pasta `out/`) e toda a parte dinâmica é **uma Netlify Function** que   atende `/api/*` (`netlify/functions/api.ts` → `server/router.ts`), com **Supabase** (Postgres + Storage privado) como banco e **dois provedores de IA** plugáveis.
 
 ```
 Navegador (site estático)
@@ -52,6 +52,8 @@ A lista completa, com comentários, está em [`.env.example`](../.env.example). 
 | `TURNSTILE_SECRET`, `TURNSTILE_SITE_KEY` | captcha gratuito da Cloudflare, no cadastro e na recuperação de senha (recomendado em produção) |
 
 ## Ligar o Supabase
+
+> Passo a passo ilustrado para quem já publicou na Netlify: [`guia-supabase-netlify.md`](guia-supabase-netlify.md).
 
 1. Crie um projeto em supabase.com (região mais próxima: São Paulo).
 2. **SQL Editor** → cole **na ordem** e rode (Run) cada arquivo:
