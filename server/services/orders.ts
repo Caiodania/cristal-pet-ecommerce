@@ -33,6 +33,13 @@ const MAX_ITEMS = 10;
 
 // ───────── DTOs ─────────
 
+/** Nome do arquivo baixado: CP-7K3M9Q-Thor-foto.jpg (a extensão é a do arquivo guardado). */
+function fileNameOf(code: string, petName: string | undefined, kind: "foto" | "previa", path: string): string {
+  const extension = path.split(".").pop() ?? "jpg";
+  const pet = (petName ?? "escultura").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w-]+/g, "-");
+  return `${code}-${pet}-${kind}.${extension}`;
+}
+
 async function itemDto(ctx: Ctx, item: OrderItemRecord, preview: PreviewRecord | null): Promise<OrderItemDto> {
   return {
     id: item.id,
@@ -86,6 +93,16 @@ export async function adminOrderDto(ctx: Ctx, order: OrderRecord): Promise<Admin
         photoUrl: preview?.photoPath
           ? await ctx.files.signedUrl(preview.photoPath, URL_TTL_SECONDS)
           : undefined,
+        photoDownloadUrl: preview?.photoPath
+          ? await ctx.files.signedUrl(preview.photoPath, URL_TTL_SECONDS, {
+              downloadName: fileNameOf(order.code, item.petName, "foto", preview.photoPath),
+            })
+          : undefined,
+        imageDownloadUrl: preview?.imagePath
+          ? await ctx.files.signedUrl(preview.imagePath, URL_TTL_SECONDS, {
+              downloadName: fileNameOf(order.code, item.petName, "previa", preview.imagePath),
+            })
+          : undefined,
       };
     }),
   );
@@ -99,6 +116,8 @@ export async function adminOrderDto(ctx: Ctx, order: OrderRecord): Promise<Admin
     customerName: order.customerName,
     customerPhone: order.customerPhone,
     city: order.city,
+    deliveryMethod: order.deliveryMethod,
+    address: order.shippingAddress,
     notes: order.notes,
     adminNotes: order.adminNotes,
     estimateCents: order.estimateCents,
@@ -146,7 +165,10 @@ export async function createOrder(
         viewToken: token,
         customerName: input.customer.name,
         customerPhone: input.customer.phone,
-        city: input.customer.city,
+        // a cidade da lista do painel vem do endereço (entrega) ou do que o cliente informou (retirada)
+        city: input.customer.address?.city ?? input.customer.city,
+        deliveryMethod: input.customer.delivery,
+        shippingAddress: input.customer.address,
         notes: input.customer.notes,
         estimateCents: estimated.totalCents,
         discountCents: estimated.discountCents,
@@ -198,7 +220,8 @@ export async function listOrders(
   // centenas de pedidos por página, trocar por uma consulta única.
   const orders = await Promise.all(
     rows.map(async (o): Promise<AdminOrderSummaryDto> => {
-      const first = o.items[0] ? await ctx.store.getPreviewById(o.items[0].previewId) : null;
+      const previews = await Promise.all(o.items.map((i) => ctx.store.getPreviewById(i.previewId)));
+      const first = previews[0];
       return {
         id: o.id,
         code: o.code,
@@ -206,7 +229,11 @@ export async function listOrders(
         createdAt: o.createdAt,
         customerName: o.customerName,
         city: o.city,
+        cityState: o.shippingAddress ? `${o.shippingAddress.city} - ${o.shippingAddress.state}` : undefined,
+        deliveryMethod: o.deliveryMethod,
         itemCount: o.items.length,
+        modelsReady: previews.filter((p) => p?.modelStatus === "ready").length,
+        modelsRunning: previews.filter((p) => p?.modelStatus === "processing" || p?.modelStatus === "queued").length,
         estimateCents: o.estimateCents,
         thumbUrl: first?.imagePath ? await ctx.files.signedUrl(first.imagePath, URL_TTL_SECONDS) : undefined,
       };

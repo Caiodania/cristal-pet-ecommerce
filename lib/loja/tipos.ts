@@ -23,6 +23,53 @@ export type PreviewStatus =
 
 export type ModelStatus = "none" | "queued" | "processing" | "ready" | "failed";
 
+// ───────── Entrega ─────────
+
+/** Como o cliente recebe: em casa (entrega ou envio) ou retirando com a loja. */
+export type DeliveryMethod = "entrega" | "retirada";
+
+export const DELIVERY_LABEL: Record<DeliveryMethod, string> = {
+  entrega: "Entrega no endereço",
+  retirada: "Retirada com a loja",
+};
+
+export type Address = {
+  /** Só os 8 dígitos. */
+  cep: string;
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  /** Sigla da UF (SP). */
+  state: string;
+};
+
+export const BR_STATES = [
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA",
+  "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO",
+] as const;
+
+export const formatCep = (cep: string) => cep.replace(/^(\d{5})(\d{3})$/, "$1-$2");
+
+/** O endereço como vai na etiqueta (várias linhas). */
+export const formatAddress = (a: Address) =>
+  [
+    `${a.street}, ${a.number}${a.complement ? ` - ${a.complement}` : ""}`,
+    a.neighborhood,
+    `${a.city} - ${a.state}`,
+    `CEP ${formatCep(a.cep)}`,
+  ].join("\n");
+
+/** (19) 99999-1234 a partir dos dígitos guardados (com ou sem o 55 do Brasil). */
+export function formatPhone(phone: string): string {
+  let digits = phone.replace(/\D/g, "");
+  if (digits.length > 11 && digits.startsWith("55")) digits = digits.slice(2);
+  if (digits.length === 11) return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  if (digits.length === 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return phone;
+}
+
 // ───────── Pedido ─────────
 
 export type OrderStatus =
@@ -96,6 +143,8 @@ export type AccountDto = {
   email: string;
   name?: string;
   emailVerified: boolean;
+  /** Só existe (e vale true) para a conta do dono: o site mostra o atalho do painel. */
+  isAdmin?: true;
 };
 
 /** Cota de prévias da conta (o limite padrão mais o que o dono liberou). */
@@ -176,6 +225,12 @@ export type OrderDto = {
 export type ModelDto = {
   status: ModelStatus;
   errorMessage?: string;
+  /** Andamento de 0 a 100 enquanto gera, quando o provedor informa. */
+  progress?: number;
+  /** Nome do provedor que gerou (ou está gerando) o arquivo. */
+  provider?: string;
+  /** Custo acumulado em centavos (todas as tentativas). */
+  costCents?: number;
   /** Links temporários dos arquivos, quando prontos (só no painel do dono). */
   stlUrl?: string;
   glbUrl?: string;
@@ -183,6 +238,9 @@ export type ModelDto = {
 
 export type AdminOrderItemDto = OrderItemDto & {
   photoUrl?: string;
+  /** Links que baixam a foto original e a prévia com um nome de arquivo bom (CP-XXXXXX-nome-foto.jpg). */
+  photoDownloadUrl?: string;
+  imageDownloadUrl?: string;
   model: ModelDto;
   heightCm: number | null;
 };
@@ -193,6 +251,9 @@ export type AdminOrderDto = Omit<OrderDto, "items"> & {
   /** E-mail da conta que fez o pedido. */
   accountEmail?: string;
   customerPhone?: string;
+  /** Como o cliente quer receber, e o endereço (só na entrega). */
+  deliveryMethod?: DeliveryMethod;
+  address?: Address;
   notes?: string;
   adminNotes?: string;
   items: AdminOrderItemDto[];
@@ -206,7 +267,13 @@ export type AdminOrderSummaryDto = {
   createdAt: string;
   customerName?: string;
   city?: string;
+  /** "Indaiatuba - SP" na entrega; vazio na retirada. */
+  cityState?: string;
+  deliveryMethod?: DeliveryMethod;
   itemCount: number;
+  /** Quantos itens já têm o arquivo 3D pronto (e quantos estão sendo gerados agora). */
+  modelsReady: number;
+  modelsRunning: number;
   estimateCents: number | null;
   thumbUrl?: string;
 };

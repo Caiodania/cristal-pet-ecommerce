@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { QuotaMeter } from "@/components/conta/QuotaMeter";
+import { FaGear } from "react-icons/fa6";
 import { ChevronRightIcon, ReceiptIcon, UserIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { account, useAccount } from "@/lib/loja/conta";
@@ -106,6 +107,16 @@ export function AccountMenu({ className }: { className?: string }) {
                 <ChevronRightIcon className="ml-auto text-lg text-ink-soft" />
               </Link>
             </li>
+            {/* só a conta do dono recebe isAdmin: para os clientes este item nem existe */}
+            {user.isAdmin && (
+              <li>
+                <Link href="/admin" onClick={() => setOpen(false)} className={itemClass}>
+                  <FaGear aria-hidden="true" className="text-xl text-magenta" />
+                  Painel do dono
+                  <ChevronRightIcon className="ml-auto text-lg text-ink-soft" />
+                </Link>
+              </li>
+            )}
             <li>
               <button
                 type="button"

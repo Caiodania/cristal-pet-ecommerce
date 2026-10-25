@@ -22,8 +22,19 @@ async function loadItem(ctx: Ctx, orderId: string, itemId: string) {
 }
 
 /** Estado do arquivo 3D de uma escultura, com links temporários quando pronto. */
-export async function modelDtoOf(ctx: Ctx, rec: PreviewRecord, downloadName: string): Promise<ModelDto> {
-  const dto: ModelDto = { status: rec.modelStatus, errorMessage: rec.modelError };
+export async function modelDtoOf(
+  ctx: Ctx,
+  rec: PreviewRecord,
+  downloadName: string,
+  progress?: number,
+): Promise<ModelDto> {
+  const dto: ModelDto = {
+    status: rec.modelStatus,
+    errorMessage: rec.modelError,
+    provider: rec.modelProvider,
+    costCents: rec.modelCostCents,
+  };
+  if (progress !== undefined) dto.progress = progress;
   if (rec.modelStatus === "ready") {
     if (rec.stlPath) dto.stlUrl = await ctx.files.signedUrl(rec.stlPath, URL_TTL_SECONDS, { downloadName });
     if (rec.glbPath) dto.glbUrl = await ctx.files.signedUrl(rec.glbPath, URL_TTL_SECONDS);
@@ -34,11 +45,25 @@ export async function modelDtoOf(ctx: Ctx, rec: PreviewRecord, downloadName: str
 export const downloadNameOf = (code: string, petName?: string) =>
   `${code}-${petName ?? "escultura"}.stl`.replace(/\s+/g, "-");
 
-/** Pede a geração do arquivo 3D. Pode ser repetido se tiver falhado. */
-export async function startModel(ctx: Ctx, orderId: string, itemId: string): Promise<ModelDto> {
+/**
+ * Pede a geração do arquivo 3D. Pode ser repetido se tiver falhado, e com
+ * `regenerate` também se já estiver pronto (gera outro, que substitui o atual;
+ * cada geração tem custo, por isso o painel pede confirmação).
+ */
+export async function startModel(
+  ctx: Ctx,
+  orderId: string,
+  itemId: string,
+  opts: { regenerate?: boolean } = {},
+): Promise<ModelDto> {
   const { order, item, preview } = await loadItem(ctx, orderId, itemId);
-  if (preview.modelStatus === "processing" || preview.modelStatus === "queued" || preview.modelStatus === "ready") {
+  const busy = preview.modelStatus === "processing" || preview.modelStatus === "queued";
+  const ready = preview.modelStatus === "ready";
+  if (busy || (ready && !opts.regenerate)) {
     return modelDtoOf(ctx, preview, downloadNameOf(order.code, item.petName));
+  }
+  if (order.status === "canceled") {
+    throw new HttpError(409, "order_canceled", "Este pedido está cancelado. Reabra o pedido antes de gerar o arquivo 3D.");
   }
 
   const image = await ctx.files.get(preview.imagePath!);
@@ -61,10 +86,12 @@ export async function startModel(ctx: Ctx, orderId: string, itemId: string): Pro
     modelJobId: job.jobId,
     modelCostCents: preview.modelCostCents + (job.costCents ?? 0),
     modelError: undefined,
+    // gerar de novo: o arquivo atual deixa de valer (o novo o substitui quando ficar pronto)
+    ...(ready ? { stlPath: undefined, glbPath: undefined } : {}),
   });
   await ctx.store.addOrderEvent(order.id, {
     status: order.status,
-    note: `[interno] Arquivo 3D solicitado (${item.petName ?? "escultura"}).`,
+    note: `[interno] Arquivo 3D ${ready ? "solicitado de novo" : "solicitado"} (${item.petName ?? "escultura"}).`,
   });
   return modelDtoOf(ctx, updated, downloadNameOf(order.code, item.petName));
 }
@@ -73,9 +100,11 @@ export async function startModel(ctx: Ctx, orderId: string, itemId: string): Pro
 export async function getModel(ctx: Ctx, orderId: string, itemId: string): Promise<ModelDto> {
   const { order, item, preview } = await loadItem(ctx, orderId, itemId);
   let rec = preview;
+  let progress: number | undefined;
 
   if (rec.modelStatus === "processing" && rec.modelJobId) {
     const result = await ctx.providers.model.poll(rec.modelJobId);
+    if (result.status === "processing") progress = result.progress;
     if (result.status === "succeeded") {
       const stlBytes = await resolveFile(result.stl);
       const stlPath = `models/${rec.id}.stl`;
@@ -102,5 +131,5 @@ export async function getModel(ctx: Ctx, orderId: string, itemId: string): Promi
       });
     }
   }
-  return modelDtoOf(ctx, rec, downloadNameOf(order.code, item.petName));
+  return modelDtoOf(ctx, rec, downloadNameOf(order.code, item.petName), progress);
 }

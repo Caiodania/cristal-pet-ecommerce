@@ -12,7 +12,7 @@ A loja de referência é o **Nobre Pata** (estrutura e funcionalidades; nunca te
 | `/esculturas` (funil + configurador inline) | `/personalizar` | rota própria: carrega só o que o configurador precisa |
 | aba "Carrinho" | `/carrinho` | inclui "enviar pedido pelo WhatsApp" |
 | `/meus-pedidos` | `/meus-pedidos` e `/pedido` | sem login: histórico do aparelho + link com token |
-| (painel interno) | `/admin` | senha única; pedidos, status, arquivo 3D |
+| (painel interno) | `/admin` | só a conta do dono (`ADMIN_EMAILS`); pedidos, envio, fotos, arquivo 3D |
 | `/chamado` | `/contato` | WhatsApp, e-mail, horário |
 | políticas (4) | iguais | texto `TODO-CLIENTE` |
 | `/quadros`, `/ranking`, `/cadastro-ong`, `/trabalhe-conosco` | omitidas | sem equivalente |

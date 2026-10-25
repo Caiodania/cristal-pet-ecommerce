@@ -17,17 +17,20 @@ Netlify Function ──► Supabase: Postgres (contas, pedidos, prévias) + Stor
 ```bash
 npm install
 npm run build                       # gera o site estático em out/
-ADMIN_PASSWORD=uma-senha npm run dev:full
-# abre http://localhost:8888  (loja)  e  http://localhost:8888/admin  (painel)
+ADMIN_EMAILS=voce@exemplo.com npm run dev:full
+# abre http://localhost:8888 (loja). O painel só aparece na conta com o e-mail acima: crie
+# essa conta pelo site ("Faça login" > "Criar conta"); o menu da conta ganha "Painel do dono".
 ```
 
-Sem configurar mais nada, sobe com **dados em memória** (somem ao reiniciar) e **IA simulada** (`mock`): o site mostra a faixa "Modo demonstração". Dá para percorrer a loja inteira: enviar foto, ver a prévia, pedir, entrar no painel, gerar e baixar o STL de teste.
+Sem configurar mais nada, sobe com **dados em memória** (somem ao reiniciar) e **IA simulada** (`mock`): o site mostra a faixa "Modo demonstração". Dá para percorrer a loja inteira: enviar foto, ver a prévia, pedir (com endereço), entrar no painel com a conta do dono, gerar e baixar o STL de teste.
+
+> **Cuidado com o `.env.local`.** Se ele tiver `SUPABASE_URL`, o servidor local passa a usar o Supabase **de verdade** (e avisa no terminal): contas, pedidos e arquivos de teste ficam no seu projeto. Para testar sem gravar nada, suba com os provedores em memória: `STORE=memory FILES=memory AUTH_PROVIDER=memory SUPABASE_URL= npm run dev:full` (no PowerShell, defina antes cada variável com `$env:STORE="memory"` e as demais, e deixe `$env:SUPABASE_URL=""`). O teste `npm run test:e2e` cria contas e pedidos: rode-o sempre assim.
 
 Para trabalhar no visual com recarga instantânea, rode `npm run dev` (porta 3000) e o `dev:full` (porta 8888) juntos, com `NEXT_PUBLIC_API_URL=http://localhost:8888` no `.env.local` do site e `ALLOWED_ORIGINS=http://localhost:3000` no servidor.
 
 | Comando | O que faz |
 |---|---|
-| `npm test` | testes do servidor (124): API, contas e sessões, cota de prévias, segurança, falhas, estados, preço, prompts, adaptador do Supabase Auth |
+| `npm test` | testes do servidor (143): API, contas e sessões, painel do dono (invisível a quem não é dono), endereço de entrega e CEP, arquivo 3D, cota de prévias, segurança, falhas, estados, preço, prompts, adaptador do Supabase Auth |
 | `npm run test:sql` | valida as migrations do Supabase num Postgres de verdade (PGlite, sem projeto nem internet): gatilho do Auth, cota, pedido com conta, cascatas, RLS |
 | `npm run test:e2e` | teste de ponta a ponta em Chrome real, desktop e celular (veja o cabeçalho de `tests/e2e/loja.mjs`) |
 | `npm run check:supabase` | roda o fluxo contra o **seu** projeto Supabase e apaga o que criou |
@@ -39,8 +42,8 @@ A lista completa, com comentários, está em [`.env.example`](../.env.example). 
 
 | Variável | Para que serve |
 |---|---|
-| `ADMIN_PASSWORD` | senha do painel. Sem ela, o painel fica desligado |
-| `ADMIN_SESSION_SECRET` | assina o cookie do painel e os links temporários. **Obrigatória em produção** |
+| `ADMIN_EMAILS` | e-mail da conta do dono (vários, separados por vírgula). Só essa conta vê o painel; **não há senha do painel**. Sem a variável, o painel fica desligado |
+| `ADMIN_SESSION_SECRET` | assina os links temporários dos arquivos. **Obrigatória em produção** |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | banco e arquivos. Em produção os dados **não podem** ficar em memória (o servidor recusa subir) |
 | `SUPABASE_ANON_KEY` | chave pública do Supabase, usada **só pelo servidor** para falar com o Supabase Auth (cadastro e login). Em produção o login **não pode** ser o simulado |
 | `SITE_URL` | endereço da loja: para onde os e-mails de confirmação e recuperação levam a pessoa. Na Netlify, se vazio, usa `URL` |
@@ -58,7 +61,8 @@ A lista completa, com comentários, está em [`.env.example`](../.env.example). 
 1. Crie um projeto em supabase.com (região mais próxima: São Paulo).
 2. **SQL Editor** → cole **na ordem** e rode (Run) cada arquivo:
    1. [`supabase/migrations/0001_init.sql`](../supabase/migrations/0001_init.sql): tabelas de prévias e pedidos, funções, RLS (sem políticas) e o bucket privado `cristal-pet`;
-   2. [`supabase/migrations/0002_contas.sql`](../supabase/migrations/0002_contas.sql): contas (`profiles`, criada sozinha para cada usuário novo do Auth por um gatilho), sessões, a função `reserve_preview` (cota de prévias) e a ligação de prévias e pedidos à conta.
+   2. [`supabase/migrations/0002_contas.sql`](../supabase/migrations/0002_contas.sql): contas (`profiles`, criada sozinha para cada usuário novo do Auth por um gatilho), sessões, a função `reserve_preview` (cota de prévias) e a ligação de prévias e pedidos à conta;
+   3. [`supabase/migrations/0003_envio.sql`](../supabase/migrations/0003_envio.sql): forma de receber (`entrega` ou `retirada`) e endereço de entrega no pedido (`delivery_method`, `shipping_address`), e a função `create_order` atualizada para gravá-los. **Quem já rodou a 0001 e a 0002 só precisa rodar esta.**
 3. **Project Settings > API**: copie a URL (`SUPABASE_URL`), a chave **anon** (`SUPABASE_ANON_KEY`) e a chave **service_role** (`SUPABASE_SERVICE_KEY`). A service_role é um segredo: só no servidor, nunca em `NEXT_PUBLIC_`.
 4. Configure o **login** (próxima seção, "Contas e login").
 5. Rode a verificação:
@@ -115,8 +119,8 @@ A lista completa, com comentários, está em [`.env.example`](../.env.example). 
 ## Publicar na Netlify
 
 1. Suba o código para um repositório (GitHub) e conecte na Netlify. O `netlify.toml` já define o build (`npm run build`), a pasta publicada (`out`) e a função.
-2. **Site configuration > Environment variables**: cadastre `ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`, `SITE_URL` (e, depois, as chaves de IA e do Turnstile).
-3. Faça o deploy. Entre em `/admin` e confira o login. A faixa "Modo demonstração" some sozinha quando as duas IAs forem reais.
+2. **Site configuration > Environment variables**: cadastre `ADMIN_EMAILS` (o e-mail do dono), `ADMIN_SESSION_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_ANON_KEY`, `SITE_URL` (e, depois, as chaves de IA e do Turnstile).
+3. Faça o deploy. Entre no site com a conta do dono: o menu da conta mostra **Painel do dono**. A faixa "Modo demonstração" some sozinha quando as duas IAs forem reais.
 4. Os cabeçalhos de segurança vêm de `public/_headers`.
 
 Pendente nesta etapa (não depende de código): domínio, `NEXT_PUBLIC_SITE_URL`, textos legais, preços (veja [`pendencias.md`](pendencias.md)).
@@ -209,16 +213,27 @@ Dois cuidados que só aparecem com a API de verdade: (a) a geração costuma lev
 
 ## O painel do dono
 
-`/admin`, com a senha de `ADMIN_PASSWORD`. Lista os pedidos (contagem por status, busca por código/nome/cidade/telefone), abre o detalhe (foto original e prévia aprovada lado a lado, dados do cliente, WhatsApp do cliente), muda o status com um recado opcional que o cliente vê, guarda anotações internas e **gera/baixa o arquivo 3D** de cada escultura. A lista de pedidos atualiza sozinha a cada 30 s.
+**Quem entra.** Não existe senha nem tela de login do painel. O dono usa o login normal do site com a conta dele, e só a conta cujo e-mail está em `ADMIN_EMAILS` é reconhecida como dona. Ela vê "Painel do dono" no menu da conta (e em "Minha conta"); ninguém mais vê esse atalho. Para qualquer outra pessoa, visitante ou cliente, `/admin` mostra a mesma página "não encontrada" do site, e **toda** a API `/api/admin/*` (qualquer método e caminho) responde 404 igual a uma rota que não existe: nada revela que o painel existe. Se o e-mail sair de `ADMIN_EMAILS` (e o site for publicado de novo), o acesso acaba na hora.
+
+**O que o dono faz.** `/admin` lista os pedidos (contagem por status, busca por código/nome/cidade/telefone, cidade e forma de entrega, quantos arquivos 3D estão prontos) e atualiza sozinha a cada 30 s. O detalhe do pedido tem:
+
+- **Envio:** forma de receber (entrega ou retirada), destinatário, WhatsApp, **endereço completo** (rua, número, complemento, bairro, cidade/UF, CEP), e-mail da conta do cliente, observação do cliente, botões **Copiar dados de envio** (texto pronto para a etiqueta) e **Chamar no WhatsApp**.
+- **Fotos:** a foto original do pet e a prévia aprovada, lado a lado, ampliáveis, cada uma com **Baixar** (o arquivo vem com nome bom, ex.: `CP-ABC123-Thor-foto.jpg`).
+- **Arquivo 3D** de cada escultura (veja abaixo).
+- Mudar o status com um recado opcional que o cliente vê, e anotações internas que só o dono vê.
 
 Os status são `Novo → Confirmado → Em produção → Pronto → Entregue` (ou `Cancelado`, que dá para reabrir). Por design o dono confirma o pedido depois de combinar e receber no WhatsApp.
+
+**Do pedido ao arquivo da impressora.** Em cada escultura, o botão **Gerar arquivo 3D** transforma a imagem que o cliente aprovou em um arquivo para imprimir. Como cada geração **custa dinheiro** no provedor, o painel pede confirmação antes (também em "Gerar de novo", que cobra outra vez e troca os arquivos), não gera para pedido cancelado, mostra o andamento (barra, quando o provedor informa) e o custo acumulado, e avisa se falhou ("Tentar de novo"). Pronto o arquivo, aparecem **Baixar STL** (vai para o fatiador e a impressora) e **Baixar GLB** (para girar e conferir o modelo), mais um lembrete do que conferir antes de imprimir (escala, malha fechada, base). Hoje o provedor é simulado (`mock`): o STL é de teste. A ligação com o **Meshy** está planejada em [`meshy.md`](meshy.md).
+
+**Endereço no pedido.** O formulário do carrinho pede o nome de quem recebe, o **WhatsApp (obrigatório)** e como o cliente quer receber. Na **entrega** pede o endereço completo; ao digitar o CEP, o servidor consulta o ViaCEP (`GET /api/cep/:cep`, com limite por rede) e preenche rua, bairro, cidade e estado; se não achar, o cliente digita à mão. Na **retirada** não pede endereço. O endereço e o telefone só aparecem no painel: a página do pedido do cliente nunca os mostra.
 
 ## Segurança: o que está protegido e os limites conhecidos
 
 - O navegador nunca recebe chave nenhuma nem fala com o banco; fotos e arquivos só saem por links temporários.
 - O **limite de tentativas** (login, cadastro, recuperação de senha) fica em memória de cada instância da função: serve contra abuso simples, mas não é global. A cota **da conta** (3 prévias), a cota **por rede por dia** e o teto de gasto ficam no banco e são globais.
 - **Contas:** senhas nunca passam pelo nosso banco (ficam no Supabase Auth); a sessão é um cookie `HttpOnly` cujo token só existe como hash no banco; a resposta de "e-mail ou senha incorretos", de "esqueci a senha" e de cadastro de e-mail repetido **não revela quem tem conta**; trocar a senha derruba as outras sessões.
-- O painel usa **uma senha única**. Com mais de uma pessoa, troque por Supabase Auth: só `server/auth.ts` muda.
+- **Painel do dono:** não há senha própria; vale a conta do Supabase Auth cujo e-mail está em `ADMIN_EMAILS`, e o servidor confere isso em **toda** chamada a `/api/admin/*` (404 para os demais). Proteja essa conta: senha forte, e-mail do dono confirmado desde o início (crie o usuário pelo Dashboard do Supabase com *Auto Confirm* antes de divulgar o site, para ninguém se cadastrar antes com o e-mail do dono) e, quando possível, login com Google com verificação em duas etapas. Mais de um dono: liste os e-mails separados por vírgula.
 - A política de conteúdo (`public/_headers`) usa `'unsafe-inline'` em scripts porque o export estático do Next grava scripts na página.
 - Cada prévia guarda `expires_at` (30 dias), mas **nada ainda usa esse campo nem apaga os arquivos**. Antes do lançamento, decidir a retenção das fotos e agendar a limpeza (`TODO-CLIENTE`).
 - A lista de pedidos busca a miniatura de cada linha com uma consulta (N consultas por página): suficiente para centenas de pedidos, otimizar se crescer.

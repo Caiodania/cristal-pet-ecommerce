@@ -150,6 +150,15 @@ server.listen(port, () => {
   console.log(
     `Dados: ${process.env.STORE ?? (process.env.SUPABASE_URL ? "supabase" : "memória")} · ` +
       `IA de imagem: ${process.env.IMAGE_PROVIDER ?? "mock"} · IA 3D: ${process.env.MODEL_PROVIDER ?? "mock"}` +
-      (process.env.ADMIN_PASSWORD ? "" : "  ·  ADMIN_PASSWORD não definida: o painel fica desligado"),
+      (process.env.ADMIN_EMAILS ? "" : "  ·  ADMIN_EMAILS não definida: o painel fica desligado"),
   );
+  const modes = [process.env.STORE, process.env.FILES, process.env.AUTH_PROVIDER];
+  const configured = modes.includes("supabase") || Boolean(process.env.SUPABASE_URL);
+  if (configured && !modes.every((mode) => mode === "memory")) {
+    console.warn(
+      "ATENÇÃO: este servidor local está ligado ao Supabase de verdade (variáveis do .env.local). Contas, pedidos e " +
+        "arquivos criados aqui ficam no seu projeto. Para testar sem gravar nada, inicie com " +
+        "STORE=memory FILES=memory AUTH_PROVIDER=memory SUPABASE_URL= (veja docs/backend.md).",
+    );
+  }
 });

@@ -4,10 +4,13 @@
 //
 //   SUPABASE_URL=https://xxxx.supabase.co SUPABASE_SERVICE_KEY=... SUPABASE_ANON_KEY=... npm run check:supabase
 //
-// O que faz: cria uma conta de teste (já confirmada, pela API de administração
-// do Supabase Auth), entra por /api/auth/login, gera uma prévia (foto de teste e
-// IA simulada), cria um pedido, lê o pedido de volta pelo painel, gera o arquivo
-// 3D (simulado) e BAIXA o arquivo pelo link assinado do Storage. Também prova a
+// O que faz: cria duas contas de teste (já confirmadas, pela API de administração
+// do Supabase Auth): uma de CLIENTE e uma de DONO (o e-mail do dono vai em
+// ADMIN_EMAILS só para este teste). Entra por /api/auth/login, gera uma prévia
+// (foto de teste e IA simulada), cria um pedido com endereço de entrega, confere
+// que o painel responde ao dono e dá 404 ao cliente, lê o pedido de volta pelo
+// painel, gera o arquivo 3D (simulado) e BAIXA o arquivo pelo link assinado do
+// Storage. Também prova a
 // COTA DE PRÉVIAS no banco real: 8 pedidos ao mesmo tempo, só 3 passam. No fim
 // apaga tudo o que criou (conta, pedido, prévias, arquivos). Não usa nenhuma IA
 // paga e não manda e-mail.
@@ -35,6 +38,10 @@ if (!url || !key || !anon) {
   process.exit(2);
 }
 
+const random = () => Math.random().toString(36).slice(2, 10);
+const email = `check-supabase-${random()}@example.com`;
+const ownerEmail = `check-supabase-dono-${random()}@example.com`;
+
 const ctx = createContext({
   ...process.env,
   STORE: "supabase",
@@ -43,7 +50,7 @@ const ctx = createContext({
   IMAGE_PROVIDER: "mock",
   MODEL_PROVIDER: "mock",
   MOCK_DELAY_MS: "0",
-  ADMIN_PASSWORD: "check-supabase-" + Math.random().toString(36).slice(2),
+  ADMIN_EMAILS: ownerEmail,
   ADMIN_SESSION_SECRET: "check-supabase-" + Math.random().toString(36).slice(2),
   NODE_ENV: "development",
   PREVIEWS_PER_ACCOUNT: "3",
@@ -75,17 +82,28 @@ const call = async (method: string, path: string, init: { json?: unknown; body?:
   return { status: res.status, data, headers: res.headers };
 };
 
-const email = `check-supabase-${Math.random().toString(36).slice(2, 10)}@example.com`;
 const password = "Check-" + Math.random().toString(36).slice(2, 12) + "9";
 const options = { sizeId: "media", poseId: "sentado", colorId: "branco", petName: "Teste" };
 const db = createClient(url, key, { auth: { persistSession: false } });
-const created = { orderCode: "", previewIds: [] as string[], paths: [] as string[], userId: "" };
+const created = { orderCode: "", previewIds: [] as string[], paths: [] as string[], userId: "", ownerId: "" };
+const address = {
+  cep: "13330-000",
+  street: "Rua México",
+  number: "311",
+  complement: "casa 2",
+  neighborhood: "Centro",
+  city: "Indaiatuba",
+  state: "SP",
+};
 
 try {
   // 0. conta de teste: criada já confirmada (a confirmação por e-mail é do Supabase; aqui só importa o resto)
   const made = await db.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { name: "Teste Automático" } });
   step("auth: cria a conta de teste (API de administração)", !made.error, made.error?.message);
   created.userId = made.data.user?.id ?? "";
+  const madeOwner = await db.auth.admin.createUser({ email: ownerEmail, password, email_confirm: true, user_metadata: { name: "Dono de Teste" } });
+  step("auth: cria a conta de teste do DONO", !madeOwner.error, madeOwner.error?.message);
+  created.ownerId = madeOwner.data.user?.id ?? "";
 
   const profile = await db.from("profiles").select().eq("id", created.userId).maybeSingle();
   step("banco: o gatilho do Auth criou o perfil com o nome", profile.data?.email === email && profile.data?.name === "Teste Automático", JSON.stringify(profile));
@@ -138,13 +156,17 @@ try {
   // 6. pedido (função create_order, atômica, com a conta)
   const order = await call("POST", "/api/orders", {
     cookie,
-    json: { previewIds: [id], customer: { name: "Teste Automático", city: "Indaiatuba" }, consent: true },
+    json: {
+      previewIds: [id],
+      customer: { name: "Teste Automático", phone: "19999991234", delivery: "entrega", address },
+      consent: true,
+    },
   });
-  step("banco: cria o pedido (função create_order)", order.status === 201, JSON.stringify(order.data));
+  step("banco: cria o pedido com o endereço de entrega (função create_order)", order.status === 201, JSON.stringify(order.data));
   created.orderCode = order.data.order?.code ?? "";
   const again = await call("POST", "/api/orders", {
     cookie,
-    json: { previewIds: [id], customer: { name: "Teste Automático" }, consent: true },
+    json: { previewIds: [id], customer: { name: "Teste Automático", phone: "19999991234", delivery: "retirada" }, consent: true },
   });
   step("banco: a mesma prévia em outro pedido é recusada (unique)", again.status === 409, `status ${again.status}`);
   const lookup = await call("GET", `/api/orders/${created.orderCode}?t=${order.data.token}`);
@@ -152,12 +174,30 @@ try {
   const mine = await call("GET", "/api/me/orders", { cookie });
   step("conta: 'meus pedidos' lista o pedido da conta", mine.status === 200 && mine.data.orders?.[0]?.code === created.orderCode, JSON.stringify(mine.data).slice(0, 200));
 
-  // 7. painel
-  const adminLogin = await call("POST", "/api/admin/login", { json: { password: ctx.config.adminPassword } });
-  const admin = (adminLogin.headers.get("set-cookie") ?? "").split(";")[0];
+  // 7. painel (só o dono entra: o cliente recebe 404, como se a rota não existisse)
+  const hidden = await call("GET", "/api/admin/stats", { cookie });
+  const noLogin = await call("GET", "/api/admin/stats");
+  step("painel: cliente e visitante recebem 404 (o painel não existe para eles)", hidden.status === 404 && noLogin.status === 404, `${hidden.status}/${noLogin.status}`);
+  const ownerLogin = await call("POST", "/api/auth/login", { json: { email: ownerEmail, password } });
+  const admin = (ownerLogin.headers.get("set-cookie") ?? "").split(";")[0];
+  const ownerMe = await call("GET", "/api/auth/me", { cookie: admin });
+  step("painel: a conta do dono entra pelo login normal e recebe isAdmin", ownerLogin.status === 200 && ownerMe.data.user?.isAdmin === true, JSON.stringify(ownerMe.data));
+  const customerMe = await call("GET", "/api/auth/me", { cookie });
+  step("painel: a conta do cliente NÃO recebe isAdmin", customerMe.data.user && !("isAdmin" in customerMe.data.user));
   const list = await call("GET", `/api/admin/orders?q=${created.orderCode}`, { cookie: admin });
   step("painel: lista e busca o pedido", list.status === 200 && list.data.total === 1, JSON.stringify(list.data).slice(0, 200));
   const orderId = list.data.orders?.[0]?.id as string;
+  step("painel: a lista mostra a cidade e o modo de entrega", list.data.orders?.[0]?.cityState === "Indaiatuba - SP" && list.data.orders?.[0]?.deliveryMethod === "entrega", JSON.stringify(list.data.orders?.[0]));
+  const detail = await call("GET", `/api/admin/orders/${orderId}`, { cookie: admin });
+  step(
+    "painel: o pedido traz o endereço completo, o WhatsApp e as fotos para baixar",
+    detail.data.address?.street === "Rua México" && detail.data.address?.cep === "13330000" && detail.data.customerPhone === "19999991234" && !!detail.data.items?.[0]?.photoDownloadUrl,
+    JSON.stringify(detail.data).slice(0, 300),
+  );
+  if (detail.data.items?.[0]?.photoDownloadUrl) {
+    const photoFile = await fetch(detail.data.items[0].photoDownloadUrl);
+    step("storage: o link de download da foto original baixa o arquivo", photoFile.ok && /attachment/.test(photoFile.headers.get("content-disposition") ?? ""), `status ${photoFile.status} ${photoFile.headers.get("content-disposition")}`);
+  }
   const confirmed = await call("PATCH", `/api/admin/orders/${orderId}`, { cookie: admin, json: { status: "confirmed", note: "teste" } });
   step("painel: muda o status e grava o evento", confirmed.status === 200 && confirmed.data.timeline?.length === 2, JSON.stringify(confirmed.data).slice(0, 200));
   step("painel: o pedido mostra a conta que o fez", confirmed.data.accountEmail === email, String(confirmed.data.accountEmail));
@@ -203,9 +243,10 @@ try {
     if (created.paths.length) await db.storage.from(ctx.config.supabaseBucket).remove(created.paths);
     // apagar o usuário do Auth leva o perfil e as sessões junto (cascata)
     if (created.userId) await db.auth.admin.deleteUser(created.userId);
+    if (created.ownerId) await db.auth.admin.deleteUser(created.ownerId);
     console.log("(dados de teste apagados)");
   } catch (error) {
-    console.error("Não consegui apagar tudo; confira o pedido", created.orderCode, "e a conta", email, error);
+    console.error("Não consegui apagar tudo; confira o pedido", created.orderCode, "e as contas", email, ownerEmail, error);
   }
 }
 

@@ -10,10 +10,11 @@ import {
   type SessionDto,
 } from "../lib/loja/tipos";
 import { catalog } from "../content/estatua";
-import { assertSameOrigin, checkPassword, clearCookie, isAdmin, requireAdmin, sessionCookie } from "./auth";
+import { assertSameOrigin, requireAdmin, routeNotFound } from "./auth";
 import { getContext, type Ctx } from "./context";
 import { clientIp, errorResponse, HttpError, json, readJson, baseHeaders } from "./http";
 import { allow } from "./ratelimit";
+import { lookupCep } from "./services/cep";
 import { getModel, startModel } from "./services/model";
 import {
   accountDto,
@@ -63,8 +64,6 @@ type Match = { ctx: Ctx; req: Request; url: URL; params: Record<string, string>;
 type Route = {
   method: string;
   pattern: RegExp;
-  /** Exige o cookie do dono. */
-  admin?: boolean;
   handler: (m: Match) => Promise<Response>;
 };
 
@@ -81,7 +80,7 @@ const optionalString = (v: unknown) => (typeof v === "string" ? v : undefined);
 
 /** Resposta de quem acabou de entrar: dados da conta e a cota, com o cookie da sessão. */
 function signedIn(ctx: Ctx, req: Request, result: SessionResult, status = 200): Response {
-  const body: AuthResultDto = { user: accountDto(result.profile), quota: result.quota, needsVerification: false };
+  const body: AuthResultDto = { user: accountDto(ctx, result.profile), quota: result.quota, needsVerification: false };
   return json(body, { status, headers: { "Set-Cookie": userSessionCookie(ctx, req, result.token) } });
 }
 
@@ -167,7 +166,7 @@ const routes: Route[] = [
     pattern: /^\/api\/auth\/me$/,
     handler: async ({ ctx, req }) => {
       const user = await currentUser(ctx, req);
-      const body: SessionDto = user ? { user: accountDto(user), quota: await quotaOf(ctx, user) } : { user: null };
+      const body: SessionDto = user ? { user: accountDto(ctx, user), quota: await quotaOf(ctx, user) } : { user: null };
       return json(body);
     },
   },
@@ -299,6 +298,16 @@ const routes: Route[] = [
     },
   },
   {
+    // preenche o endereço pelo CEP (ViaCEP, pelo servidor); "não achei" não é erro
+    method: "GET",
+    pattern: /^\/api\/cep\/(?<cep>\d{8})$/,
+    handler: async ({ params, ip }) => {
+      limit(`cep:${ip}`, 60, HOUR);
+      const address = await lookupCep(params.cep);
+      return json(address ? { found: true, address } : { found: false });
+    },
+  },
+  {
     method: "GET",
     pattern: /^\/api\/orders\/(?<code>CP-[A-Za-z0-9]{6})$/i,
     handler: async ({ ctx, url, params, ip }) => {
@@ -319,38 +328,16 @@ const routes: Route[] = [
   },
 
   // ───────── Painel do dono ─────────
-  {
-    method: "POST",
-    pattern: /^\/api\/admin\/login$/,
-    handler: async ({ ctx, req, ip }) => {
-      limit(`login:${ip}`, 6, 15 * 60 * 1000, "Muitas tentativas de login. Aguarde 15 minutos.");
-      const body = requireRecord(await readJson(req));
-      if (!checkPassword(ctx, body.password)) {
-        throw new HttpError(401, "invalid_credentials", "Senha incorreta.");
-      }
-      return json({ ok: true }, { headers: { "Set-Cookie": sessionCookie(ctx, req) } });
-    },
-  },
-  {
-    method: "POST",
-    pattern: /^\/api\/admin\/logout$/,
-    handler: async ({ ctx, req }) => json({ ok: true }, { headers: { "Set-Cookie": clearCookie(ctx, req) } }),
-  },
-  {
-    method: "GET",
-    pattern: /^\/api\/admin\/me$/,
-    handler: async ({ ctx, req }) => json({ admin: isAdmin(ctx, req) }),
-  },
+  // Todas as rotas /api/admin/* passam por requireAdmin (veja handle): só a conta do
+  // dono (ADMIN_EMAILS) entra; para os demais a resposta é 404, como se não existissem.
   {
     method: "GET",
     pattern: /^\/api\/admin\/stats$/,
-    admin: true,
     handler: async ({ ctx }) => json(await adminStats(ctx)),
   },
   {
     method: "GET",
     pattern: /^\/api\/admin\/users$/,
-    admin: true,
     handler: async ({ ctx, url }) => {
       const page = Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1);
       return json(await listUsers(ctx, { q: cleanText(url.searchParams.get("q"), 60), page }));
@@ -360,7 +347,6 @@ const routes: Route[] = [
     // o dono libera prévias extras para uma conta (soma ao limite padrão)
     method: "PATCH",
     pattern: /^\/api\/admin\/users\/(?<id>[\w-]+)$/,
-    admin: true,
     handler: async ({ ctx, req, params }) => {
       const body = requireRecord(await readJson(req));
       const bonus = body.bonusPreviews;
@@ -373,7 +359,6 @@ const routes: Route[] = [
   {
     method: "GET",
     pattern: /^\/api\/admin\/orders$/,
-    admin: true,
     handler: async ({ ctx, url }) => {
       const status = url.searchParams.get("status") as OrderStatus | null;
       if (status && !ORDER_STATUSES.includes(status)) throw new HttpError(400, "invalid_input", "Status inválido.");
@@ -390,13 +375,11 @@ const routes: Route[] = [
   {
     method: "GET",
     pattern: /^\/api\/admin\/orders\/(?<id>[\w-]+)$/,
-    admin: true,
     handler: async ({ ctx, params }) => json(await getOrderAdmin(ctx, params.id)),
   },
   {
     method: "PATCH",
     pattern: /^\/api\/admin\/orders\/(?<id>[\w-]+)$/,
-    admin: true,
     handler: async ({ ctx, req, params }) => {
       const body = requireRecord(await readJson(req));
       const status = body.status as OrderStatus | undefined;
@@ -416,13 +399,17 @@ const routes: Route[] = [
   {
     method: "POST",
     pattern: /^\/api\/admin\/orders\/(?<id>[\w-]+)\/items\/(?<itemId>[\w-]+)\/model$/,
-    admin: true,
-    handler: async ({ ctx, params }) => json(await startModel(ctx, params.id, params.itemId), { status: 202 }),
+    handler: async ({ ctx, req, params }) => {
+      // corpo opcional: { regenerate: true } gera de novo mesmo com o arquivo pronto
+      const body = requireRecord(await readJson(req));
+      return json(await startModel(ctx, params.id, params.itemId, { regenerate: body.regenerate === true }), {
+        status: 202,
+      });
+    },
   },
   {
     method: "GET",
     pattern: /^\/api\/admin\/orders\/(?<id>[\w-]+)\/items\/(?<itemId>[\w-]+)\/model$/,
-    admin: true,
     handler: async ({ ctx, params }) => json(await getModel(ctx, params.id, params.itemId)),
   },
 ];
@@ -454,6 +441,12 @@ export async function handle(req: Request, ctx: Ctx = getContext()): Promise<Res
     // HEAD = GET sem corpo (navegadores e verificadores de link usam)
     const method = req.method === "HEAD" ? "GET" : req.method;
 
+    // O painel é só do dono: qualquer outra pessoa recebe 404, em qualquer método e
+    // em qualquer caminho sob /api/admin, igual a uma rota que não existe.
+    if (url.pathname === "/api/admin" || url.pathname.startsWith("/api/admin/")) {
+      await requireAdmin(ctx, req);
+    }
+
     let pathMatched = false;
     for (const route of routes) {
       const match = route.pattern.exec(url.pathname);
@@ -461,7 +454,6 @@ export async function handle(req: Request, ctx: Ctx = getContext()): Promise<Res
       pathMatched = true;
       if (route.method !== method) continue;
 
-      if (route.admin) requireAdmin(ctx, req);
       if (req.method !== "GET" && req.method !== "HEAD") assertSameOrigin(ctx, req);
 
       const res = await route.handler({
@@ -474,9 +466,7 @@ export async function handle(req: Request, ctx: Ctx = getContext()): Promise<Res
       const answer = req.method === "HEAD" ? new Response(null, { status: res.status, headers: res.headers }) : res;
       return withCors(ctx, req, answer);
     }
-    throw pathMatched
-      ? new HttpError(405, "method_not_allowed", "Método não permitido.")
-      : new HttpError(404, "not_found", "Rota não encontrada.");
+    throw pathMatched ? new HttpError(405, "method_not_allowed", "Método não permitido.") : routeNotFound();
   } catch (error) {
     return withCors(ctx, req, errorResponse(error));
   }

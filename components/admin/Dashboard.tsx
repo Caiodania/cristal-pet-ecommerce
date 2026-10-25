@@ -15,7 +15,7 @@ import {
   type OrderStatus,
 } from "@/lib/loja/tipos";
 import { cn } from "@/lib/cn";
-import { AdminBar, useAdmin } from "./AdminGate";
+import { AdminBar, lostAccess, useAdmin } from "./AdminGate";
 
 type Page = { orders: AdminOrderSummaryDto[]; total: number; pageSize: number };
 
@@ -51,7 +51,7 @@ export function Dashboard() {
       })
       .catch((e) => {
         if (!active) return;
-        if (e instanceof ApiError && e.status === 401) return expire();
+        if (lostAccess(e)) expire();
         setError(e instanceof ApiError ? e.message : "Não foi possível carregar os pedidos.");
       });
     return () => {
@@ -136,7 +136,9 @@ export function Dashboard() {
                 <tr>
                   <th scope="col">Pedido</th>
                   <th scope="col">Cliente</th>
+                  <th scope="col">Envio</th>
                   <th scope="col">Esculturas</th>
+                  <th scope="col">Arquivo 3D</th>
                   <th scope="col">Valor</th>
                   <th scope="col">Status</th>
                 </tr>
@@ -155,9 +157,13 @@ export function Dashboard() {
                     </th>
                     <td>
                       <span className="cell-label">Cliente</span>
+                      <span>{order.customerName ?? "—"}</span>
+                    </td>
+                    <td>
+                      <span className="cell-label">Envio</span>
                       <span>
-                        {order.customerName ?? "—"}
-                        {order.city && <span className="block text-sm text-ink-soft">{order.city}</span>}
+                        {order.deliveryMethod === "retirada" ? "Retirada" : (order.cityState ?? order.city ?? "—")}
+                        {order.deliveryMethod === "entrega" && <span className="block text-sm text-ink-soft">Entrega</span>}
                       </span>
                     </td>
                     <td>
@@ -168,6 +174,16 @@ export function Dashboard() {
                           <img src={fileUrl(order.thumbUrl)} alt="" className="size-10 rounded-soft object-cover" />
                         )}
                         {order.itemCount}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="cell-label">Arquivo 3D</span>
+                      <span>
+                        {order.modelsRunning > 0
+                          ? "Gerando…"
+                          : order.modelsReady === 0
+                            ? "—"
+                            : `${order.modelsReady} de ${order.itemCount} ${order.modelsReady === 1 ? "pronto" : "prontos"}`}
                       </span>
                     </td>
                     <td>

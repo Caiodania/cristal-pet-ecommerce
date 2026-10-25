@@ -6,7 +6,7 @@ import { TextField } from "@/components/ui/Field";
 import { Alert, Loading, formatDateTime } from "@/components/ui/Status";
 import { ApiError, api } from "@/lib/loja/api";
 import type { AdminUserDto } from "@/lib/loja/tipos";
-import { AdminBar, useAdmin } from "./AdminGate";
+import { AdminBar, lostAccess, useAdmin } from "./AdminGate";
 
 type Page = { users: AdminUserDto[]; total: number; pageSize: number };
 
@@ -27,7 +27,7 @@ function UserRow({ user, onChange }: { user: AdminUserDto; onChange: (next: Admi
       setBonus(String(next.bonusPreviews));
       setMessage({ ok: true, text: "Salvo." });
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) return expire();
+      if (lostAccess(error)) expire();
       setMessage({ ok: false, text: error instanceof ApiError ? error.message : "Não foi possível salvar." });
     } finally {
       setBusy(false);
@@ -110,7 +110,7 @@ export function Contas() {
       })
       .catch((e) => {
         if (!active) return;
-        if (e instanceof ApiError && e.status === 401) return expire();
+        if (lostAccess(e)) expire();
         setError(e instanceof ApiError ? e.message : "Não foi possível carregar as contas.");
       });
     return () => {

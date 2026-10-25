@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { legalLinks, nav } from "@/content/site";
+import { FaGear } from "react-icons/fa6";
 import { CloseIcon, MenuIcon, UserIcon } from "@/components/ui/icons";
 import { account, useAccount } from "@/lib/loja/conta";
 import { openAuth } from "@/lib/loja/dialogo-conta";
@@ -61,6 +62,12 @@ export function MobileMenu() {
                       <UserIcon className="text-xl text-magenta" />
                       Minha conta
                     </Link>
+                    {user.isAdmin && (
+                      <Link href="/admin" className={rowClass}>
+                        <FaGear aria-hidden="true" className="text-xl text-magenta" />
+                        Painel do dono
+                      </Link>
+                    )}
                     <button
                       type="button"
                       className={`${rowClass} text-ink-soft`}

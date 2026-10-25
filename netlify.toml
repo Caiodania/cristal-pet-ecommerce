@@ -17,5 +17,5 @@
   included_files = ["public/images/esculturas/mel.webp"]
 
 # A função api.ts se publica sozinha em /api/* (veja `config.path` nela).
-# Variáveis de ambiente (senha do painel, Supabase, provedores de IA…):
+# Variáveis de ambiente (e-mail do dono, Supabase, provedores de IA…):
 # Site configuration > Environment variables. Lista completa em .env.example.

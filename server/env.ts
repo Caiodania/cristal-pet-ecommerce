@@ -25,9 +25,13 @@ export type ServerConfig = {
   userSessionTtlDays: number;
 
   // Painel do dono
-  adminPassword?: string;
+  /**
+   * E-mails das contas que são o DONO (só elas entram no painel; entram pelo login
+   * normal do site). Vazio = painel desligado para todo mundo.
+   */
+  adminEmails: string[];
+  /** Segredo do servidor: assina os links temporários dos arquivos e embaralha o IP. */
   sessionSecret: string;
-  sessionTtlSeconds: number;
 
   // Provedores de IA
   imageProvider: string;
@@ -111,9 +115,11 @@ export function loadConfig(env: Env = process.env): ServerConfig {
     previewsPerAccount: int(env.PREVIEWS_PER_ACCOUNT, previewsPerAccount),
     userSessionTtlDays: int(env.USER_SESSION_TTL_DAYS, 30),
 
-    adminPassword: env.ADMIN_PASSWORD || undefined,
+    adminEmails: (env.ADMIN_EMAILS ?? "")
+      .split(/[,;\s]+/)
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
     sessionSecret,
-    sessionTtlSeconds: int(env.ADMIN_SESSION_TTL_SECONDS, 60 * 60 * 12),
 
     imageProvider: env.IMAGE_PROVIDER ?? "mock",
     modelProvider: env.MODEL_PROVIDER ?? "mock",

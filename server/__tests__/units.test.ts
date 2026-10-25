@@ -46,11 +46,11 @@ describe("validate", () => {
     assert.equal(sniffImage(new Uint8Array()), null);
   });
 
-  it("telefone: só dígitos, 10 a 13; vazio é opcional", () => {
+  it("telefone (WhatsApp): só dígitos, 10 a 13; é obrigatório", () => {
     assert.equal(parsePhone("(19) 97154-8471"), "19971548471");
     assert.equal(parsePhone("+55 19 97154-8471"), "5519971548471");
-    assert.equal(parsePhone(""), undefined);
-    assert.equal(parsePhone(undefined), undefined);
+    assert.throws(() => parsePhone(""), /WhatsApp/);
+    assert.throws(() => parsePhone(undefined), /WhatsApp/);
     assert.throws(() => parsePhone("12345"));
     assert.throws(() => parsePhone("1".repeat(14)));
   });

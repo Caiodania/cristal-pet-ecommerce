@@ -417,11 +417,11 @@ describe("pedido e conta", () => {
     assert.equal(users.body.users[0].orderCount, 1);
   });
 
-  it("as rotas de contas do painel exigem o login do dono", async () => {
+  it("as rotas de contas do painel são só do dono (cliente recebe 404)", async () => {
     const { ctx } = makeCtx();
     const userCookie = cookieOf(await signup(ctx));
-    assert.equal((await call(ctx, "GET", "/api/admin/users", { cookie: userCookie })).status, 401);
-    assert.equal((await call(ctx, "PATCH", "/api/admin/users/x", { cookie: userCookie, json: { bonusPreviews: 5 } })).status, 401);
+    assert.equal((await call(ctx, "GET", "/api/admin/users", { cookie: userCookie })).status, 404);
+    assert.equal((await call(ctx, "PATCH", "/api/admin/users/x", { cookie: userCookie, json: { bonusPreviews: 5 } })).status, 404);
     const admin = await adminCookie(ctx);
     const bad = await call(ctx, "PATCH", "/api/admin/users/x", { cookie: admin, json: { bonusPreviews: -1 } });
     assert.equal(bad.status, 400);

@@ -11,6 +11,7 @@ import { ArrowRightIcon, TrashIcon } from "@/components/ui/icons";
 import { catalog } from "@/content/estatua";
 import { ApiError, api, fileUrl } from "@/lib/loja/api";
 import { LoginPrompt } from "@/components/conta/LoginPrompt";
+import { EMPTY_ENTREGA, EntregaForm, toAddress, validateEntrega, type EntregaErrors, type EntregaValues } from "./EntregaForm";
 import { useCart, useOrderHistory, type CartItem } from "@/lib/loja/carrinho";
 import { account, useAccount } from "@/lib/loja/conta";
 import { estimate, formatCents } from "@/lib/loja/estimativa";
@@ -137,7 +138,7 @@ function Sent({ order, token, items }: { order: OrderDto; token: string; items: 
 
 // ───────── Carrinho ─────────
 
-type Errors = Partial<Record<"name" | "phone" | "consent", string>>;
+type Errors = EntregaErrors & Partial<Record<"name" | "phone" | "consent", string>>;
 
 export function CartView() {
   const cart = useCart();
@@ -148,10 +149,11 @@ export function CartView() {
   const [typedName, setName] = useState<string>();
   const name = typedName ?? user?.name ?? "";
   const [phone, setPhone] = useState("");
-  const [city, setCity] = useState("");
+  const [entrega, setEntrega] = useState<EntregaValues>(EMPTY_ENTREGA);
   const [notes, setNotes] = useState("");
   const [consent, setConsent] = useState(false);
-  const [errors, setErrors] = useState<Errors>({});
+  // depois da primeira tentativa de envio os erros acompanham o que a pessoa digita (somem ao corrigir)
+  const [attempted, setAttempted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<{ message: string; offerFallback: boolean }>();
   const [gone, setGone] = useState<string[]>([]);
@@ -188,20 +190,20 @@ export function CartView() {
 
   function validate(): Errors {
     const next: Errors = {};
-    if (name.trim().length < 2) next.name = "Informe o seu nome.";
+    if (name.trim().length < 2) next.name = "Informe o nome de quem vai receber.";
     const digits = phone.replace(/\D/g, "");
-    if (phone.trim() && (digits.length < 10 || digits.length > 13)) {
-      next.phone = "Informe o WhatsApp com DDD, ou deixe em branco.";
-    }
+    if (digits.length < 10 || digits.length > 13) next.phone = "Informe o WhatsApp com DDD (ex.: 19 99999-1234).";
+    Object.assign(next, validateEntrega(entrega));
     if (!consent) next.consent = "Aceite a política de privacidade para enviar o pedido.";
     return next;
   }
+  const errors: Errors = attempted ? validate() : {};
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setFailure(undefined);
     const found = validate();
-    setErrors(found);
+    setAttempted(true);
     if (Object.keys(found).length) {
       // leva o foco ao primeiro campo com erro (depois que o React mostrar o erro)
       requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
@@ -219,8 +221,9 @@ export function CartView() {
         previewIds: items.map((i) => i.previewId),
         customer: {
           name: name.trim(),
-          phone: phone.trim() || undefined,
-          city: city.trim() || undefined,
+          phone: phone.trim(),
+          delivery: entrega.delivery,
+          address: entrega.delivery === "entrega" ? toAddress(entrega) : undefined,
           notes: notes.trim() || undefined,
         },
         consent: true,
@@ -263,7 +266,7 @@ export function CartView() {
         ref={formRef}
         onSubmit={submit}
         noValidate
-        className="grid gap-5 rounded-card border border-line bg-white p-5 shadow-soft sm:p-6 lg:sticky lg:top-24"
+        className="grid gap-5 rounded-card border border-line bg-white p-5 shadow-soft sm:p-6"
       >
         <h2 className="font-display text-2xl font-extrabold">Enviar o pedido</h2>
 
@@ -279,12 +282,12 @@ export function CartView() {
             <strong>{formatCents(totals.totalCents)}</strong>
           </p>
           <p className="text-sm text-ink-soft">
-            O valor final, o pagamento e a entrega são combinados com você no WhatsApp.
+            O valor final e o pagamento são combinados com você no WhatsApp.
           </p>
         </div>
 
         <TextField
-          label="Seu nome"
+          label="Nome de quem vai receber"
           name="name"
           autoComplete="name"
           required
@@ -299,22 +302,14 @@ export function CartView() {
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          optional
+          required
           maxLength={20}
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           error={errors.phone}
-          hint="Com DDD. Ajuda a gente a falar com você."
+          hint="Com DDD. É por ele que combinamos o pagamento e a entrega."
         />
-        <TextField
-          label="Cidade"
-          name="city"
-          autoComplete="address-level2"
-          optional
-          maxLength={60}
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-        />
+        <EntregaForm value={entrega} onChange={(patch) => setEntrega((now) => ({ ...now, ...patch }))} errors={errors} />
         <TextAreaField
           label="Observações"
           name="notes"

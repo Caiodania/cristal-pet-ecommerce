@@ -3,7 +3,7 @@
 
 import { catalog as defaultCatalog, type Catalog } from "../content/estatua";
 import { priceItem } from "../lib/loja/estimativa";
-import type { ItemConfig } from "../lib/loja/tipos";
+import { BR_STATES, type Address, type DeliveryMethod, type ItemConfig } from "../lib/loja/tipos";
 import { HttpError } from "./http";
 
 const bad = (message: string) => new HttpError(400, "invalid_input", message);
@@ -46,23 +46,54 @@ export function parseItemConfig(raw: unknown, catalog: Catalog = defaultCatalog)
   return config;
 }
 
-/** Telefone: só dígitos, 10 a 13 (DDD + número, com ou sem 55). */
-export function parsePhone(value: unknown): string | undefined {
-  if (typeof value !== "string" || !value.trim()) return undefined;
-  const digits = value.replace(/\D/g, "");
-  if (digits.length < 10 || digits.length > 13) throw bad("Informe o WhatsApp com DDD, ou deixe em branco.");
+/** WhatsApp: só dígitos, 10 a 13 (DDD + número, com ou sem 55). Obrigatório: é por ele que combinamos a entrega. */
+export function parsePhone(value: unknown): string {
+  const digits = typeof value === "string" ? value.replace(/\D/g, "") : "";
+  if (digits.length < 10 || digits.length > 13) throw bad("Informe o WhatsApp com DDD (ex.: 19 99999-1234).");
   return digits;
 }
 
-export type Customer = { name: string; phone?: string; city?: string; notes?: string };
+/** Endereço de entrega, campo a campo (cada erro diz qual campo). */
+export function parseAddress(raw: unknown): Address {
+  const o = requireRecord(raw, "endereço");
+  const cep = typeof o.cep === "string" ? o.cep.replace(/\D/g, "") : "";
+  if (cep.length !== 8) throw bad("Informe o CEP com 8 números.");
+  const street = cleanText(o.street, 120);
+  if (!street || street.length < 3) throw bad("Informe a rua ou avenida.");
+  const number = cleanText(o.number, 10);
+  if (!number) throw bad('Informe o número (ou "s/n" se não tiver).');
+  const neighborhood = cleanText(o.neighborhood, 80);
+  if (!neighborhood || neighborhood.length < 2) throw bad("Informe o bairro.");
+  const city = cleanText(o.city, 80);
+  if (!city || city.length < 2) throw bad("Informe a cidade.");
+  const state = typeof o.state === "string" ? o.state.trim().toUpperCase() : "";
+  if (!(BR_STATES as readonly string[]).includes(state)) throw bad("Escolha o estado (UF).");
+  return { cep, street, number, complement: cleanText(o.complement, 60), neighborhood, city, state };
+}
+
+export type Customer = {
+  /** Quem recebe. */
+  name: string;
+  phone: string;
+  delivery: DeliveryMethod;
+  /** Só na entrega. */
+  address?: Address;
+  /** Cidade, na retirada (opcional). Na entrega vem do endereço. */
+  city?: string;
+  notes?: string;
+};
 
 export function parseCustomer(raw: unknown): Customer {
   const o = requireRecord(raw, "cliente");
   const name = cleanText(o.name, 80);
-  if (!name || name.length < 2) throw bad("Informe o seu nome.");
+  if (!name || name.length < 2) throw bad("Informe o nome de quem vai receber.");
+  const phone = parsePhone(o.phone);
+  if (o.delivery !== "entrega" && o.delivery !== "retirada") throw bad("Escolha como quer receber a escultura.");
   return {
     name,
-    phone: parsePhone(o.phone),
+    phone,
+    delivery: o.delivery,
+    address: o.delivery === "entrega" ? parseAddress(o.address) : undefined,
     city: cleanText(o.city, 60),
     notes: cleanText(o.notes, 500),
   };

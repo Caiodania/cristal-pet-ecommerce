@@ -1,15 +1,17 @@
 // Teste de ponta a ponta da loja em Chrome real (DevTools Protocol), com mouse,
 // teclado e toque de verdade. Percorre: vitrine → configurador (foto, prévia) →
-// carrinho → pedido → acompanhamento → painel do dono (login, lista, detalhe,
-// arquivo 3D, status, anotações) e varre contraste e nomes acessíveis em cada
-// estado. Não precisa de nenhuma conta: usa a IA simulada.
+// carrinho (com endereço de entrega) → pedido → acompanhamento → painel do dono
+// (só aparece para a conta do dono: lista, endereço, fotos, arquivo 3D, status,
+// anotações) e varre contraste e nomes acessíveis em cada estado. Não precisa
+// de nenhuma conta real: usa a IA simulada e contas na memória do servidor.
 //
 //   1. npm run build
-//   2. ADMIN_PASSWORD=senha-de-teste PREVIEWS_PER_DAY_PER_IP=100 npm run dev:full   (outro terminal)
+//   2. ADMIN_EMAILS=dono@exemplo.com PREVIEWS_PER_DAY_PER_IP=100 MOCK_DELAY_MS=2500 npm run dev:full   (outro terminal)
 //      (cada rodada gera 3 prévias; sem subir o limite por rede, a 3ª rodada
 //       seguida bate na cota de 8 por IP, que está funcionando como deveria)
-//   3. ADMIN_PASSWORD=senha-de-teste npm run test:e2e              (desktop)
-//      ADMIN_PASSWORD=senha-de-teste npm run test:e2e -- 390 844 1 (celular)
+//   3. npm run test:e2e                (desktop)
+//      npm run test:e2e -- 390 844 1   (celular)
+//   Se usar outro e-mail de dono, passe o mesmo em OWNER_EMAIL.
 //
 // Argumentos opcionais: <largura> <altura> <celular:0|1> <porta do Chrome>
 // Variáveis: BASE_URL (padrão http://localhost:8888), CHROME_PATH (caminho do
@@ -24,8 +26,8 @@ import { fileURLToPath } from 'node:url'
 
 const [W = '1366', H = '900', mobileArg = '0', portArg = '9700'] = process.argv.slice(2)
 const base = process.env.BASE_URL ?? 'http://localhost:8888'
-const adminPassword = process.env.ADMIN_PASSWORD
-if (!adminPassword) { console.error('Defina ADMIN_PASSWORD (a mesma do servidor).'); process.exit(2) }
+// o dono é a conta cujo e-mail está em ADMIN_EMAILS no servidor (não há senha do painel)
+const ownerEmail = process.env.OWNER_EMAIL ?? 'dono@exemplo.com'
 const photoPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../fixtures/pets/lulu-creme-gravata-branca.webp')
 const width = Number(W), height = Number(H), mobile = mobileArg === '1', port = Number(portArg)
 
@@ -287,12 +289,29 @@ try {
   await evaluate(`(() => { const i = document.querySelector('input[name=name]'); Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(i, ''); i.dispatchEvent(new Event('input', { bubbles: true })) })()`)
   await click('button', 'Enviar pedido')
   await sleep(500)
-  const errs = await evaluate(`({ invalid: [...document.querySelectorAll('[aria-invalid=true]')].map(e => e.name || e.type), alerts: [...document.querySelectorAll('[role=alert]')].map(a => a.textContent), focusedName: document.activeElement?.name })`)
-  check('enviar vazio: mostra erros no nome e no aceite, e foca o primeiro', errs.invalid.includes('name') && errs.invalid.includes('checkbox') && errs.focusedName === 'name', JSON.stringify(errs))
-  await shot('07-carrinho-erros')
+  const errs = await evaluate(`({ invalid: [...document.querySelectorAll('[aria-invalid=true]')].map(e => e.name || e.type), focusedName: document.activeElement?.name })`)
+  const wanted = ['name', 'phone', 'cep', 'street', 'number', 'neighborhood', 'city', 'state', 'checkbox']
+  check('enviar vazio: erros no nome, WhatsApp, endereço e aceite, e foca o primeiro', wanted.every((n) => errs.invalid.includes(n)) && errs.focusedName === 'name', JSON.stringify(errs))
+  await shot('07-carrinho-erros', true)
+
+  // retirada: o endereço some; voltar para a entrega traz os campos de volta
+  await click('label', 'Retirada com a loja')
+  check('retirada: o endereço não é pedido', !(await evaluate(`!!document.querySelector('input[name=cep]')`)))
+  await shot('07b-carrinho-retirada')
+  await click('label', 'Entrega no endereço')
+  check('entrega: os campos do endereço voltam', await evaluate(`!!document.querySelector('input[name=cep]')`))
+
   await type('input[name=name]', 'Maria Souza')
   await type('input[name=phone]', '(19) 99999-1234')
-  await type('input[name=city]', 'Indaiatuba')
+  // o servidor consulta o CEP no ViaCEP; aqui a resposta é simulada para o teste não depender da internet
+  await evaluate(`(() => { const real = window.fetch; window.fetch = (url, init) => String(url).includes('/api/cep/') ? Promise.resolve(new Response(JSON.stringify({ found: true, address: { street: 'Rua das Flores', neighborhood: 'Centro', city: 'Indaiatuba', state: 'SP' } }), { status: 200, headers: { 'content-type': 'application/json' } })) : real(url, init) })()`)
+  await type('input[name=cep]', '13330000')
+  await waitFor(`document.querySelector('input[name=street]')?.value === 'Rua das Flores'`, 5000, 'endereço preenchido pelo CEP')
+  const filled = await evaluate(`({ cep: document.querySelector('input[name=cep]').value, bairro: document.querySelector('input[name=neighborhood]').value, city: document.querySelector('input[name=city]').value, uf: document.querySelector('select[name=state]').value, hint: document.body.innerText.includes('Endereço encontrado') })`)
+  check('CEP completo ganha a máscara e preenche rua, bairro, cidade e estado', filled.cep === '13330-000' && filled.bairro === 'Centro' && filled.city === 'Indaiatuba' && filled.uf === 'SP' && filled.hint, JSON.stringify(filled))
+  await type('input[name=number]', '123')
+  await type('input[name=complement]', 'Casa 2')
+  await shot('07c-carrinho-endereco', true)
   await click('input[type=checkbox]')
   await click('button', 'Enviar pedido')
   await waitFor(`document.body.innerText.includes('Pedido registrado')`, 15000, 'pedido registrado')
@@ -312,7 +331,7 @@ try {
   const order = await evaluate(`({ t: document.body.innerText, img: !!document.querySelector('img[alt^="Prévia da escultura"]') })`)
   await shot('09-pedido-cliente')
   check('página do pedido: código, status "Pedido recebido", escultura e imagem', order.t.includes(sent.code) && order.t.includes('PEDIDO RECEBIDO') && order.t.includes('Escultura de Thor') && order.img)
-  check('o cliente NÃO vê o telefone nem anotações internas', !order.t.includes('99999-1234') && !order.t.includes('19999991234'))
+  check('o cliente NÃO vê o telefone, o endereço nem anotações internas', !order.t.includes('99999-1234') && !order.t.includes('19999991234') && !order.t.includes('Rua das Flores'))
   await go('/pedido?c=CP-AAAAAA&t=errado')
   await waitFor(`document.body.innerText.includes('não encontrado')`, 8000)
   check('código/token errado: mensagem de pedido não encontrado', true)
@@ -325,25 +344,58 @@ try {
 
   // ───────── 5. painel do dono ─────────
   phase = 'painel'
+  const notFound = await evaluate(`fetch('/api/rota-que-nao-existe').then(async (r) => ({ status: r.status, body: await r.text() }))`)
+
+  // visitante: /admin parece qualquer endereço que não existe
   await send('Network.clearBrowserCookies')
   await go('/admin')
-  await waitFor(`!!document.querySelector('input[type=password]')`, 8000, 'tela de login')
-  await shot('10-admin-login')
-  check('painel sem login: só mostra o formulário de senha', !(await text()).includes('Pedidos'))
-  await type('input[type=password]', 'senha-errada')
-  await click('button', 'Entrar')
-  await waitFor(`document.body.innerText.includes('Senha incorreta')`, 8000)
-  check('senha errada: mostra erro e não entra', true)
-  await type('input[type=password]', adminPassword)
-  await click('button', 'Entrar')
+  await waitFor(`document.body.innerText.includes('Página não encontrada')`, 8000, 'visitante vê "não encontrada"')
+  const visitor = await evaluate(`({ t: document.body.innerText, pw: !!document.querySelector('input[type=password]'), title: document.title })`)
+  check('visitante em /admin: vê a página "não encontrada", sem login do painel e sem pista do painel', !visitor.pw && !/[Pp]ainel|[Pp]edidos/.test(visitor.t) && visitor.title === 'Página não encontrada | Cristal Pet Esculturas', JSON.stringify(visitor))
+  await shot('10-admin-visitante')
+  const visitorApi = await evaluate(`Promise.all(['/api/admin/stats', '/api/admin/orders', '/api/admin/accounts'].map(async (p) => { const r = await fetch(p); return { status: r.status, body: await r.text() } }))`)
+  check('visitante na API do painel: 404 idêntico ao de uma rota que não existe', visitorApi.every((r) => r.status === 404 && r.body === notFound.body), JSON.stringify(visitorApi).slice(0, 200))
+
+  // cliente comum (logado): também não vê nem sabe do painel
+  await go('/entrar')
+  await type('input[type=email]', accountEmail)
+  await type('input[autocomplete="current-password"]', accountPassword)
+  await click('button[type=submit]', 'Entrar')
+  await waitFor(`!!document.querySelector('header button[aria-label="Minha conta"]')`, 10000, 'cliente logado')
+  await click('header button[aria-label="Minha conta"]')
+  const customerMenu = await evaluate(`document.querySelector('header [id]:not(svg)')?.closest('div.relative')?.innerText ?? ''`)
+  check('cliente comum: o menu da conta não mostra o painel', /Minha conta/.test(customerMenu) && !/Painel/.test(customerMenu), customerMenu.replace(/\n/g, ' | ').slice(0, 160))
+  const customerApi = await evaluate(`Promise.all(['/api/admin/stats', '/api/auth/me'].map(async (p) => { const r = await fetch(p); return { status: r.status, body: await r.text() } }))`)
+  check('cliente comum: API do painel responde 404 igual a rota inexistente, e a conta não traz sinal de dono', customerApi[0].status === 404 && customerApi[0].body === notFound.body && !/isAdmin/.test(customerApi[1].body), JSON.stringify(customerApi).slice(0, 200))
+  await go('/admin')
+  await waitFor(`document.body.innerText.includes('Página não encontrada')`, 8000, 'cliente vê "não encontrada"')
+  check('cliente comum em /admin: vê a página "não encontrada"', !/Buscar pedido/.test(await text()))
+  await evaluate(`fetch('/api/auth/logout', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }).then((r) => r.status)`)
+
+  // dono: a conta com o e-mail de ADMIN_EMAILS (cria no primeiro uso; nas rodadas seguintes só entra)
+  const ownerHow = await evaluate(`(async () => {
+    const call = (path, body) => fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.status)
+    const login = { email: ${JSON.stringify(ownerEmail)}, password: ${JSON.stringify(accountPassword)} }
+    if ((await call('/api/auth/login', login)) === 200) return 'entrou'
+    const created = await call('/api/auth/signup', { name: 'Dona da Cristal', ...login })
+    return created === 200 || created === 201 ? 'cadastrou' : 'erro ' + created
+  })()`)
+  check('conta do dono criada ou aberta (e-mail de ADMIN_EMAILS)', ownerHow === 'entrou' || ownerHow === 'cadastrou', `${ownerHow} — o servidor foi iniciado com ADMIN_EMAILS=${ownerEmail}?`)
+  await go('/')
+  await waitFor(`!!document.querySelector('header button[aria-label="Minha conta"]')`, 8000, 'dono logado')
+  await click('header button[aria-label="Minha conta"]')
+  const ownerMenu = await evaluate(`document.querySelector('header [id]:not(svg)')?.closest('div.relative')?.innerText ?? ''`)
+  check('conta do dono: o menu mostra "Painel do dono"', /Painel do dono/.test(ownerMenu), ownerMenu.replace(/\n/g, ' | ').slice(0, 160))
+  await shot('10b-menu-dono')
+  await click('header a[href="/admin"]', 'Painel do dono')
   await waitFor(`document.body.innerText.includes('Buscar pedido')`, 10000, 'dashboard')
   await shot('11-admin-lista')
-  const dash = await evaluate(`({ t: document.body.innerText, rows: document.querySelectorAll('.orders-table tbody tr').length, th: document.querySelectorAll('.orders-table th').length })`)
-  check('painel: lista o pedido novo, com cliente e status "Novo"', dash.rows >= 1 && dash.t.includes(sent.code) && dash.t.includes('Maria Souza') && /NOVO/.test(dash.t))
+  const dash = await evaluate(`({ t: document.body.innerText, rows: document.querySelectorAll('.orders-table tbody tr').length, title: document.title })`)
+  check('painel do dono: lista o pedido novo, com cliente, cidade/UF e status "Novo"', dash.rows >= 1 && dash.t.includes(sent.code) && dash.t.includes('Maria Souza') && dash.t.includes('Indaiatuba - SP') && /NOVO/.test(dash.t) && dash.title === 'Painel do dono', dash.title)
   const cookieFlags = await send('Network.getCookies', { urls: [base] })
-  const ck = cookieFlags.result.cookies.find((c) => c.name === 'cp_admin')
-  check('cookie do painel: HttpOnly e SameSite=Strict', ck && ck.httpOnly && ck.sameSite === 'Strict', JSON.stringify(ck && { httpOnly: ck.httpOnly, sameSite: ck.sameSite }))
-  check('o JavaScript da página não enxerga o cookie do painel', !(await evaluate('document.cookie')).includes('cp_admin'))
+  const ck = cookieFlags.result.cookies.find((c) => c.name === 'cp_user')
+  check('cookie da sessão: HttpOnly e SameSite=Strict', ck && ck.httpOnly && ck.sameSite === 'Strict', JSON.stringify(ck && { httpOnly: ck.httpOnly, sameSite: ck.sameSite }))
+  check('o JavaScript da página não enxerga o cookie da sessão', !(await evaluate('document.cookie')).includes('cp_user'))
   await type('input[type=search]', 'inexistente')
   await waitFor(`document.body.innerText.includes('Nenhum pedido com esse filtro')`, 5000)
   check('busca sem resultado mostra mensagem', true)
@@ -358,22 +410,53 @@ try {
   await waitFor(`document.body.innerText.includes('Anotações internas')`, 10000, 'detalhe do pedido')
   await shot('12-admin-detalhe', true)
   const detail = await evaluate(`document.body.innerText`)
-  check('detalhe: telefone, cidade, esculturas e valor', /Maria Souza/.test(detail) && /Indaiatuba/.test(detail) && /Média/.test(detail) && /Sentado/.test(detail) && /A combinar/.test(detail))
+  check('detalhe: forma de entrega, destinatário, WhatsApp e endereço completo para a etiqueta', /Entrega no endereço/.test(detail) && /Maria Souza/.test(detail) && detail.includes('(19) 99999-1234') && detail.includes('Rua das Flores, 123 - Casa 2') && detail.includes('Centro') && detail.includes('Indaiatuba - SP') && detail.includes('CEP 13330-000'))
+  check('detalhe: escultura, tamanho, pose, valor e conta do cliente', /Média/.test(detail) && /Sentado/.test(detail) && /A combinar/.test(detail) && detail.includes(accountEmail))
   check('detalhe: foto original e prévia aprovada lado a lado', (await evaluate(`document.querySelectorAll('button[aria-label^="Ampliar"]').length`)) === 2)
   await click('button[aria-label="Ampliar: Foto original"]')
   await waitFor(`!!document.querySelector('dialog[open]')`, 5000)
   check('foto original amplia no lightbox', true)
   await key('Escape'); await sleep(400)
 
+  // baixar a foto do pet e a prévia (arquivos com o nome do pedido e do pet)
+  const downloads = await evaluate(`Promise.all([...document.querySelectorAll('a[download]')].filter((a) => /^Baixar (foto original|prévia aprovada)/.test(a.textContent.trim())).map(async (a) => { const r = await fetch(a.href); return { status: r.status, disp: r.headers.get('content-disposition') || '' } }))`)
+  check('baixar a foto do pet e a prévia: dois arquivos com o nome do pedido e do pet', downloads.length === 2 && downloads.every((d) => d.status === 200 && /attachment/.test(d.disp)) && downloads.some((d) => d.disp.includes(`${sent.code}-Thor-foto`)) && downloads.some((d) => d.disp.includes(`${sent.code}-Thor-previa`)), JSON.stringify(downloads))
+
+  // dados de envio copiáveis
+  await send('Browser.grantPermissions', { origin: base, permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'] })
+  await click('button', 'Copiar dados de envio')
+  await waitFor(`document.body.innerText.includes('Copiado!') || document.body.innerText.includes('Não deu para copiar')`, 5000, 'resposta do botão de copiar')
+  check('"Copiar dados de envio" copia para a área de transferência', (await text()).includes('Copiado!'))
+  const clip = await evaluate(`navigator.clipboard.readText().catch(() => '')`)
+  if (clip) check('o texto copiado traz destinatário, WhatsApp e endereço', clip.includes('Destinatário: Maria Souza') && clip.includes('(19) 99999-1234') && clip.includes('Rua das Flores, 123 - Casa 2') && clip.includes('CEP 13330-000'), clip.replace(/\n/g, ' ⏎ '))
+
+  // arquivo 3D: pede confirmação (custa dinheiro), mostra o andamento, baixa, e gera de novo
+  const confirmButtons = '[role=group][aria-label="Confirmar a geração"] button'
   await click('button', 'Gerar arquivo 3D')
-  await waitFor(`document.body.innerText.includes('Gerando o arquivo 3D')`, 8000)
+  await waitFor(`document.body.innerText.includes('tem custo por arquivo')`, 5000, 'confirmação antes de gerar')
+  await shot('12b-admin-3d-confirmar', true)
+  await click(confirmButtons, 'Cancelar')
+  check('gerar o 3D pede confirmação (tem custo); cancelar não gera nada', !(await text()).includes('Pode levar alguns minutos') && !!(await evaluate(find('button', 'Gerar arquivo 3D'))))
+  await click('button', 'Gerar arquivo 3D')
+  await click(confirmButtons, 'Sim, gerar')
+  await waitFor(`document.body.innerText.includes('Pode levar alguns minutos')`, 8000, 'gerando')
+  await shot('12c-admin-3d-gerando', true)
+  check('enquanto gera: mostra o andamento e avisa que continua sem a página aberta', await evaluate(`!!document.querySelector('[role=progressbar]') || document.body.innerText.includes('Gerando o arquivo 3D')`))
   await waitFor(`[...document.querySelectorAll('a')].some(a => /Baixar STL/.test(a.textContent))`, 30000, 'STL pronto')
   const stlHref = await evaluate(`[...document.querySelectorAll('a')].find(a => /Baixar STL/.test(a.textContent)).href`)
   const stl = await evaluate(`fetch(${JSON.stringify(stlHref)}).then(async r => ({ status: r.status, disp: r.headers.get('content-disposition'), body: (await r.text()).slice(0, 40) }))`)
   check('arquivo 3D: gera, mostra "Baixar STL" e o arquivo baixa como STL com o nome do pedido', stl.status === 200 && stl.body.startsWith('solid ') && stl.disp.includes(`${sent.code}-Thor.stl`), JSON.stringify(stl))
   check('arquivo 3D de teste é avisado como demonstração', (await text()).includes('Arquivo de teste (modo demonstração)'))
-
+  check('arquivo pronto traz o guia "Antes de imprimir"', (await text()).includes('Antes de imprimir'))
   await shot('13-admin-3d-pronto', true)
+
+  await click('button', 'Gerar de novo')
+  await waitFor(`document.body.innerText.includes('troca os arquivos atuais')`, 5000, 'confirmação para gerar de novo')
+  await click(confirmButtons, 'Sim, gerar')
+  await waitFor(`document.body.innerText.includes('Pode levar alguns minutos')`, 8000, 'gerando de novo')
+  await waitFor(`[...document.querySelectorAll('a')].some(a => /Baixar STL/.test(a.textContent))`, 30000, 'STL de novo')
+  check('gerar de novo: pede confirmação, refaz o arquivo e o STL volta a ficar disponível', true)
+
   await type('input[maxlength="300"]', 'Pix recebido')
   await click('button', 'Confirmar pedido')
   await waitFor(`document.body.innerText.includes('CONFIRMADO')`, 8000, 'status confirmado')
@@ -386,14 +469,22 @@ try {
   await go(sent.track)
   await waitFor(`document.body.innerText.includes('PEDIDO CONFIRMADO')`, 10000, 'cliente vê confirmado')
   const cust = await text()
-  check('o cliente vê "Pedido confirmado" e o recado, mas não as anotações internas', cust.includes('Pix recebido') && !cust.includes('Cliente prefere retirar') && !/Arquivo 3D/.test(cust))
+  check('o cliente vê "Pedido confirmado" e o recado, mas não as anotações internas nem o endereço', cust.includes('Pix recebido') && !cust.includes('Cliente prefere retirar') && !/Arquivo 3D/.test(cust) && !cust.includes('Rua das Flores'))
 
-  // sair do painel
+  // a lista mostra o andamento dos arquivos 3D
   await go('/admin')
   await waitFor(`document.body.innerText.includes('Buscar pedido')`, 8000)
-  await click('button', 'Sair')
-  await waitFor(`!!document.querySelector('input[type=password]')`, 8000)
-  check('"Sair" volta ao login', true)
+  await type('input[type=search]', sent.code)
+  await waitFor(`document.querySelectorAll('.orders-table tbody tr').length === 1`, 5000)
+  check('a lista mostra quantos arquivos 3D do pedido estão prontos', /1 de 1 pronto/.test(await text()))
+
+  // sair: volta para a loja e o painel deixa de existir para este aparelho
+  await click('header button', 'Sair')
+  await waitFor(`!!document.querySelector('header button[aria-label="Faça login"]')`, 8000, 'visitante de novo')
+  check('"Sair" no painel volta para a loja como visitante', true)
+  await go('/admin')
+  await waitFor(`document.body.innerText.includes('Página não encontrada')`, 8000)
+  check('depois de sair, /admin volta a ser "não encontrada"', !/Buscar pedido/.test(await text()))
 
   // ───────── 6. falhas pelo nome do pet (gatilhos do modo demonstração) ─────────
   phase = 'falhas'

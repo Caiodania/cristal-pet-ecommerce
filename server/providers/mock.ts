@@ -173,7 +173,9 @@ export function createMockModelProvider(delayMs: number): PrintModelProvider {
 
     async poll(jobId): Promise<ModelPoll> {
       const job = decodeJob(jobId);
-      if (Date.now() - job.t < job.d) return { status: "processing" };
+      if (Date.now() - job.t < job.d) {
+        return { status: "processing", progress: Math.min(95, Math.floor(((Date.now() - job.t) / job.d) * 100)) };
+      }
       if (/falha3d/i.test(job.name)) {
         return { status: "failed", code: "provider_error", message: "Falha simulada na geração do arquivo 3D." };
       }

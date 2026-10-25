@@ -11,7 +11,7 @@ Loja de **esculturas 3D de pets**: o cliente envia a foto, vê a prévia e pede;
 ```bash
 npm install
 npm run build
-ADMIN_PASSWORD=uma-senha npm run dev:full     # http://localhost:8888  (loja)  /admin  (painel)
+ADMIN_EMAILS=voce@exemplo.com npm run dev:full     # http://localhost:8888 (loja); o painel só aparece na conta com esse e-mail
 ```
 
 Sem mais configuração: dados em memória e IA simulada ("modo demonstração"). Dá para percorrer a loja inteira.

@@ -249,6 +249,18 @@ export function MinhaContaCorpo() {
         )}
       </Card>
 
+      {user.isAdmin && (
+        <Card className="rounded-3xl border-magenta/40">
+          <h2 className="font-display text-xl font-extrabold">Painel do dono</h2>
+          <p className="mt-1 text-ink-soft">Pedidos dos clientes, dados de envio, fotos e arquivos para a impressora 3D.</p>
+          <div className="mt-4">
+            <Button href="/admin" size="md">
+              Abrir o painel
+            </Button>
+          </div>
+        </Card>
+      )}
+
       <Card className="rounded-3xl">
         <h2 className="font-display text-xl font-extrabold">Pedidos</h2>
         <p className="mt-1 text-ink-soft">Acompanhe o andamento das suas esculturas em qualquer aparelho.</p>

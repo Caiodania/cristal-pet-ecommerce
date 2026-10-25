@@ -1,47 +1,29 @@
-// Login do painel do dono. Sem conta de usuário: uma senha (variável de
-// ambiente ADMIN_PASSWORD) troca por um cookie de sessão assinado (HMAC) e
-// com validade. O cookie é HttpOnly (o JavaScript do site não lê), SameSite=
-// Strict (outros sites não conseguem usá-lo) e Secure em https.
+// Acesso do dono (painel). NÃO existe senha própria do painel nem tela de login
+// do painel: o dono entra pelo login normal do site, com a conta dele, e o
+// servidor só libera o painel se o e-mail da conta estiver em ADMIN_EMAILS.
 //
-// Quando houver mais de uma pessoa usando o painel, troque por Supabase Auth:
-// só este arquivo muda (requireAdmin).
+// Quem não é o dono (visitante ou cliente) recebe 404 em /api/admin/*, a mesma
+// resposta de uma rota que não existe: nada revela que o painel existe.
 
 import type { Ctx } from "./context";
-import { safeEqual, signToken, verifyToken } from "./crypto";
-import { HttpError, parseCookies, serializeCookie } from "./http";
+import { HttpError } from "./http";
+import { currentUser } from "./services/accounts";
+import type { ProfileRecord } from "./store/types";
 
-const COOKIE = "cp_admin";
+/** A resposta de "esta rota não existe": a mesma para o painel negado e para o que de fato não existe. */
+export const routeNotFound = () => new HttpError(404, "not_found", "Rota não encontrada.");
 
-const isHttps = (req: Request) => new URL(req.url).protocol === "https:";
-
-export function checkPassword(ctx: Ctx, password: unknown): boolean {
-  if (!ctx.config.adminPassword) {
-    throw new HttpError(503, "admin_disabled", "O painel não está configurado (defina ADMIN_PASSWORD).");
-  }
-  return typeof password === "string" && safeEqual(password, ctx.config.adminPassword);
+/** A conta logada, se for a do dono. */
+export async function currentAdmin(ctx: Ctx, req: Request): Promise<ProfileRecord | null> {
+  const user = await currentUser(ctx, req);
+  return user && ctx.config.adminEmails.includes(user.email.trim().toLowerCase()) ? user : null;
 }
 
-export function sessionCookie(ctx: Ctx, req: Request): string {
-  const ttl = ctx.config.sessionTtlSeconds;
-  const token = signToken(
-    { sub: "admin", exp: Math.floor(ctx.now().getTime() / 1000) + ttl },
-    ctx.config.sessionSecret,
-  );
-  return serializeCookie(COOKIE, token, { maxAge: ttl, secure: ctx.config.isProd || isHttps(req) });
-}
-
-export function clearCookie(ctx: Ctx, req: Request): string {
-  return serializeCookie(COOKIE, "", { maxAge: 0, secure: ctx.config.isProd || isHttps(req) });
-}
-
-export function isAdmin(ctx: Ctx, req: Request): boolean {
-  const token = parseCookies(req.headers.get("cookie"))[COOKIE];
-  if (!token) return false;
-  return verifyToken(token, ctx.config.sessionSecret, ctx.now().getTime() / 1000)?.sub === "admin";
-}
-
-export function requireAdmin(ctx: Ctx, req: Request): void {
-  if (!isAdmin(ctx, req)) throw new HttpError(401, "unauthorized", "Entre no painel para continuar.");
+/** Barra quem não é o dono, com 404 (não 401/403, que confirmariam que a rota existe). */
+export async function requireAdmin(ctx: Ctx, req: Request): Promise<ProfileRecord> {
+  const admin = await currentAdmin(ctx, req);
+  if (!admin) throw routeNotFound();
+  return admin;
 }
 
 /**

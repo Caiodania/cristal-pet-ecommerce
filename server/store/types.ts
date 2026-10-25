@@ -2,7 +2,7 @@
 // desenvolvimento) e `supabase` (produção). O resto do servidor só conhece
 // esta interface, então trocar de banco é trocar um arquivo.
 
-import type { ItemConfig, ModelStatus, OrderStatus, PreviewStatus } from "../../lib/loja/tipos";
+import type { Address, DeliveryMethod, ItemConfig, ModelStatus, OrderStatus, PreviewStatus } from "../../lib/loja/tipos";
 
 /** A conta de um cliente (o login em si vive no Supabase Auth; aqui ficam os dados da loja). */
 export type ProfileRecord = {
@@ -99,6 +99,9 @@ export type OrderRecord = {
   customerName?: string;
   customerPhone?: string;
   city?: string;
+  /** Como o cliente quer receber, e o endereço (só na entrega). */
+  deliveryMethod?: DeliveryMethod;
+  shippingAddress?: Address;
   notes?: string;
   adminNotes?: string;
   estimateCents: number | null;

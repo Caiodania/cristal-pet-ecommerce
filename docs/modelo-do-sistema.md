@@ -15,10 +15,10 @@ Vitrine ─► Criar (6 passos) ─► Carrinho ─► Enviar pedido ─► What
 
 1. **Vitrine** (`/`): hero com um CTA, exemplos, como funciona, tamanhos com preço, benefícios, FAQ.
 2. **Criar** (`/personalizar`): tamanho → tipo → cor → nome → **foto** → **prévia**. Na ordem da loja de referência. A foto é reduzida e recodificada no navegador (remove o EXIF); a prévia é gerada no servidor pela IA de imagem. O cliente pode **gerar outra** (mesma foto, sem reenviar) dentro do limite diário.
-3. **Carrinho** (`/carrinho`): esculturas, valor estimado e formulário (nome, WhatsApp opcional, cidade, observações, aceite da privacidade). "Enviar pedido" grava o pedido, devolve o **código `CP-XXXXXX`** e abre o WhatsApp com a nota do pedido pronta.
+3. **Carrinho** (`/carrinho`): esculturas, valor estimado e formulário (nome de quem recebe, **WhatsApp obrigatório**, **entrega** com endereço completo (o CEP preenche rua, bairro e cidade) ou **retirada**, observações, aceite da privacidade). "Enviar pedido" grava o pedido, devolve o **código `CP-XXXXXX`** e abre o WhatsApp com a nota do pedido pronta.
 4. **Conta** (`/entrar`, `/criar-conta`, `/minha-conta`, `/esqueci-a-senha`, `/redefinir-senha`, `/confirmar`): botão "Faça login" no cabeçalho e, logado, o menu "Minha conta" com as prévias que sobram. Ao tentar gerar a prévia sem login, abre um diálogo de entrar/criar conta sem sair da página. Detalhes em [`backend.md`](backend.md#contas-e-login).
 5. **Acompanhar** (`/pedido?c=…&t=…`) e **Meus pedidos** (`/meus-pedidos`): o link do WhatsApp (com token longo) abre sem login; "Meus pedidos" lista os pedidos **da conta**, em qualquer aparelho.
-6. **Painel** (`/admin`): login com senha, lista com busca e filtros por status, detalhe do pedido, arquivo 3D, anotações, e `/admin/contas` (contas, prévias usadas, prévias extras).
+6. **Painel do dono** (`/admin`): **só a conta do dono** (e-mail em `ADMIN_EMAILS`) o enxerga; para todos os outros é um "não encontrado" igual ao de qualquer endereço inexistente. Lista com busca e filtros por status, detalhe do pedido com **dados de envio e endereço**, **foto do pet e prévia** (para baixar), **arquivo 3D** (gerar com confirmação, andamento, baixar STL/GLB), anotações, e `/admin/contas` (contas, prévias usadas, prévias extras).
 
 Se o servidor estiver fora do ar na hora de enviar, o botão **continua funcionando** com a mensagem sem o link (plano B): o WhatsApp nunca depende do backend.
 
@@ -52,7 +52,7 @@ Páginas de pedido usam **query string** e leem por fetch: no export estático n
 
 ## 4. Dados
 
-Seis tabelas (`supabase/migrations/0001_init.sql` e `0002_contas.sql`, validadas num Postgres de verdade com `npm run test:sql`): **`profiles`** (a conta: e-mail, nome, prévias extras; criada por gatilho para cada usuário do Supabase Auth), **`customer_sessions`** (só o hash do token do cookie), **`previews`** (foto, imagem, arquivo 3D, custos, estados das duas etapas), **`orders`**, **`order_items`** (uma prévia vale em um pedido só: `unique`) e **`order_events`** (linha do tempo). Prévias e pedidos têm `user_id`. A prévia é reservada por uma função SQL (`reserve_preview`) que trava a conta e confere a cota; o pedido é criado por outra (`create_order`), numa transação só. **RLS ligado e sem políticas**: o navegador nunca fala com o banco; só o servidor, com a chave de serviço. Fotos, imagens e STL ficam num **bucket privado** e só saem por links assinados e temporários.
+Seis tabelas (`supabase/migrations/0001_init.sql`, `0002_contas.sql` e `0003_envio.sql`, validadas num Postgres de verdade com `npm run test:sql`): **`profiles`** (a conta: e-mail, nome, prévias extras; criada por gatilho para cada usuário do Supabase Auth), **`customer_sessions`** (só o hash do token do cookie), **`previews`** (foto, imagem, arquivo 3D, custos, estados das duas etapas), **`orders`**, **`order_items`** (uma prévia vale em um pedido só: `unique`) e **`order_events`** (linha do tempo). Prévias e pedidos têm `user_id`. A prévia é reservada por uma função SQL (`reserve_preview`) que trava a conta e confere a cota; o pedido (com a forma de receber e o endereço de entrega, `delivery_method` e `shipping_address`) é criado por outra (`create_order`), numa transação só. **RLS ligado e sem políticas**: o navegador nunca fala com o banco; só o servidor, com a chave de serviço. Fotos, imagens e STL ficam num **bucket privado** e só saem por links assinados e temporários.
 
 O **catálogo** (tamanhos, tipos, cores, preços) fica em código versionado (`content/estatua.ts`), importado pelo site e pelo servidor. O preço é **sempre recalculado no servidor**; o valor que o navegador mande é ignorado. Enquanto algum preço for `null` ("a definir"), o total aparece como "A combinar".
 
@@ -60,17 +60,17 @@ O **catálogo** (tamanhos, tipos, cores, preços) fica em código versionado (`c
 
 ## 5. API
 
-Públicas: `GET /api/config`, `GET /api/orders/:code?t=token`. Da conta (cookie `cp_user`; sem login: 401 `login_required`): `POST /api/auth/signup|login|logout|forgot|resend|confirm|reset`, `GET /api/auth/me`, `GET /api/me/orders`, `POST /api/previews`, `PUT /api/previews/:id/photo`, `POST /api/previews/:id/start`, `GET /api/previews/:id`, `POST /api/previews/:id/regenerate`, `POST /api/orders`. Do painel (cookie de sessão): `POST /api/admin/login|logout`, `GET /api/admin/me|stats|orders|orders/:id|users`, `PATCH /api/admin/orders/:id|users/:id`, `POST|GET /api/admin/orders/:id/items/:itemId/model`.
+Públicas: `GET /api/config`, `GET /api/orders/:code?t=token`. Da conta (cookie `cp_user`; sem login: 401 `login_required`): `POST /api/auth/signup|login|logout|forgot|resend|confirm|reset`, `GET /api/auth/me`, `GET /api/me/orders`, `POST /api/previews`, `PUT /api/previews/:id/photo`, `POST /api/previews/:id/start`, `GET /api/previews/:id`, `POST /api/previews/:id/regenerate`, `POST /api/orders`. Pública também: `GET /api/cep/:cep` (endereço pelo CEP, via ViaCEP). Do painel (só a conta do dono; 404 para o resto): `GET /api/admin/stats|orders|orders/:id|users`, `PATCH /api/admin/orders/:id|users/:id`, `POST|GET /api/admin/orders/:id/items/:itemId/model` (o POST aceita `{regenerate: true}`).
 
 As etapas de IA são **jobs assíncronos** consultados por polling: o site pergunta ao servidor a cada 2 s e o servidor pergunta ao provedor. Sem fila nem webhook (dá para acrescentar depois sem mudar o site).
 
 ## 6. Segurança, LGPD e acessibilidade
 
-- Nenhuma chave no navegador. Painel: senha em variável de ambiente, cookie assinado `HttpOnly` + `SameSite=Strict` + `Secure`, checagem de origem (CSRF), tentativas limitadas.
+- Nenhuma chave no navegador. Painel: sem senha própria; vale a conta do dono (e-mail em `ADMIN_EMAILS`), conferida em toda chamada `/api/admin/*`, que responde 404 a qualquer outra pessoa; mesma sessão `HttpOnly` + `SameSite=Strict` + `Secure` da conta, checagem de origem (CSRF), tentativas limitadas.
 - Conta do cliente: senha no Supabase Auth, sessão em cookie `HttpOnly` + `SameSite=Strict` (token só como hash no banco), e-mail confirmado, respostas que não revelam quem tem conta, cota atômica no banco. Detalhes em [`backend.md`](backend.md#contas-e-login).
 - Pedido do cliente só abre com o **token** do link (comparação em tempo constante; "não existe" e "token errado" dão a mesma resposta).
 - Cabeçalhos de segurança e CSP em `public/_headers` (testados no servidor local).
-- LGPD: aceite registrado (`consent_at`), foto reduzida e sem EXIF, só nome/cidade/WhatsApp (os dois últimos opcionais). Política de privacidade e retenção das fotos: `TODO-CLIENTE`.
+- LGPD: aceite registrado (`consent_at`), foto reduzida e sem EXIF, só nome, WhatsApp e, na entrega, o endereço (só o dono vê). Política de privacidade e retenção das fotos: `TODO-CLIENTE`.
 - Acessibilidade verificada em cada estado da loja e do painel (contraste AA, nomes acessíveis, teclado, alvos de toque).
 
 ## 7. Roadmap
@@ -80,6 +80,6 @@ As etapas de IA são **jobs assíncronos** consultados por polling: o site pergu
 | **A. Estrutura da loja + backend com IA simulada** | tudo acima, com testes | **feito** |
 | **B. Colocar no ar com dados reais** | projeto Supabase, migration, variáveis, deploy na Netlify, `npm run check:supabase` | falta (precisa das suas contas) |
 | **C. IA de imagem de verdade** | adaptador + afinar o prompt com fotos reais | falta (precisa de chave) |
-| **D. IA 3D de verdade** | adaptador imagem → STL imprimível; testar imprimindo 2 peças | falta (chave + impressora) |
+| **D. IA 3D de verdade** | adaptador do **Meshy** (imagem → STL imprimível; plano em [`meshy.md`](meshy.md)); testar imprimindo 2 peças | terreno pronto no painel; falta a chave e o adaptador |
 | **E. Conteúdo e lançamento** | preços, tamanhos, cores, fotos de esculturas, textos legais, SEO, Lighthouse | falta (`docs/pendencias.md`) |
 | **F. Evoluções** | catálogo editável no painel, métricas de funil, login de equipe (Supabase Auth) | futuro |

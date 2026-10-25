@@ -375,74 +375,91 @@ describe("painel do dono", () => {
     return { code: res.body.order.code as string, token: res.body.token as string };
   };
 
-  it("exige login em todas as rotas do painel", async () => {
+  it("o painel é invisível para quem não é o dono: 404 igual ao de uma rota que não existe", async () => {
     const { ctx } = makeCtx();
+    const nothing = await call(ctx, "GET", "/api/rota-que-nao-existe", { anonymous: true });
+    const customer = { as: "cliente@exemplo.com" };
     for (const [method, path] of [
       ["GET", "/api/admin/orders"],
       ["GET", "/api/admin/stats"],
+      ["GET", "/api/admin/users"],
       ["GET", "/api/admin/orders/qualquer-id"],
       ["PATCH", "/api/admin/orders/qualquer-id"],
+      ["PATCH", "/api/admin/users/qualquer-id"],
       ["POST", "/api/admin/orders/x/items/y/model"],
+      ["DELETE", "/api/admin/orders/x"], // método que nem existe: também 404, não 405
+      ["GET", "/api/admin"],
+      ["GET", "/api/admin/login"], // o login do painel deixou de existir
     ]) {
-      const res = await call(ctx, method, path, { json: method === "GET" ? undefined : {} });
-      assert.equal(res.status, 401, `${method} ${path}`);
+      const body = method === "GET" ? undefined : {};
+      const visitor = await call(ctx, method, path, { anonymous: true, json: body });
+      const client = await call(ctx, method, path, { ...customer, json: body });
+      for (const res of [visitor, client]) {
+        assert.equal(res.status, 404, `${method} ${path}`);
+        assert.deepEqual(res.body, nothing.body, `${method} ${path}`);
+      }
     }
-    assert.equal((await call(ctx, "GET", "/api/admin/me")).body.admin, false);
   });
 
-  it("login: senha errada 401, certa devolve cookie HttpOnly e SameSite=Strict", async () => {
+  it("o dono entra pelo login normal: a conta com e-mail em ADMIN_EMAILS acessa o painel", async () => {
+    const { ctx } = makeCtx({ ADMIN_EMAILS: "Dono@Exemplo.com, outro@exemplo.com" });
+    // maiúsculas e minúsculas não importam, e dá para ter mais de um e-mail
+    const owner = await call(ctx, "GET", "/api/admin/stats", { as: "dono@exemplo.com" });
+    assert.equal(owner.status, 200);
+    assert.equal((await call(ctx, "GET", "/api/admin/stats", { as: "outro@exemplo.com" })).status, 200);
+    assert.equal((await call(ctx, "GET", "/api/admin/stats", { as: "cliente@exemplo.com" })).status, 404);
+  });
+
+  it("só a conta do dono recebe isAdmin em /api/auth/me (para os outros a chave nem existe)", async () => {
     const { ctx } = makeCtx();
-    const wrong = await call(ctx, "POST", "/api/admin/login", { json: { password: "errada" } });
-    assert.equal(wrong.status, 401);
-    const ok = await call(ctx, "POST", "/api/admin/login", { json: { password: "senha-de-teste-123" } });
-    assert.equal(ok.status, 200);
-    const cookie = ok.headers.get("set-cookie")!;
-    assert.match(cookie, /HttpOnly/);
-    assert.match(cookie, /SameSite=Strict/);
-    assert.equal((await call(ctx, "GET", "/api/admin/me", { cookie: cookie.split(";")[0] })).body.admin, true);
+    const owner = await call(ctx, "GET", "/api/auth/me", { as: "dono@exemplo.com" });
+    assert.equal(owner.body.user.isAdmin, true);
+    const client = await call(ctx, "GET", "/api/auth/me", { as: "cliente@exemplo.com" });
+    assert.ok(client.body.user);
+    assert.ok(!("isAdmin" in client.body.user));
+    const visitor = await call(ctx, "GET", "/api/auth/me", { anonymous: true });
+    assert.equal(visitor.body.user, null);
   });
 
-  it("limita tentativas de login", async () => {
-    const { ctx } = makeCtx();
-    let last = 0;
-    for (let i = 0; i < 8; i++) {
-      last = (await call(ctx, "POST", "/api/admin/login", { json: { password: `errada-${i}` } })).status;
-    }
-    assert.equal(last, 429);
-    // e a senha certa também fica bloqueada nesse IP durante a janela
-    assert.equal((await call(ctx, "POST", "/api/admin/login", { json: { password: "senha-de-teste-123" } })).status, 429);
+  it("sem ADMIN_EMAILS o painel fica desligado, até para quem tem conta", async () => {
+    const { ctx } = makeCtx({ ADMIN_EMAILS: "" });
+    assert.equal((await call(ctx, "GET", "/api/admin/stats", { as: "dono@exemplo.com" })).status, 404);
+    assert.ok(!("isAdmin" in (await call(ctx, "GET", "/api/auth/me", { as: "dono@exemplo.com" })).body.user));
   });
 
-  it("painel desligado se não houver senha configurada", async () => {
-    const { ctx } = makeCtx({ ADMIN_PASSWORD: "" });
-    const res = await call(ctx, "POST", "/api/admin/login", { json: { password: "qualquer" } });
-    assert.equal(res.status, 503);
-    assert.equal(res.body.error.code, "admin_disabled");
-  });
-
-  it("cookie expira e adulterado não vale", async () => {
-    const { ctx, clock } = makeCtx({ ADMIN_SESSION_TTL_SECONDS: "60" });
+  it("sair ou perder a sessão tira o acesso ao painel na hora", async () => {
+    const { ctx, clock } = makeCtx();
     const cookie = await adminCookie(ctx);
-    assert.equal((await call(ctx, "GET", "/api/admin/me", { cookie })).body.admin, true);
-    const tampered = cookie.replace(/.$/, (c) => (c === "A" ? "B" : "A"));
-    assert.equal((await call(ctx, "GET", "/api/admin/me", { cookie: tampered })).body.admin, false);
-    clock.ms += 61_000;
-    assert.equal((await call(ctx, "GET", "/api/admin/me", { cookie })).body.admin, false);
+    assert.equal((await call(ctx, "GET", "/api/admin/stats", { cookie })).status, 200);
+    await call(ctx, "POST", "/api/auth/logout", { cookie, json: {} });
+    assert.equal((await call(ctx, "GET", "/api/admin/stats", { cookie })).status, 404);
+
+    // e o cookie adulterado ou vencido também não vale
+    const fresh = await call(ctx, "POST", "/api/auth/login", {
+      anonymous: true,
+      json: { email: "dono@exemplo.com", password: "uma-senha-boa-2026" },
+    });
+    const good = fresh.headers.get("set-cookie")!.split(";")[0];
+    assert.equal((await call(ctx, "GET", "/api/admin/stats", { cookie: good + "x" })).status, 404);
+    clock.ms += 31 * 24 * 3600 * 1000;
+    assert.equal((await call(ctx, "GET", "/api/admin/stats", { cookie: good })).status, 404);
   });
 
-  it("recusa mudanças vindas de outro site (CSRF) mesmo com cookie válido", async () => {
+  it("recusa mudanças vindas de outro site (CSRF) mesmo com cookie do dono", async () => {
     const { ctx } = makeCtx();
     const cookie = await adminCookie(ctx);
-    const res = await call(ctx, "POST", "/api/admin/logout", {
+    const res = await call(ctx, "PATCH", "/api/admin/orders/qualquer-id", {
       cookie,
+      json: { status: "confirmed" },
       headers: { origin: "https://site-malicioso.example" },
     });
     assert.equal(res.status, 403);
-    const same = await call(ctx, "POST", "/api/admin/logout", {
+    const same = await call(ctx, "PATCH", "/api/admin/orders/qualquer-id", {
       cookie,
+      json: { status: "confirmed" },
       headers: { origin: "http://localhost:8888" },
     });
-    assert.equal(same.status, 200);
+    assert.equal(same.status, 404); // passou pela checagem de origem; o pedido é que não existe
   });
 
   it("lista, filtra, busca e conta os pedidos", async () => {

@@ -10,11 +10,12 @@ No site gerado, cada espaço reservado leva `data-todo="…"` no HTML e aparece 
 
 ## Contas e chaves (para ligar o que já está pronto)
 
-- **Supabase:** projeto, as duas migrations (`0001` e `0002`) e as três chaves (URL, anon e service_role). Roteiro e verificação em [`backend.md`](backend.md#ligar-o-supabase).
+- **Supabase:** projeto, as três migrations (`0001`, `0002` e `0003`) e as três chaves (URL, anon e service_role). Roteiro e verificação em [`backend.md`](backend.md#ligar-o-supabase).
 - **Login dos clientes (Supabase Auth):** ligar "Confirm email", cadastrar o endereço da loja e as páginas `/confirmar` e `/redefinir-senha` nas *Redirect URLs*, e configurar um **SMTP próprio** (Resend, Brevo, SES…): sem ele os e-mails de confirmação caem no spam e travam em poucos cadastros por hora. Passo a passo em [`backend.md`](backend.md#contas-e-login).
 - **Login com Google (opcional):** criar o *OAuth client* no Google Cloud, colar no Supabase e definir `AUTH_GOOGLE=1`.
+- **Conta do dono:** definir `ADMIN_EMAILS` na Netlify e criar essa conta no Supabase (Authentication > Users > Add user, com *Auto Confirm* e senha forte) antes de divulgar o site. Detalhe e cuidados em [`guia-supabase-netlify.md`](guia-supabase-netlify.md#passo-5-variáveis-na-netlify). Depois: considerar login com Google e verificação em duas etapas nessa conta.
 - **Netlify:** site, variáveis de ambiente e domínio.
-- **IA de imagem** (foto → escultura) e **IA 3D** (imagem → STL): escolher fornecedor, chave de API e **teto de gasto diário**. Roteiro em [`backend.md`](backend.md#como-ligar-uma-ia-de-verdade).
+- **IA de imagem** (foto → escultura) e **IA 3D** (imagem → STL): escolher fornecedor, chave de API e **teto de gasto diário**. Roteiro em [`backend.md`](backend.md#como-ligar-uma-ia-de-verdade). Para o **Meshy** (arquivo 3D): o painel já está pronto; falta a chave, o plano e a documentação da API que você vai passar. O que cada passo precisa está em [`meshy.md`](meshy.md).
 - **Cloudflare Turnstile** (gratuito): chaves de site e secreta. Recomendado em produção: protege o cadastro (onde se criam contas em massa para ganhar prévias).
 
 ## TODO-CLIENTE (informação)
@@ -26,7 +27,8 @@ No site gerado, cada espaço reservado leva `data-todo="…"` no HTML e aparece 
 - **Cores** reais do material (hoje provisórias: branco, cinza, preto).
 - Plaquinha com o nome do pet: existe?
 - Prazo de produção; oferta para a 2ª peça, se houver.
-- Entrega local e envio; garantia e regras de troca (produto sob medida: revisão jurídica).
+- Entrega local e envio (o formulário já pede o endereço e oferece a retirada com a loja; falta definir **frete, prazo e áreas atendidas**, e se há **retirada em mãos** e onde); garantia e regras de troca (produto sob medida: revisão jurídica).
+- CEP automático: usa o ViaCEP (gratuito, sem chave). Se o volume crescer, trocar por um provedor pago no `server/services/cep.ts`.
 - Por quanto tempo guardar as fotos dos clientes (e agendar a limpeza dos arquivos expirados).
 - **Quantas prévias por conta** (hoje 3, em `content/estatua.ts`) e quando liberar extras (por exemplo, a quem já fez um pedido).
 - **Exclusão de conta (LGPD):** como atender o pedido de um cliente (hoje é manual, no painel do Supabase). Decidir se vale construir o autoatendimento em "Minha conta" (excluir a conta, apagar fotos e imagens).

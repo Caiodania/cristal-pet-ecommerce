@@ -5,6 +5,8 @@
 // NEXT_PUBLIC_API_URL=http://localhost:8888 (e ALLOWED_ORIGINS no servidor).
 
 import type {
+  Address,
+  DeliveryMethod,
   AdminOrderDto,
   AdminOrderSummaryDto,
   AdminStatsDto,
@@ -104,6 +106,12 @@ export const api = {
     reset: (input: { accessToken: string; password: string }) =>
       request<AuthResultDto>("POST", "/api/auth/reset", { json: input }),
   },
+  /** Endereço pelo CEP (8 números). `found: false` = digitar à mão. */
+  cep: (cep: string) =>
+    request<{ found: boolean; address?: { street: string; neighborhood: string; city: string; state: string } }>(
+      "GET",
+      `/api/cep/${cep}`,
+    ),
   myOrders: () => request<{ orders: MyOrderDto[] }>("GET", "/api/me/orders"),
 
   createPreview: (input: { options: ItemConfig }) =>
@@ -117,16 +125,20 @@ export const api = {
 
   createOrder: (input: {
     previewIds: string[];
-    customer: { name: string; phone?: string; city?: string; notes?: string };
+    customer: {
+      name: string;
+      phone: string;
+      delivery: DeliveryMethod;
+      /** Só na entrega. */
+      address?: Address;
+      notes?: string;
+    };
     consent: boolean;
   }) => request<{ order: OrderDto; token: string }>("POST", "/api/orders", { json: input }),
   getOrder: (code: string, token: string) =>
     request<OrderDto>("GET", `/api/orders/${encodeURIComponent(code)}${q({ t: token })}`),
 
   admin: {
-    login: (password: string) => request<{ ok: true }>("POST", "/api/admin/login", { json: { password } }),
-    logout: () => request<{ ok: true }>("POST", "/api/admin/logout", { json: {} }),
-    me: () => request<{ admin: boolean }>("GET", "/api/admin/me"),
     stats: () => request<AdminStatsDto>("GET", "/api/admin/stats"),
     orders: (params: { status?: OrderStatus; q?: string; page?: number }) =>
       request<{ orders: AdminOrderSummaryDto[]; total: number; pageSize: number }>(
@@ -140,8 +152,8 @@ export const api = {
       request<AdminUserDto>("PATCH", `/api/admin/users/${id}`, { json: { bonusPreviews } }),
     updateOrder: (id: string, patch: { status?: OrderStatus; note?: string; adminNotes?: string }) =>
       request<AdminOrderDto>("PATCH", `/api/admin/orders/${id}`, { json: patch }),
-    startModel: (id: string, itemId: string) =>
-      request<ModelDto>("POST", `/api/admin/orders/${id}/items/${itemId}/model`, { json: {} }),
+    startModel: (id: string, itemId: string, opts: { regenerate?: boolean } = {}) =>
+      request<ModelDto>("POST", `/api/admin/orders/${id}/items/${itemId}/model`, { json: opts }),
     model: (id: string, itemId: string) =>
       request<ModelDto>("GET", `/api/admin/orders/${id}/items/${itemId}/model`),
   },

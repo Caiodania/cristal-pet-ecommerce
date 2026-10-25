@@ -47,12 +47,17 @@ async function viaAuth<T>(action: () => Promise<T>): Promise<T> {
 
 // ───────── DTOs ─────────
 
-export const accountDto = (profile: ProfileRecord): AccountDto => ({
+/**
+ * Só a conta do dono recebe `isAdmin: true` (para o site mostrar o atalho do
+ * painel). Para qualquer outra a chave nem existe.
+ */
+export const accountDto = (ctx: Ctx, profile: ProfileRecord): AccountDto => ({
   id: profile.id,
   email: profile.email,
   name: profile.name,
   // só abrimos sessão para e-mail confirmado
   emailVerified: true,
+  ...(ctx.config.adminEmails.includes(profile.email.trim().toLowerCase()) ? { isAdmin: true as const } : {}),
 });
 
 /** Quantas prévias a conta já usou e quantas ainda pode gerar. */

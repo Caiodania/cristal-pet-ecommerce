@@ -73,6 +73,33 @@ export function TextField({
   );
 }
 
+/** Lista de opções (select) com rótulo, ajuda e erro ligados, igual ao campo de texto. */
+export function SelectField({
+  label,
+  hint,
+  error,
+  optional,
+  className,
+  children,
+  ...rest
+}: BaseProps & Omit<ComponentProps<"select">, "id"> & { id?: string }) {
+  const auto = useId();
+  const id = rest.id ?? auto;
+  return (
+    <Wrapper id={id} label={label} hint={hint} error={error} optional={optional}>
+      <select
+        {...rest}
+        id={id}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy(id, hint, error)}
+        className={cn(control, "min-h-12", className)}
+      >
+        {children}
+      </select>
+    </Wrapper>
+  );
+}
+
 export function TextAreaField({
   label,
   hint,

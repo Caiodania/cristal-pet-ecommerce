@@ -5,7 +5,8 @@ import { createContext, type Ctx } from "../context";
 import { resetRateLimits } from "../ratelimit";
 import { handle } from "../router";
 
-export const PASSWORD = "senha-de-teste-123";
+/** A conta do dono: o e-mail está em ADMIN_EMAILS (veja makeCtx). */
+export const OWNER = "dono@exemplo.com";
 
 /** Conta usada por padrão nas rotas que exigem login (veja `call`). */
 export const DEFAULT_USER = "ana@exemplo.com";
@@ -21,7 +22,7 @@ export function makeCtx(env: TestEnv = {}) {
       NODE_ENV: "test",
       STORE: "memory",
       MOCK_DELAY_MS: "0",
-      ADMIN_PASSWORD: PASSWORD,
+      ADMIN_EMAILS: OWNER,
       ADMIN_SESSION_SECRET: "segredo-de-teste-com-bastante-entropia",
       ...env,
     },
@@ -141,10 +142,24 @@ export async function readyPreview(
   return id;
 }
 
-export async function adminCookie(ctx: Ctx): Promise<string> {
-  const res = await call(ctx, "POST", "/api/admin/login", { json: { password: PASSWORD } });
-  if (res.status !== 200) throw new Error(`login falhou: ${res.status}`);
-  return res.headers.get("set-cookie")!.split(";")[0];
-}
+/** O cookie da conta do dono (entra pelo login normal, como na vida real). */
+export const adminCookie = (ctx: Ctx) => loginAs(ctx, OWNER);
 
-export const CUSTOMER = { name: "Maria Souza", phone: "(19) 99999-1234", city: "Indaiatuba", notes: "Presente" };
+export const ADDRESS = {
+  cep: "13330-000",
+  street: "Rua México",
+  number: "311",
+  complement: "casa 2",
+  neighborhood: "Centro",
+  city: "Indaiatuba",
+  state: "sp",
+};
+
+/** Dados de entrega de um cliente de teste (entrega no endereço). */
+export const CUSTOMER = {
+  name: "Maria Souza",
+  phone: "(19) 99999-1234",
+  delivery: "entrega",
+  address: ADDRESS,
+  notes: "Presente",
+};

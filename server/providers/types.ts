@@ -79,7 +79,11 @@ export interface ImageProvider {
 // ───────── Slot 2: imagem da escultura → arquivo pronto para a impressora 3D ─────────
 
 export type ModelPoll =
-  | { status: "processing" }
+  | {
+      status: "processing";
+      /** Andamento de 0 a 100, se o provedor informar (o painel mostra a barra). */
+      progress?: number;
+    }
   | {
       status: "succeeded";
       /** Obrigatório: o arquivo que vai para o fatiador da impressora. */

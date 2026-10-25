@@ -1,6 +1,6 @@
-// Valida as migrations do Supabase (0001 + 0002) num Postgres de verdade (PGlite, WASM),
+// Valida as migrations do Supabase (0001 + 0002 + 0003) num Postgres de verdade (PGlite, WASM),
 // sem precisar de projeto nem de internet: gatilho do Auth, cota de prévias
-// (reserve_preview), pedido com conta, cascatas e RLS.
+// (reserve_preview), pedido com conta e endereço de entrega, cascatas e RLS.
 //
 //   npm run test:sql
 //
@@ -40,6 +40,8 @@ await db.exec(readFileSync(new URL("0001_init.sql", root), "utf8"));
 check("0001 aplica", true);
 await db.exec(readFileSync(new URL("0002_contas.sql", root), "utf8"));
 check("0002 aplica por cima da 0001", true);
+await db.exec(readFileSync(new URL("0003_envio.sql", root), "utf8"));
+check("0003 aplica por cima da 0002", true);
 
 // ───────── gatilho do Auth → perfil ─────────
 const { id: anaId } = await one(`insert into auth.users (email, raw_user_meta_data) values ('ana@x.com', '{"name":"Ana Souza"}') returning id`);
@@ -91,6 +93,35 @@ const orderId = (await one(`select create_order($1::jsonb, $2::jsonb) as id`, [
 check("create_order grava a conta que fez o pedido", (await one(`select user_id from orders where id = $1`, [orderId])).user_id === anaId);
 const anon = (await one(`select create_order($1::jsonb, '[]'::jsonb) as id`, [JSON.stringify({ code: "CP-BBB222", view_token: "t2", consent_at: new Date().toISOString() })])).id;
 check("create_order sem conta continua aceito (pedidos antigos)", (await one(`select user_id from orders where id = $1`, [anon])).user_id === null);
+
+// ───────── envio (0003) ─────────
+const address = { cep: "13330000", street: "Rua México", number: "311", neighborhood: "Centro", city: "Indaiatuba", state: "SP" };
+const { id: bruPreview } = await one(
+  `select reserve_preview($1::jsonb, 3) as id`,
+  [JSON.stringify({ public_id: "bru-envio", user_id: bruId, ip_hash: "h", options: {}, image_provider: "mock" })],
+);
+const shipped = (
+  await one(`select create_order($1::jsonb, $2::jsonb) as id`, [
+    JSON.stringify({
+      code: "CP-CCC333", view_token: "t3", user_id: bruId, customer_name: "Bru", customer_phone: "19999991234",
+      city: "Indaiatuba", delivery_method: "entrega", shipping_address: address, consent_at: new Date().toISOString(),
+    }),
+    JSON.stringify([{ preview_id: bruPreview, size_id: "media", pose_id: "sentado", color_id: "branco", catalog_version: "t" }]),
+  ])
+).id;
+const row = await one(`select delivery_method, shipping_address from orders where id = $1`, [shipped]);
+check("create_order grava o modo de entrega e o endereço (JSON)", row.delivery_method === "entrega" && row.shipping_address?.street === "Rua México" && row.shipping_address?.cep === "13330000", JSON.stringify(row));
+const pickup = (
+  await one(`select create_order($1::jsonb, '[]'::jsonb) as id`, [
+    JSON.stringify({ code: "CP-DDD444", view_token: "t4", delivery_method: "retirada", shipping_address: null, consent_at: new Date().toISOString() }),
+  ])
+).id;
+const pickupRow = await one(`select delivery_method, shipping_address from orders where id = $1`, [pickup]);
+check("retirada: o endereço nulo vira NULL de verdade (não o JSON 'null')", pickupRow.delivery_method === "retirada" && pickupRow.shipping_address === null, JSON.stringify(pickupRow));
+check(
+  "modo de entrega inválido é recusado pelo banco",
+  !!(await fails(`select create_order($1::jsonb, '[]'::jsonb)`, [JSON.stringify({ code: "CP-EEE555", view_token: "t5", delivery_method: "drone", consent_at: new Date().toISOString() })])),
+);
 
 // ───────── sessões e remoção de conta ─────────
 await db.query(`insert into customer_sessions (token_hash, user_id, expires_at) values ('hash1', $1, now() + interval '30 days')`, [anaId]);
