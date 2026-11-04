@@ -40,8 +40,8 @@ export function TodoTag({
 
 /**
  * Espaço reservado para uma foto que ainda não existe. Tem a proporção final,
- * então trocar pela foto real não muda o layout. O texto sobre fundo areia tem
- * 5,8:1 de contraste.
+ * então trocar pela foto real não muda o layout. O texto sobre o fundo claro
+ * tem mais de 7:1 de contraste.
  */
 export function Placeholder({
   label,
@@ -58,7 +58,7 @@ export function Placeholder({
       data-todo={todo}
       className={cn(
         "relative grid w-full place-items-center overflow-hidden rounded-card",
-        "border border-dashed border-ink-soft/40 bg-sand text-ink-soft",
+        "border border-dashed border-ink-soft/40 bg-pearl text-ink-soft",
         ratios[ratio],
         className,
       )}
@@ -69,7 +69,7 @@ export function Placeholder({
       </div>
       <span
         aria-hidden="true"
-        className="absolute left-3 top-3 rounded-full bg-ink px-2.5 py-1 text-[0.6875rem] font-bold uppercase tracking-wide text-cream"
+        className="absolute left-3 top-3 rounded-full bg-ink px-2.5 py-1 text-[0.6875rem] font-bold uppercase tracking-wide text-snow"
       >
         Em breve
       </span>

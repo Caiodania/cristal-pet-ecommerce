@@ -39,7 +39,7 @@ export function LightboxGallery({
               type="button"
               onClick={() => setIndex(position)}
               aria-label={`Ampliar foto: ${item.alt}`}
-              className="group relative block w-full overflow-hidden rounded-card bg-sand shadow-soft"
+              className="group relative block w-full overflow-hidden rounded-card bg-pearl shadow-soft"
             >
               <Image
                 src={item.thumb.src}

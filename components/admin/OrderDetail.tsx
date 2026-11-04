@@ -10,6 +10,7 @@ import { Lightbox, type LightboxImage } from "@/components/ui/Lightbox";
 import { Alert, Loading, StatusBadge, Timeline, formatDateTime } from "@/components/ui/Status";
 import { DownloadIcon } from "@/components/ui/icons";
 import { catalog } from "@/content/estatua";
+import { site } from "@/content/site";
 import { ApiError, api, fileUrl } from "@/lib/loja/api";
 import { formatCents } from "@/lib/loja/estimativa";
 import {
@@ -101,7 +102,7 @@ function ModelPanel({
   const provider = model.provider ?? providerName;
 
   return (
-    <section aria-label={`Arquivo 3D de ${name}`} className="grid gap-4 rounded-soft bg-sand p-4">
+    <section aria-label={`Arquivo 3D de ${name}`} className="grid gap-4 rounded-soft bg-pearl p-4">
       <div className="flex flex-wrap items-start gap-4">
         {item.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
@@ -156,7 +157,7 @@ function ModelPanel({
                 className="h-3 overflow-hidden rounded-full bg-white"
               >
                 <div
-                  className="h-full rounded-full bg-teal-deep transition-[width] duration-500"
+                  className="h-full rounded-full bg-navy transition-[width] duration-500"
                   style={{ width: `${Math.max(4, Math.min(100, model.progress))}%` }}
                 />
               </div>
@@ -224,7 +225,7 @@ function ModelPanel({
       )}
 
       {confirming && (
-        <div role="group" aria-label="Confirmar a geração" className="grid gap-3 rounded-soft border-2 border-magenta/40 bg-white p-4">
+        <div role="group" aria-label="Confirmar a geração" className="grid gap-3 rounded-soft border-2 border-navy/40 bg-white p-4">
           <p className="font-semibold">
             {regenerate ? `Gerar o arquivo 3D de ${name} de novo?` : `Gerar o arquivo 3D de ${name}?`}
           </p>
@@ -281,11 +282,11 @@ function ShippingCard({ order }: { order: AdminOrderDto }) {
       </div>
 
       {order.address ? (
-        <address className="whitespace-pre-line rounded-soft bg-sand p-3 not-italic">{formatAddress(order.address)}</address>
+        <address className="whitespace-pre-line rounded-soft bg-pearl p-3 not-italic">{formatAddress(order.address)}</address>
       ) : pickup ? (
-        <p className="rounded-soft bg-sand p-3 text-sm">O cliente busca com a loja: não precisa de endereço.</p>
+        <p className="rounded-soft bg-pearl p-3 text-sm">O cliente busca com a loja: não precisa de endereço.</p>
       ) : (
-        <p className="rounded-soft bg-sand p-3 text-sm text-ink-soft">
+        <p className="rounded-soft bg-pearl p-3 text-sm text-ink-soft">
           Pedido sem endereço cadastrado{order.city ? ` (cidade: ${order.city})` : ""}. Combine pelo WhatsApp.
         </p>
       )}
@@ -298,7 +299,7 @@ function ShippingCard({ order }: { order: AdminOrderDto }) {
           <Button
             href={whatsappTo(
               order.customerPhone,
-              `Olá${order.customerName ? `, ${order.customerName.split(" ")[0]}` : ""}! Aqui é da Cristal Pet, sobre o seu pedido ${order.code}.`,
+              `Olá${order.customerName ? `, ${order.customerName.split(" ")[0]}` : ""}! Aqui é da ${site.shortName}, sobre o seu pedido ${order.code}.`,
             )}
             size="sm"
             variant="secondary"
@@ -309,7 +310,7 @@ function ShippingCard({ order }: { order: AdminOrderDto }) {
           </Button>
         )}
       </div>
-      <p role="status" className="min-h-5 text-sm font-semibold text-teal-deep">
+      <p role="status" className="min-h-5 text-sm font-semibold text-navy">
         {copy === "done" && "Copiado! É só colar."}
         {copy === "failed" && "Não deu para copiar: selecione o texto e copie à mão."}
       </p>
@@ -320,7 +321,7 @@ function ShippingCard({ order }: { order: AdminOrderDto }) {
         </p>
       )}
       {order.notes && (
-        <p className="rounded-soft bg-sand p-3 text-sm">
+        <p className="rounded-soft bg-pearl p-3 text-sm">
           <span className="font-semibold">Observação do cliente:</span> {order.notes}
         </p>
       )}
@@ -469,7 +470,7 @@ export function OrderDetail() {
     <>
       <AdminBar />
       <main id="conteudo" className="container-page grid gap-8 py-8">
-        <Link href="/admin" className="w-fit font-semibold text-teal-deep underline underline-offset-4">
+        <Link href="/admin" className="w-fit font-semibold text-navy underline underline-offset-4">
           ← Pedidos
         </Link>
 
@@ -539,14 +540,14 @@ export function OrderDetail() {
                             <button
                               type="button"
                               onClick={() => open(url)}
-                              className="block w-full overflow-hidden rounded-soft bg-sand"
+                              className="block w-full overflow-hidden rounded-soft bg-pearl"
                               aria-label={`Ampliar: ${label}`}
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img src={fileUrl(url)} alt="" className="aspect-square w-full object-cover" />
                             </button>
                           ) : (
-                            <div className="grid aspect-square place-items-center rounded-soft bg-sand text-sm text-ink-soft">
+                            <div className="grid aspect-square place-items-center rounded-soft bg-pearl text-sm text-ink-soft">
                               Sem imagem
                             </div>
                           )}
@@ -597,7 +598,7 @@ export function OrderDetail() {
                     <Button size="sm" onClick={() => void saveNotes()} disabled={busy || adminNotes === undefined}>
                       Salvar anotação
                     </Button>
-                    {saved && <span role="status" className="text-sm font-semibold text-teal-deep">Salvo.</span>}
+                    {saved && <span role="status" className="text-sm font-semibold text-navy">Salvo.</span>}
                   </div>
                 </Card>
 

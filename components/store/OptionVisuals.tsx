@@ -34,7 +34,7 @@ export function OptionVisual({
     );
   }
   return (
-    <span className="absolute inset-0 grid place-items-end bg-gradient-to-b from-teal-mist to-sand p-3">
+    <span className="absolute inset-0 grid place-items-end bg-gradient-to-b from-silver-mist to-pearl p-3">
       <SculptureIllustration pose={pose} tint={tint} />
     </span>
   );
@@ -46,7 +46,7 @@ export function OptionVisual({
  */
 export function SizeVisual({ scale, tint }: { scale: number; tint: string }) {
   return (
-    <span className="absolute inset-0 flex items-end justify-center bg-gradient-to-b from-teal-mist to-sand px-3 pb-3">
+    <span className="absolute inset-0 flex items-end justify-center bg-gradient-to-b from-silver-mist to-pearl px-3 pb-3">
       <span style={{ width: `${Math.round(scale * 72)}%` }} className="block">
         <SculptureIllustration pose="sentado" tint={tint} />
       </span>

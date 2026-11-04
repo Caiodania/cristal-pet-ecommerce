@@ -19,32 +19,34 @@ export const metadata: Metadata = {
 };
 
 const swatchClass: Record<PaletteName, string> = {
-  cream: "bg-cream",
-  sand: "bg-sand",
+  snow: "bg-snow",
+  pearl: "bg-pearl",
+  "silver-mist": "bg-silver-mist",
   line: "bg-line",
+  silver: "bg-silver",
+  "silver-deep": "bg-silver-deep",
+  navy: "bg-navy",
   ink: "bg-ink",
   "ink-soft": "bg-ink-soft",
-  teal: "bg-teal",
-  "teal-deep": "bg-teal-deep",
-  "teal-mist": "bg-teal-mist",
-  magenta: "bg-magenta",
-  "magenta-mist": "bg-magenta-mist",
 };
 
 // Pares usados no site: o contraste é calculado a cada build, não digitado.
 const pairs: Array<{ fg: PaletteName | "white"; bg: PaletteName | "white"; note: string }> = [
-  { fg: "ink", bg: "cream", note: "texto principal" },
-  { fg: "ink-soft", bg: "cream", note: "texto secundário" },
-  { fg: "ink-soft", bg: "sand", note: "texto secundário em seção tonal" },
-  { fg: "teal-deep", bg: "cream", note: "palavra-acento, links" },
-  { fg: "teal-deep", bg: "teal-mist", note: "texto sobre tinta teal" },
-  { fg: "magenta", bg: "cream", note: "selo/promoção como texto" },
-  { fg: "white", bg: "magenta", note: "selo sólido (texto branco)" },
-  { fg: "cream", bg: "ink", note: "botão escuro" },
-  { fg: "ink", bg: "teal", note: "botão teal (texto escuro)" },
-  { fg: "teal", bg: "ink", note: "acento em faixa escura" },
-  { fg: "teal", bg: "cream", note: "teal puro como texto (NÃO USAR)" },
-  { fg: "white", bg: "teal", note: "branco sobre teal (NÃO USAR)" },
+  { fg: "ink", bg: "snow", note: "texto principal" },
+  { fg: "ink-soft", bg: "snow", note: "texto secundário" },
+  { fg: "ink-soft", bg: "pearl", note: "texto secundário em seção tonal" },
+  { fg: "ink-soft", bg: "silver", note: "texto secundário na faixa prata" },
+  { fg: "navy", bg: "snow", note: "links e palavra de destaque" },
+  { fg: "navy", bg: "silver-mist", note: "texto sobre tinta prata" },
+  { fg: "ink", bg: "silver", note: "texto na faixa prata" },
+  { fg: "navy", bg: "silver", note: "botão e destaque sobre a faixa prata" },
+  { fg: "white", bg: "navy", note: "botão e faixa azul marinho" },
+  { fg: "silver", bg: "navy", note: "destaque em faixa azul marinho" },
+  { fg: "snow", bg: "ink", note: "botão escuro" },
+  { fg: "silver", bg: "ink", note: "destaque em faixa escura" },
+  { fg: "silver-deep", bg: "snow", note: "prata escuro: só enfeite e texto grande" },
+  { fg: "silver", bg: "snow", note: "prata puro como texto (NÃO USAR)" },
+  { fg: "white", bg: "silver", note: "branco sobre prata (NÃO USAR)" },
 ];
 
 const hexOf = (name: PaletteName | "white") =>
@@ -81,11 +83,11 @@ export default function StyleGuide() {
               Guia de <Accent>estilo</Accent>
             </>
           }
-          description="Tokens e componentes base da Cristal Pet. Página de trabalho: fora do Google e removida antes do lançamento."
+          description="Tokens e componentes base da AUmor de Patas. Página de trabalho: fora do Google e removida antes do lançamento."
         />
       </Section>
 
-      <Section tone="sand" labelledBy="sg-cores">
+      <Section tone="pearl" labelledBy="sg-cores">
         <SectionHeader
           titleId="sg-cores"
           eyebrow="Cores"
@@ -94,7 +96,7 @@ export default function StyleGuide() {
               Paleta com <Accent>contraste medido</Accent>
             </>
           }
-          description="O teal puro não serve para texto: só entra em preenchimentos, ícones e faixas."
+          description="O prata puro não serve para texto: só entra em faixas, preenchimentos e ícones, sempre com texto marinho ou escuro por cima."
         />
 
         <ul className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -121,7 +123,7 @@ export default function StyleGuide() {
             <caption className="sr-only">
               Contraste entre as cores de texto e de fundo usadas no site
             </caption>
-            <thead className="border-b border-line bg-cream text-xs uppercase tracking-wider text-ink-soft">
+            <thead className="border-b border-line bg-snow text-xs uppercase tracking-wider text-ink-soft">
               <tr>
                 <th scope="col" className="px-4 py-3">
                   Amostra
@@ -148,7 +150,7 @@ export default function StyleGuide() {
                         className="inline-block whitespace-nowrap rounded-soft px-3 py-1 font-bold"
                         style={{ color: hexOf(fg), backgroundColor: hexOf(bg) }}
                       >
-                        Cristal Pet
+                        AUmor de Patas
                       </span>
                     </td>
                     <td className="px-4 py-3">{note}</td>
@@ -156,7 +158,7 @@ export default function StyleGuide() {
                       {ratio.toFixed(2).replace(".", ",")}:1
                     </td>
                     <td
-                      className={`px-4 py-3 font-bold ${level === "falha" ? "text-magenta" : "text-teal-deep"}`}
+                      className={`px-4 py-3 font-bold ${level === "falha" ? "text-danger" : "text-navy"}`}
                     >
                       {level}
                     </td>
@@ -223,7 +225,7 @@ export default function StyleGuide() {
         </div>
       </Section>
 
-      <Section tone="sand" labelledBy="sg-botoes">
+      <Section tone="pearl" labelledBy="sg-botoes">
         <SectionHeader
           titleId="sg-botoes"
           eyebrow="Botões"
@@ -271,9 +273,9 @@ export default function StyleGuide() {
 
         <div
           data-surface="dark"
-          className="mt-12 rounded-card bg-ink p-8 text-cream"
+          className="mt-12 rounded-card bg-ink p-8 text-snow"
         >
-          <p className="mb-6 text-center text-eyebrow font-bold uppercase text-teal">
+          <p className="mb-6 text-center text-eyebrow font-bold uppercase text-silver">
             Sobre faixa escura
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
@@ -305,7 +307,7 @@ export default function StyleGuide() {
             </Card>
           </li>
           <li>
-            <Card tone="sand" className="reveal h-full">
+            <Card tone="pearl" className="reveal h-full">
               <h3 className="font-display text-subtitle font-extrabold">Card tonal</h3>
               <p className="mt-3 text-ink-soft">
                 Para blocos dentro de seções claras, sem competir com o fundo.
@@ -315,7 +317,7 @@ export default function StyleGuide() {
           <li>
             <Card tone="ink" interactive className="reveal h-full">
               <h3 className="font-display text-subtitle font-extrabold">Card escuro, interativo</h3>
-              <p className="mt-3 text-cream/80">
+              <p className="mt-3 text-snow/80">
                 Sobe de leve ao passar o mouse (desligado com movimento reduzido).
               </p>
             </Card>
@@ -367,7 +369,7 @@ export default function StyleGuide() {
               Especialistas em <Accent>filhotes</Accent>
             </>
           }
-          description="O acento troca para teal e o foco também, mantendo o contraste acima de 7:1."
+          description="O destaque troca para prata e o foco também, mantendo o contraste acima de 7:1."
         />
         <div className="mt-10 flex justify-center">
           <Button variant="accent" size="lg">

@@ -19,7 +19,7 @@ export default function EsqueciPage() {
           </>
         }
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         <EsqueciCorpo />
       </Section>
     </main>

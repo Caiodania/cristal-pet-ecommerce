@@ -131,9 +131,9 @@ export function EntregaForm({
             />
             <span
               className={cn(
-                "grid gap-0.5 rounded-soft border-2 border-line bg-white p-3 transition-colors hover:border-magenta/50",
-                "peer-checked:border-magenta peer-checked:bg-magenta-mist",
-                "peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-magenta",
+                "grid gap-0.5 rounded-soft border-2 border-line bg-white p-3 transition-colors hover:border-navy/50",
+                "peer-checked:border-navy peer-checked:bg-silver-mist",
+                "peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-navy",
               )}
             >
               <span className="font-bold">{DELIVERY_LABEL[method.id]}</span>

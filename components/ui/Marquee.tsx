@@ -25,7 +25,7 @@ export function Marquee({ items, className }: MarqueeProps) {
   );
 
   return (
-    <div aria-hidden="true" className={cn("marquee bg-magenta py-3 text-white", className)}>
+    <div aria-hidden="true" className={cn("marquee bg-navy py-3 text-white", className)}>
       <div className="marquee-track">
         {row(1)}
         {row(2)}

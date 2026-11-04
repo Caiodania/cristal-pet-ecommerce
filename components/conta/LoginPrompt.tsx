@@ -29,12 +29,12 @@ export function LoginPrompt({
     <div
       role="note"
       className={cn(
-        "relative overflow-hidden rounded-card border-2 border-magenta/40 bg-magenta-mist",
+        "relative overflow-hidden rounded-card border-2 border-navy/40 bg-silver-mist",
         compact ? "p-4" : "p-6 sm:p-8",
         className,
       )}
     >
-      <FaPaw aria-hidden="true" className="absolute -right-3 -top-3 text-8xl text-magenta/10" />
+      <FaPaw aria-hidden="true" className="absolute -right-3 -top-3 text-8xl text-navy/10" />
       <div className="relative grid gap-4">
         <div>
           <p className="font-display text-xl font-extrabold">{title}</p>

@@ -9,10 +9,10 @@ import { images } from "@/content/images";
  */
 export function NaoEncontrada() {
   return (
-    <main id="conteudo" className="grid min-h-dvh place-items-center bg-cream px-4 py-16 text-center">
+    <main id="conteudo" className="grid min-h-dvh place-items-center bg-snow px-4 py-16 text-center">
       <div className="grid max-w-md justify-items-center gap-5">
-        <Image src={images.logo.src} alt="" width={96} height={96} className="size-24" />
-        <p aria-hidden="true" className="font-display text-7xl font-extrabold text-magenta">
+        <Image src={images.emblem.src} alt="" width={images.emblem.width} height={images.emblem.height} className="h-auto w-36" />
+        <p aria-hidden="true" className="font-display text-7xl font-extrabold text-navy">
           404
         </p>
         <h1 className="font-display text-3xl font-extrabold">Página não encontrada</h1>

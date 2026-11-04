@@ -95,7 +95,7 @@ export function OrderView() {
         <ul className="grid gap-4" aria-label="Esculturas do pedido">
           {o.items.map((item) => (
             <Card as="li" key={item.id} className="flex gap-4 sm:gap-6">
-              <div className="size-24 shrink-0 overflow-hidden rounded-soft bg-sand sm:size-32">
+              <div className="size-24 shrink-0 overflow-hidden rounded-soft bg-pearl sm:size-32">
                 {item.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={fileUrl(item.imageUrl)} alt={`Prévia da escultura${item.petName ? ` de ${item.petName}` : ""}`} className="size-full object-cover" />
@@ -125,7 +125,7 @@ export function OrderView() {
       <aside className="grid gap-6 rounded-card border border-line bg-white p-5 shadow-soft sm:p-6">
         <div>
           <p className="text-sm text-ink-soft">Pedido</p>
-          <p className="font-display text-3xl font-extrabold text-teal-deep">{o.code}</p>
+          <p className="font-display text-3xl font-extrabold text-navy">{o.code}</p>
         </div>
         <div>
           <h2 className="mb-3 font-display text-xl font-extrabold">Andamento</h2>
@@ -146,7 +146,7 @@ function OrderRow({ order: ref }: { order: OrderRef }) {
   return (
     <Card as="li" className="flex flex-wrap items-center justify-between gap-4">
       <div className="grid gap-1">
-        <p className="font-display text-2xl font-extrabold text-teal-deep">{ref.code}</p>
+        <p className="font-display text-2xl font-extrabold text-navy">{ref.code}</p>
         <p className="text-sm text-ink-soft">
           {formatDateTime(ref.createdAt)} · {ref.itemCount} {ref.itemCount === 1 ? "escultura" : "esculturas"}
           {loaded.state === "ok" && ` · ${formatCents(loaded.order.estimateCents)}`}
@@ -169,7 +169,7 @@ function AccountOrderRow({ order }: { order: MyOrderDto }) {
   return (
     <Card as="li" className="flex flex-wrap items-center justify-between gap-4">
       <div className="grid gap-1">
-        <p className="font-display text-2xl font-extrabold text-teal-deep">{order.code}</p>
+        <p className="font-display text-2xl font-extrabold text-navy">{order.code}</p>
         <p className="text-sm text-ink-soft">
           {formatDateTime(order.createdAt)} · {order.itemCount} {order.itemCount === 1 ? "escultura" : "esculturas"} ·{" "}
           {formatCents(order.estimateCents)}
@@ -266,7 +266,7 @@ export function MyOrders() {
       {user && (
         <p className="text-sm text-ink-soft">
           Para tirar dúvidas, fale com a gente pelo{" "}
-          <Link href="/contato" className="font-semibold text-teal-deep underline underline-offset-4">
+          <Link href="/contato" className="font-semibold text-navy underline underline-offset-4">
             contato
           </Link>
           .

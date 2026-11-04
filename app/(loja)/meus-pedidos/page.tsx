@@ -20,7 +20,7 @@ export default function MeusPedidosPage() {
         }
         description="Acompanhe o andamento das suas esculturas. Os pedidos ficam na sua conta, em qualquer aparelho."
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         <MyOrders />
       </Section>
     </main>

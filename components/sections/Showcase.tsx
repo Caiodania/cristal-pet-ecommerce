@@ -15,7 +15,7 @@ export function Showcase() {
   const pending = exemplos.filter((e) => !e.sculpture);
   const items = [...exemplosProntos, ...pending.slice(0, Math.max(0, MIN_CARDS - exemplosProntos.length))];
   return (
-    <Section id="exemplos" tone="cream" wave="teal" labelledBy="exemplos-titulo">
+    <Section id="exemplos" tone="snow" wave="silver" labelledBy="exemplos-titulo">
       <SectionHeader
         eyebrow="Exemplos"
         titleId="exemplos-titulo"

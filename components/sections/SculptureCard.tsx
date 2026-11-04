@@ -11,7 +11,7 @@ import type { Exemplo } from "@/content/exemplos";
 export function SculptureCard({ item, priority = false }: { item: Exemplo; priority?: boolean }) {
   const { sculpture, photo, name } = item;
   return (
-    <figure className="group relative overflow-hidden rounded-3xl bg-sand shadow-lift transition-[translate,box-shadow] duration-300 hover:-translate-y-1.5">
+    <figure className="group relative overflow-hidden rounded-3xl bg-pearl shadow-lift transition-[translate,box-shadow] duration-300 hover:-translate-y-1.5">
       {sculpture ? (
         <>
           <Image
@@ -23,7 +23,7 @@ export function SculptureCard({ item, priority = false }: { item: Exemplo; prior
             priority={priority}
             className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <span className="absolute left-3 top-3 rounded-full bg-magenta px-3 py-1 text-xs font-bold text-white">
+          <span className="absolute left-3 top-3 rounded-full bg-navy px-3 py-1 text-xs font-bold text-white">
             Escultura 3D
           </span>
         </>

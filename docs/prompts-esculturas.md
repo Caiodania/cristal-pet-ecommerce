@@ -37,8 +37,9 @@ Troque `{NOME}` e `{CENA}` no prompt base e acrescente a descrição como primei
 | `mel` | MEL | cream pomeranian, sitting, fluffy double coat, pointed ears, smiling | On a travertine console table under a round mirror with a gold frame, a vase of dried pampas grass beside it. |
 | `duque` | DUQUE | golden cocker spaniel, sitting, long feathered ears, wavy coat | On a white floating shelf against a light plaster wall, a green plant leaf out of focus beside it. |
 | `sol` | SOL | golden retriever, sitting, medium-long coat, gentle face | On a living-room sideboard with a few white ceramic vases blurred in the background. |
-| `bela` | BELA | white shih tzu, sitting, long coat with a topknot, round face, flat muzzle | On a light wooden table next to a window, soft linen curtain in the background. |
-| `bob` | BOB | caramel and white mixed-breed dog, sitting, short coat, floppy ears, pointed muzzle | On a simple natural wood table, plain warm-gray wall in the background. |
+| `luna` | LUNA | cream and white shih tzu, sitting, long coat with a topknot, round face, flat muzzle | On a light wooden table next to a window, soft linen curtain in the background. |
+| `toby` | TOBY | caramel and white mixed-breed dog, sitting, short coat, floppy ears, pointed muzzle | On a simple natural wood table, plain warm-gray wall in the background. |
+| `apolo` | APOLO | golden retriever, sitting, long feathered coat, open-mouth smile, head slightly turned | On a polished concrete floor in a bright room, a tall window blurred behind. |
 | `nina` | NINA | white pomeranian, sitting, very fluffy coat, small pointed ears | On a white shelf in a bright minimalist room, a small plant blurred beside it. |
 | `kobe` | KOBE | cream pomeranian, lying down with front paws stretched forward, fluffy coat | On a travertine coffee table, soft daylight from a window on the left. |
 | `neve` | NEVE | long-haired white dog (maltese type), sitting, silky long coat falling to the sides | On a pale oak console table, an out-of-focus mirror and dried flowers behind. |
@@ -48,8 +49,8 @@ Troque `{NOME}` e `{CENA}` no prompt base e acrescente a descrição como primei
 
 - **Fidelidade vem da foto.** O modelo não "sabe" quem é o cachorro: ele copia da foto anexada. Fotos nítidas, de corpo inteiro e bem iluminadas dão esculturas melhores (as mesmas dicas que o site dá ao cliente).
 - **O que a imagem não é:** é uma prévia de marketing, não o arquivo de impressão. A escultura real sai do fluxo da loja (prévia aprovada → Meshy → STL → impressora).
-- **Autorização:** as fotos são de pets atendidos pela Cristal Pet. Antes de publicar, confirme com os tutores o uso da foto e do nome do pet na vitrine. Os nomes, exceto Mel e Kobe, são de exemplo: troque em `content/exemplos.ts` (e no prompt) pelos reais.
-- **Quantas?** O mínimo é 5 (o hero usa a primeira, o carrossel mostra as demais). Com as 9, a vitrine fica completa.
+- **Autorização:** as fotos são de pets atendidos pela Cristal Pet. Antes de publicar, confirme com os tutores o uso da foto e do nome do pet na vitrine. Os nomes de Duque, Sol, Nina, Neve e Pipoca são de exemplo: troque em `content/exemplos.ts` (e no prompt) pelos reais.
+- **Quantas?** Hoje há 4 prontas (Mel, Luna, Toby e Apolo): o hero usa a Mel e o carrossel mostra as quatro. Mais esculturas entram no carrossel sozinhas; as que faltam só aparecem como "em breve" se houver menos de quatro prontas.
 - **Pelo próprio sistema:** quando o adaptador do Gemini estiver ligado na loja (`server/providers/`), este mesmo prompt vira o `prompts.ts` da prévia do cliente.
 
 ## Imagens das opções do configurador (cor, tipo, nome)

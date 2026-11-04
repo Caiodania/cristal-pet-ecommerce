@@ -1,33 +1,37 @@
 @import "tailwindcss";
 
 /*
-  DESIGN TOKENS — Cristal Pet
+  DESIGN TOKENS — AUmor de Patas
   No Tailwind v4 o equivalente do `tailwind.config` é o bloco @theme: cada
-  variável vira utilitário (--color-teal-deep → bg-teal-deep, text-teal-deep…)
-  e também fica disponível como variável CSS. Mexer na marca = mexer aqui.
+  variável vira utilitário (--color-navy → bg-navy, text-navy…) e também fica
+  disponível como variável CSS. Mexer na marca = mexer aqui.
+
+  Paleta pedida pelo cliente: azul marinho, prata e branco.
+    navy    azul marinho: ação (botões), links, texto de destaque, faixas escuras
+    silver  prata: faixas claras, preenchimentos, ícones sobre o marinho
+    snow    branco: fundo da página      pearl / silver-mist: tintas de fundo
 
   Contrastes medidos (WCAG), para saber o que pode ser texto:
-    ink sobre cream 16,5 · ink-soft sobre cream 6,4 · teal-deep sobre cream 5,7
-    magenta sobre cream 4,7 · ink sobre teal 7,8 · teal sobre ink 7,8
-  ATENÇÃO: teal sobre cream = 2,1 e branco sobre teal = 2,2 → REPROVAM.
-  O teal puro só entra em preenchimentos, ícones e faixas, sempre com texto
-  escuro por cima. Para texto e palavra-acento use teal-deep.
+    ink sobre snow 17,7 · ink-soft sobre snow 8,0 · navy sobre snow 15,6
+    ink sobre silver 11,3 · ink-soft sobre silver 5,1 · navy sobre silver 10,0
+    snow sobre navy 15,6 · silver sobre navy 10,0
+  ATENÇÃO: silver-deep sobre snow = 3,05 → só para texto grande ou enfeite;
+  silver sobre snow = 1,6 → NUNCA como texto. O prata puro entra em faixas,
+  preenchimentos e ícones, sempre com texto marinho/ink por cima.
 */
 @theme {
   /* Cores */
-  --color-cream: #faf9f5; /* fundo da página */
-  --color-sand: #f1eee6; /* seções tonais */
-  --color-line: #e2ddd2; /* bordas decorativas (1,3:1: nunca como único indicador) */
-  --color-ink: #1a1a1a; /* texto, botão escuro, faixas escuras */
-  --color-ink-soft: #5f5b55; /* texto secundário */
-  --color-teal: #4bc0af; /* marca: preenchimentos, ícones, faixas */
-  --color-teal-deep: #1f6f63; /* marca: texto, links, palavra-acento */
-  --color-teal-mist: #e3f3f0; /* tinta de fundo */
-  --color-magenta: #c82d91; /* selos e promoções (texto branco por cima) */
-  --color-magenta-mist: #fbeaf5; /* tinta decorativa, nunca com texto magenta */
-  --color-claw: #f97316; /* marquinhas de garra do site original (só decorativo) */
-  --color-danger: #b3261e; /* erros: 6,3:1 sobre creme, 6,9:1 sobre branco */
-  --color-field: #86817a; /* borda de campo de formulário: 3,9:1 sobre branco (mín. 3:1) */
+  --color-snow: #ffffff; /* fundo da página */
+  --color-pearl: #f0f3f8; /* seções tonais */
+  --color-line: #d7dde7; /* bordas decorativas (1,4:1: nunca como único indicador) */
+  --color-ink: #0a1830; /* texto e superfícies escuras (marinho quase preto) */
+  --color-ink-soft: #40506a; /* texto secundário */
+  --color-navy: #0b2347; /* marca: botões, links, destaque, faixas escuras */
+  --color-silver: #c9cfdb; /* marca: faixas claras, preenchimentos, ícones sobre o marinho */
+  --color-silver-deep: #8a94a8; /* prata escuro: enfeites e linhas (nunca texto pequeno) */
+  --color-silver-mist: #e3e8f0; /* tinta de fundo: seleção, aberto, avisos */
+  --color-danger: #b3261e; /* erros: 6,5:1 sobre branco, 5,9:1 sobre pearl */
+  --color-field: #76809a; /* borda de campo de formulário: 3,9:1 sobre branco (mín. 3:1) */
 
   /* Escala tipográfica (fluida) */
   --text-display: clamp(2.5rem, 1.5rem + 4.4vw, 4.5rem);
@@ -50,9 +54,9 @@
 
   /* Sombras quase imperceptíveis */
   --shadow-soft:
-    0 1px 2px rgb(26 26 26 / 0.05), 0 10px 28px -14px rgb(26 26 26 / 0.14);
+    0 1px 2px rgb(10 24 48 / 0.05), 0 10px 28px -14px rgb(10 24 48 / 0.16);
   --shadow-lift:
-    0 2px 4px rgb(26 26 26 / 0.06), 0 22px 44px -18px rgb(26 26 26 / 0.26);
+    0 2px 4px rgb(10 24 48 / 0.06), 0 22px 44px -18px rgb(10 24 48 / 0.3);
 }
 
 /* Fontes: as variáveis são definidas pelo next/font no layout */
@@ -81,6 +85,15 @@
   padding-block: clamp(4rem, 2.6rem + 5.4vw, 7rem);
 }
 
+/*
+  Faixa prata: do prata (em cima, igual à onda da seção anterior, sem emenda) ao claro (embaixo,
+  onde entra a onda branca): lembra metal escovado. O texto por cima é ink.
+*/
+@utility bg-silver-sheen {
+  background-color: var(--color-silver);
+  background-image: linear-gradient(180deg, var(--color-silver) 0%, #d4dae4 58%, #e2e6ee 100%);
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -105,7 +118,7 @@
   }
 
   body {
-    background-color: var(--color-cream);
+    background-color: var(--color-snow);
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -127,35 +140,35 @@
   }
 
   ::selection {
-    background-color: var(--color-teal);
-    color: var(--color-ink);
+    background-color: var(--color-silver);
+    color: var(--color-navy);
   }
 
-  /* Foco SEMPRE visível (AA): 5,7:1 sobre fundos claros, 7,8:1 sobre escuros */
+  /* Foco SEMPRE visível (AA): 15,6:1 (marinho) sobre fundos claros, 10:1 (prata) sobre escuros */
   :focus-visible {
-    outline: 3px solid var(--color-teal-deep);
+    outline: 3px solid var(--color-navy);
     outline-offset: 3px;
   }
 
   [data-surface="dark"] :focus-visible,
   dialog.lightbox :focus-visible {
-    outline-color: var(--color-teal);
+    outline-color: var(--color-silver);
   }
 
-  /* faixa magenta: o foco é branco (4,95:1 sobre o magenta) */
-  [data-surface="magenta"] :focus-visible {
+  /* faixa marinho: o foco é branco (15,6:1) */
+  [data-surface="navy"] :focus-visible {
     outline-color: #fff;
   }
 
-  /* faixa teal: o foco é ink (7,8:1); teal-deep sobre teal daria 2,7:1 */
-  [data-surface="teal"] :focus-visible {
+  /* faixa prata: o foco é ink (11,3:1) */
+  [data-surface="silver"] :focus-visible {
     outline-color: var(--color-ink);
   }
 
-  /* card claro dentro de faixa escura: teal sobre branco só daria 2,1:1 */
+  /* card claro dentro de faixa escura: o prata sobre branco só daria 1,6:1 */
   [data-surface="light"] :focus-visible,
   [data-surface="light"]:focus-visible {
-    outline-color: var(--color-teal-deep);
+    outline-color: var(--color-navy);
   }
 }
 
@@ -211,11 +224,11 @@
     box-shadow: var(--shadow-lift);
   }
 
-  /* aberta: fundo suave e uma barra magenta na lateral */
+  /* aberta: fundo suave e uma barra navy na lateral */
   .accordion details[open] {
-    background-color: var(--color-teal-mist);
-    border-color: var(--color-teal);
-    box-shadow: inset 5px 0 0 var(--color-magenta);
+    background-color: var(--color-silver-mist);
+    border-color: var(--color-silver);
+    box-shadow: inset 5px 0 0 var(--color-navy);
   }
 
   .accordion summary {
@@ -243,8 +256,8 @@
     width: 0.625rem;
     height: 0.625rem;
     margin-top: -0.25rem;
-    border-right: 2px solid var(--color-teal-deep);
-    border-bottom: 2px solid var(--color-teal-deep);
+    border-right: 2px solid var(--color-navy);
+    border-bottom: 2px solid var(--color-navy);
     rotate: 45deg;
     transition:
       rotate 0.25s ease,
@@ -295,7 +308,7 @@
     margin: auto;
     padding: 0;
     overflow: hidden;
-    color: var(--color-cream);
+    color: var(--color-snow);
     background-color: var(--color-ink);
     border: 0;
     border-radius: var(--radius-card);
@@ -321,7 +334,7 @@
   }
 
   dialog.lightbox::backdrop {
-    background-color: rgb(26 26 26 / 0);
+    background-color: rgb(10 24 48 / 0);
     backdrop-filter: blur(2px);
     transition:
       background-color 0.25s ease-out,
@@ -330,10 +343,10 @@
   }
 
   dialog.lightbox[open]::backdrop {
-    background-color: rgb(26 26 26 / 0.82);
+    background-color: rgb(10 24 48 / 0.85);
 
     @starting-style {
-      background-color: rgb(26 26 26 / 0);
+      background-color: rgb(10 24 48 / 0);
     }
   }
 
@@ -391,7 +404,7 @@
   }
 
   dialog.auth-dialog::backdrop {
-    background-color: rgb(26 26 26 / 0);
+    background-color: rgb(10 24 48 / 0);
     backdrop-filter: blur(3px);
     transition:
       background-color 0.25s ease-out,
@@ -400,10 +413,10 @@
   }
 
   dialog.auth-dialog[open]::backdrop {
-    background-color: rgb(26 26 26 / 0.6);
+    background-color: rgb(10 24 48 / 0.62);
 
     @starting-style {
-      background-color: rgb(26 26 26 / 0);
+      background-color: rgb(10 24 48 / 0);
     }
   }
 
@@ -427,7 +440,7 @@
     padding: 0.75rem 1rem 1.25rem;
     overflow-y: auto;
     color: var(--color-ink);
-    background-color: var(--color-cream);
+    background-color: var(--color-snow);
     border: 0;
     border-bottom: 1px solid var(--color-line);
     box-shadow: var(--shadow-lift);
@@ -485,7 +498,7 @@
     width: 1.5rem;
     height: 1.5rem;
     border: 3px solid var(--color-line);
-    border-top-color: var(--color-teal-deep);
+    border-top-color: var(--color-navy);
     border-radius: 9999px;
     background: none;
     animation: spinner-turn 0.9s linear infinite;
@@ -503,8 +516,8 @@
   }
 
   [data-surface="dark"] progress.spinner {
-    border-color: rgb(250 249 245 / 0.25);
-    border-top-color: var(--color-teal);
+    border-color: rgb(255 255 255 / 0.25);
+    border-top-color: var(--color-silver);
   }
 
   @keyframes spinner-turn {
@@ -579,7 +592,7 @@
   position: sticky;
   inset-block-start: 0;
   z-index: 1;
-  background: var(--color-cream);
+  background: var(--color-snow);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -616,7 +629,7 @@
   }
 
   .orders-table tbody th {
-    background: var(--color-sand);
+    background: var(--color-pearl);
   }
 
   .orders-table td {
@@ -686,7 +699,7 @@
       inset: 0 0 auto 0;
       z-index: 60;
       height: 4px;
-      background: linear-gradient(90deg, var(--color-teal), var(--color-magenta));
+      background: linear-gradient(90deg, var(--color-silver), var(--color-navy));
       transform-origin: 0 50%;
       animation: progress-grow linear both;
       animation-timeline: scroll(root);

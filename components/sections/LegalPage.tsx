@@ -19,11 +19,11 @@ export function LegalPage({ title, intro, topics }: LegalPageProps) {
   return (
     <main id="conteudo">
       <PageHeader titleId="legal-titulo" title={title} description={intro} />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         <div className="mx-auto max-w-3xl">
           <div
             data-todo="TODO-CLIENTE: texto jurídico revisado"
-            className="rounded-card border border-dashed border-ink-soft/40 bg-sand p-6"
+            className="rounded-card border border-dashed border-ink-soft/40 bg-pearl p-6"
           >
             <p className="font-display text-xl font-extrabold">
               Texto completo em elaboração
@@ -35,7 +35,7 @@ export function LegalPage({ title, intro, topics }: LegalPageProps) {
             <ul className="mt-4 grid gap-2">
               {topics.map((topic) => (
                 <li key={topic} className="flex items-start gap-3">
-                  <CheckIcon className="mt-1 shrink-0 text-teal-deep" />
+                  <CheckIcon className="mt-1 shrink-0 text-navy" />
                   {topic}
                 </li>
               ))}

@@ -31,7 +31,7 @@ export function GeneratingCard({
   }, []);
 
   return (
-    <div className="grid items-center gap-6 rounded-card bg-gradient-to-b from-teal-mist to-sand p-6 sm:grid-cols-[14rem_1fr]">
+    <div className="grid items-center gap-6 rounded-card bg-gradient-to-b from-silver-mist to-pearl p-6 sm:grid-cols-[14rem_1fr]">
       <div className="mx-auto w-44 motion-safe:animate-pulse sm:w-full">
         <SculptureIllustration pose={pose ?? "sentado"} tint={tint ?? "#f3f0e8"} name={name} />
       </div>
@@ -49,7 +49,7 @@ export function GeneratingCard({
               <span
                 className={cn(
                   "grid size-6 place-items-center rounded-full border-2 text-xs transition-colors duration-500",
-                  index < stage ? "border-magenta bg-magenta text-white" : "border-magenta text-magenta",
+                  index < stage ? "border-navy bg-navy text-white" : "border-navy text-navy",
                 )}
               >
                 {index < stage ? <CheckIcon className="text-xs" /> : index + 1}

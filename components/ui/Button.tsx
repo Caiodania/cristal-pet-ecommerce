@@ -42,26 +42,26 @@ const sizes: Record<Size, string> = {
   lg: "min-h-14 px-9 text-base",
 };
 
-// Pares de cor já medidos: primary (branco sobre magenta) 4,95:1 · accent (ink
-// sobre teal) 7,8:1 · inverse (ink sobre branco) 16,5:1. O magenta é a cor de
-// ação da marca, como no site institucional. Sobre uma faixa magenta o botão
-// principal inverte (magenta sobre branco) para não sumir.
+// Pares de cor já medidos: primary (branco sobre marinho) 15,6:1 · accent (ink
+// sobre prata) 11,3:1 · inverse (ink sobre branco) 17,7:1. O marinho é a cor de
+// ação da marca. Sobre uma faixa marinho o botão principal inverte (marinho
+// sobre branco) para não sumir.
 const variants: Record<Variant, string> = {
   primary:
-    "btn-sheen bg-magenta text-white shadow-soft hover:brightness-110 hover:shadow-lift " +
-    "[[data-surface=magenta]_&]:bg-white [[data-surface=magenta]_&]:text-magenta",
-  accent: "btn-sheen bg-teal text-ink hover:brightness-95 hover:shadow-soft",
+    "btn-sheen bg-navy text-white shadow-soft hover:brightness-110 hover:shadow-lift " +
+    "[[data-surface=navy]_&]:bg-white [[data-surface=navy]_&]:text-navy",
+  accent: "btn-sheen bg-silver text-ink hover:brightness-95 hover:shadow-soft",
   secondary:
-    "border-2 border-ink text-ink hover:bg-ink hover:text-cream " +
-    "[[data-surface=dark]_&]:border-cream [[data-surface=dark]_&]:text-cream " +
-    "[[data-surface=dark]_&]:hover:bg-cream [[data-surface=dark]_&]:hover:text-ink " +
-    "[[data-surface=magenta]_&]:border-white [[data-surface=magenta]_&]:text-white " +
-    "[[data-surface=magenta]_&]:hover:bg-white [[data-surface=magenta]_&]:hover:text-magenta",
-  inverse: "bg-white text-ink shadow-soft hover:bg-cream hover:shadow-lift",
+    "border-2 border-ink text-ink hover:bg-ink hover:text-snow " +
+    "[[data-surface=dark]_&]:border-snow [[data-surface=dark]_&]:text-snow " +
+    "[[data-surface=dark]_&]:hover:bg-snow [[data-surface=dark]_&]:hover:text-ink " +
+    "[[data-surface=navy]_&]:border-white [[data-surface=navy]_&]:text-white " +
+    "[[data-surface=navy]_&]:hover:bg-white [[data-surface=navy]_&]:hover:text-navy",
+  inverse: "bg-white text-ink shadow-soft hover:bg-snow hover:shadow-lift",
   ghost:
-    "text-teal-deep underline decoration-2 underline-offset-4 hover:decoration-magenta " +
-    "[[data-surface=dark]_&]:text-teal [[data-surface=teal]_&]:text-ink " +
-    "[[data-surface=magenta]_&]:text-white",
+    "text-navy underline decoration-2 underline-offset-4 hover:decoration-silver-deep " +
+    "[[data-surface=dark]_&]:text-silver [[data-surface=silver]_&]:text-ink " +
+    "[[data-surface=navy]_&]:text-white",
 };
 
 const isHttp = (href: string) => /^https?:\/\//i.test(href);

@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Nunito, Nunito_Sans } from "next/font/google";
+import { images } from "@/content/images";
 import { site } from "@/content/site";
 import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
-// Identidade da Cristal Pet (igual ao site institucional): títulos em Nunito pesado,
-// texto em Nunito Sans. Só estas duas famílias são carregadas.
+// Identidade da AUmor de Patas: títulos em Nunito pesado, texto em Nunito Sans. Só
+// estas duas famílias são carregadas. Ícones (app/icon.png, apple-icon.png, favicon.ico)
+// e imagem de compartilhamento (public/images/og.jpg) saem do logo: `npm run marca`.
 const nunito = Nunito({
   subsets: ["latin"],
   display: "swap",
@@ -31,11 +33,12 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     siteName: site.name,
+    images: [{ url: images.share.src, width: images.share.width, height: images.share.height, alt: images.share.alt }],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#4bc0af",
+  themeColor: "#0b2347",
 };
 
 // Layout mínimo: fontes e "pular para o conteúdo". Cada área monta o seu
@@ -51,7 +54,7 @@ export default function RootLayout({
       <body>
         <a
           href="#conteudo"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:font-semibold focus:text-cream"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-ink focus:px-5 focus:py-3 focus:font-semibold focus:text-snow"
         >
           Pular para o conteúdo
         </a>

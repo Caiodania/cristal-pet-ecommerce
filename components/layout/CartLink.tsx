@@ -12,7 +12,7 @@ export function CartLink({ className }: { className?: string }) {
     <Link
       href="/carrinho"
       aria-label={count > 0 ? `Carrinho, ${count} ${count === 1 ? "escultura" : "esculturas"}` : "Carrinho vazio"}
-      className={cn("relative grid size-11 place-items-center rounded-full text-ink hover:bg-sand", className)}
+      className={cn("relative grid size-11 place-items-center rounded-full text-ink hover:bg-pearl", className)}
     >
       <BagIcon className="text-2xl" />
       <CartBadge />
@@ -28,7 +28,7 @@ export function CartBadge({ className }: { className?: string }) {
     <span
       aria-hidden="true"
       className={cn(
-        "absolute right-0.5 top-0.5 grid min-w-5 place-items-center rounded-full bg-magenta px-1 text-[0.6875rem] font-bold leading-5 text-white",
+        "absolute right-0.5 top-0.5 grid min-w-5 place-items-center rounded-full bg-navy px-1 text-[0.6875rem] font-bold leading-5 text-white",
         className,
       )}
     >

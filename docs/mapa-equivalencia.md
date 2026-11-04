@@ -1,12 +1,12 @@
-# Mapa: Nobre Pata → Cristal Pet Esculturas
+# Mapa: Nobre Pata → AUmor de Patas
 
-A loja de referência é o **Nobre Pata** (estrutura e funcionalidades; nunca texto, imagem, marca, preço, nota ou doação). A Cristal Pet Esculturas é uma **loja comercial de esculturas de pets impressas em 3D**, sem parte institucional. Análise da referência: [`analise-nobre-pata.md`](analise-nobre-pata.md). Sistema completo: [`modelo-do-sistema.md`](modelo-do-sistema.md).
+A loja de referência é o **Nobre Pata** (estrutura e funcionalidades; nunca texto, imagem, marca, preço, nota ou doação). A AUmor de Patas é uma **loja comercial de esculturas de pets impressas em 3D**, sem parte institucional. Análise da referência: [`analise-nobre-pata.md`](analise-nobre-pata.md). Sistema completo: [`modelo-do-sistema.md`](modelo-do-sistema.md).
 
 > Histórico: o primeiro desenho misturava a loja com o banho e tosa da Cristal Pet (home híbrida, páginas de serviço, franquias, galeria). Foi descartado: isso pertence ao outro site, e este projeto é só comércio.
 
 ## Rotas
 
-| Nobre Pata | Cristal Pet | Observação |
+| Nobre Pata | AUmor de Patas | Observação |
 |---|---|---|
 | `/` (home híbrida) | `/` | vitrine única |
 | `/esculturas` (funil + configurador inline) | `/personalizar` | rota própria: carrega só o que o configurador precisa |
@@ -19,7 +19,7 @@ A loja de referência é o **Nobre Pata** (estrutura e funcionalidades; nunca te
 
 ## Home (`/`)
 
-| Nobre Pata | Cristal Pet |
+| Nobre Pata | AUmor de Patas |
 |---|---|
 | nav fixa com blur, sem botão | igual, com "Meus pedidos" e carrinho com contador |
 | hero: H1 com palavra-acento, CTA, dica de foto, resultados | hero com **um** CTA "Criar minha escultura", três pontos de confiança e o visual foto → prévia |

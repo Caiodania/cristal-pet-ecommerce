@@ -108,7 +108,7 @@ export function Lightbox({
         <div className="relative flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 sm:px-5">
             <p
-              className="text-sm font-semibold text-cream/80"
+              className="text-sm font-semibold text-snow/80"
               aria-live="polite"
             >
               Foto {(shown ?? 0) + 1} de {total}
@@ -117,7 +117,7 @@ export function Lightbox({
               <button
                 type="submit"
                 aria-label="Fechar"
-                className="grid size-11 place-items-center rounded-full text-xl text-cream transition-colors hover:bg-cream/15"
+                className="grid size-11 place-items-center rounded-full text-xl text-snow transition-colors hover:bg-snow/15"
               >
                 <CloseIcon />
               </button>
@@ -154,7 +154,7 @@ export function Lightbox({
                   type="button"
                   onClick={() => go(-1)}
                   aria-label="Foto anterior"
-                  className="absolute left-2 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-ink/70 text-2xl text-cream backdrop-blur transition-colors hover:bg-ink sm:left-4"
+                  className="absolute left-2 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-ink/70 text-2xl text-snow backdrop-blur transition-colors hover:bg-ink sm:left-4"
                 >
                   <ChevronLeftIcon />
                 </button>
@@ -162,7 +162,7 @@ export function Lightbox({
                   type="button"
                   onClick={() => go(1)}
                   aria-label="Próxima foto"
-                  className="absolute right-2 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-ink/70 text-2xl text-cream backdrop-blur transition-colors hover:bg-ink sm:right-4"
+                  className="absolute right-2 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full bg-ink/70 text-2xl text-snow backdrop-blur transition-colors hover:bg-ink sm:right-4"
                 >
                   <ChevronRightIcon />
                 </button>
@@ -170,7 +170,7 @@ export function Lightbox({
             )}
           </div>
 
-          <p className="px-4 py-3 text-sm leading-snug text-cream/80 sm:px-5">
+          <p className="px-4 py-3 text-sm leading-snug text-snow/80 sm:px-5">
             {current.alt}
           </p>
         </div>

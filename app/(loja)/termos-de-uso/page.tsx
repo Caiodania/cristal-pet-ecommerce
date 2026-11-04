@@ -11,14 +11,14 @@ export default function TermosDeUsoPage() {
   return (
     <LegalPage
       title="Termos de uso"
-      intro="As regras para usar o site da Cristal Pet Móvel e pedir uma escultura 3D do seu pet."
+      intro="As regras para usar o site da AUmor de Patas e pedir uma escultura 3D do seu pet."
       topics={[
         "Uso do site e das fotos enviadas",
         "A conta gratuita e o limite de prévias por conta",
         "A prévia em 3D como representação da escultura",
         "Como funciona o pedido pelo WhatsApp",
         "Direitos sobre as imagens e as esculturas",
-        "Responsabilidades da Cristal Pet e do cliente",
+        "Responsabilidades da AUmor de Patas e do cliente",
       ]}
     />
   );

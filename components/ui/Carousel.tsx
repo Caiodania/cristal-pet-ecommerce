@@ -5,12 +5,12 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { ChevronLeftIcon, ChevronRightIcon } from "./icons";
 
-// Botões redondos: contorno ink em fundo claro; creme dentro de faixa escura.
+// Botões redondos: contorno ink em fundo claro; branco dentro de faixa escura.
 const buttonClass =
   "grid size-11 place-items-center rounded-full border-2 border-ink text-ink transition-colors " +
-  "hover:bg-ink hover:text-cream disabled:pointer-events-none disabled:opacity-40 " +
-  "[[data-surface=dark]_&]:border-cream [[data-surface=dark]_&]:text-cream " +
-  "[[data-surface=dark]_&]:hover:bg-cream [[data-surface=dark]_&]:hover:text-ink";
+  "hover:bg-ink hover:text-snow disabled:pointer-events-none disabled:opacity-40 " +
+  "[[data-surface=dark]_&]:border-snow [[data-surface=dark]_&]:text-snow " +
+  "[[data-surface=dark]_&]:hover:bg-snow [[data-surface=dark]_&]:hover:text-ink";
 
 type CarouselProps = {
   /** Nome acessível do carrossel ("Fotos da unidade móvel"). */
@@ -77,7 +77,9 @@ export function Carousel({
         tabIndex={0}
         aria-label={`${label}: itens`}
         className={cn(
-          "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-2",
+          // o overflow-x corta também na vertical: o respiro (padding com margem negativa, que não muda o layout)
+          // deixa a sombra dos cartões e o "levantar" ao passar o mouse aparecerem inteiros
+          "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain -mb-8 -mt-2 pb-10 pt-2",
           "motion-safe:scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         )}
       >

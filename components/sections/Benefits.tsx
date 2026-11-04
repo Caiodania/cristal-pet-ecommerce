@@ -11,7 +11,7 @@ const benefits = [
   {
     Icon: FaPrint,
     title: "Impressa em 3D pela nossa equipe",
-    text: "A peça é impressa pela própria equipe da Cristal Pet, a partir do modelo 3D gerado com a foto.",
+    text: "A peça é impressa pela nossa própria equipe, a partir do modelo 3D gerado com a foto.",
   },
   {
     Icon: FaWhatsapp,
@@ -20,20 +20,20 @@ const benefits = [
   },
 ];
 
-/** Três cards de qualidade, na faixa magenta da marca. TODO-CLIENTE: acrescentar material e garantia. */
+/** Três cards de qualidade, na faixa navy da marca. TODO-CLIENTE: acrescentar material e garantia. */
 export function Benefits() {
   return (
-    <Section id="qualidade" tone="magenta" wave="cream" labelledBy="qualidade-titulo" className="overflow-hidden">
+    <Section id="qualidade" tone="navy" wave="snow" labelledBy="qualidade-titulo" className="overflow-hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="drift absolute -left-24 top-10 size-96 rounded-full bg-white/10 blur-3xl" />
         <div
-          className="drift absolute -right-24 bottom-10 size-96 rounded-full bg-teal/20 blur-3xl"
+          className="drift absolute -right-24 bottom-10 size-96 rounded-full bg-silver/20 blur-3xl"
           style={{ animationDelay: "-8s" }}
         />
       </div>
       <div className="relative">
         <SectionHeader
-          eyebrow="Qualidade Cristal Pet"
+          eyebrow="Qualidade AUmor de Patas"
           titleId="qualidade-titulo"
           title={
             <>
@@ -51,7 +51,7 @@ export function Benefits() {
             >
               <span
                 aria-hidden="true"
-                className="grid size-16 place-items-center rounded-full bg-teal text-3xl text-ink transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110"
+                className="grid size-16 place-items-center rounded-full bg-silver text-3xl text-ink transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110"
               >
                 <Icon />
               </span>

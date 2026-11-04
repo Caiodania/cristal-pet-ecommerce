@@ -1,5 +1,5 @@
 // Catálogo da escultura 3D. TODO-CLIENTE: os valores são provisórios até o dono
-// da Cristal Pet passar os dados reais. Preços e alturas NÃO foram inventados:
+// do cliente passar os dados reais. Preços e alturas NÃO foram inventados:
 // `null` significa "a definir" e a interface mostra "A definir"; enquanto
 // houver `null`, o total do carrinho aparece como "valor a combinar".
 //

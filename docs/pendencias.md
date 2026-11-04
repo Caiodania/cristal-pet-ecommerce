@@ -34,9 +34,9 @@ No site gerado, cada espaço reservado leva `data-todo="…"` no HTML e aparece 
 - **Exclusão de conta (LGPD):** como atender o pedido de um cliente (hoje é manual, no painel do Supabase). Decidir se vale construir o autoatendimento em "Minha conta" (excluir a conta, apagar fotos e imagens).
 
 **Loja**
-- Nome comercial da loja de esculturas e logo próprio (hoje é o logo da Cristal Pet Móvel).
+- Nome comercial e logo: **feito** (AUmor de Patas, com o logo e a paleta que o cliente mandou; `content/site.ts` e `assets/marca/`). **Falta confirmar com o cliente** o telefone/WhatsApp, e-mail, endereço, horário, Instagram e Facebook: hoje ainda são os da Cristal Pet Móvel.
 - CNPJ, razão social e endereço (rodapé).
-- Endereço do site institucional da Cristal Pet (para o rodapé apontar).
+- Endereço do site institucional da AUmor de Patas, se houver (para o rodapé apontar).
 - Link da página comercial do Facebook (o atual parece perfil pessoal).
 - Domínio final (`NEXT_PUBLIC_SITE_URL`).
 - Textos das 4 páginas legais (privacidade, termos, trocas, entrega), com revisão jurídica. Hoje têm só o roteiro e estão `noindex`. **Agora a privacidade e os termos precisam falar de conta** (e-mail, senha guardada pelo Supabase, foto ligada à conta, o limite de prévias).
@@ -46,9 +46,9 @@ No site gerado, cada espaço reservado leva `data-todo="…"` no HTML e aparece 
 
 ## TODO-FOTO (imagens)
 
-- **Esculturas de exemplo** (hero + carrossel): o hero já usa a escultura da Mel; o carrossel completa com "Em breve" (foto do pet) onde falta.
-  Para preencher: gerar as imagens com os prompts de [`docs/prompts-esculturas.md`](prompts-esculturas.md),
-  salvar em `public/images/esculturas/_originais/<id>.png` e rodar `npm run esculturas`
-  (mínimo 5, ideal 9; o hero usa a Mel). Com autorização dos tutores: os nomes, exceto Mel e Kobe, são de demonstração.
+- **Esculturas de exemplo** (hero + carrossel): **prontas** — Mel (no hero), Luna, Toby e Apolo, as quatro do carrossel. Os outros pets de `content/exemplos.ts` (Duque, Sol, Nina, Kobe, Neve, Pipoca) são opcionais: não aparecem enquanto houver quatro esculturas.
+  Para acrescentar mais: gerar a imagem com os prompts de [`docs/prompts-esculturas.md`](prompts-esculturas.md),
+  salvar em `public/images/esculturas/_originais/<id>.png` (ou .jpg) e rodar `npm run esculturas`.
+  **Autorização dos tutores** (`TODO-CLIENTE`): confirmar o uso da foto e do nome de cada pet na vitrine; os nomes de Duque, Sol, Nina, Neve e Pipoca são de demonstração.
 - **Imagens das opções do configurador** (cor, tipo, exemplo do nome): hoje são provisórias, derivadas da escultura da Mel (cores recoloridas por computador). Falta `tipo-na-pose`. Para trocar por reais, veja o fim de [`prompts-esculturas.md`](prompts-esculturas.md).
-- Logo em alta resolução; imagem de compartilhamento (OG) e favicon.
+- Logo em alta resolução: o do cliente tem 1254 px e fundo branco; peça o arquivo vetorial (SVG/PDF) ou um PNG com fundo transparente maior, se tiver, e troque em `assets/marca/` (`npm run marca` refaz tudo). A imagem de compartilhamento (OG) e o favicon já saem do logo.

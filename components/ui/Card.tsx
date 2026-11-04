@@ -4,7 +4,7 @@ import { cn } from "@/lib/cn";
 type CardProps = {
   /** Elemento HTML: "article" para conteúdo independente, "li" em listas… */
   as?: ElementType;
-  tone?: "white" | "sand" | "ink";
+  tone?: "white" | "pearl" | "ink";
   /** Sobe levemente ao passar o mouse; use em cards que são links. */
   interactive?: boolean;
   /** Inclinação leve (cartões "soltos" da marca); só a partir do tablet e volta ao passar o mouse. */
@@ -17,8 +17,8 @@ type CardProps = {
 
 const tones = {
   white: "bg-white text-ink",
-  sand: "bg-sand text-ink",
-  ink: "bg-ink text-cream border-transparent",
+  pearl: "bg-pearl text-ink",
+  ink: "bg-ink text-snow border-transparent",
 } as const;
 
 export function Card({

@@ -20,7 +20,7 @@ export default function MinhaContaPage() {
         }
         description="Suas prévias, seus pedidos e os dados do seu cadastro."
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         <MinhaContaCorpo />
       </Section>
     </main>

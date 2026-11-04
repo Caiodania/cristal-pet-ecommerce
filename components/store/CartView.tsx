@@ -66,7 +66,7 @@ function CartItemRow({
   const { options } = item;
   return (
     <Card as="li" className="flex gap-4 sm:gap-6">
-      <div className="size-24 shrink-0 overflow-hidden rounded-soft bg-sand sm:size-32">
+      <div className="size-24 shrink-0 overflow-hidden rounded-soft bg-pearl sm:size-32">
         {preview.status === "ok" && preview.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={preview.imageUrl} alt={`Prévia da escultura${options.petName ? ` de ${options.petName}` : ""}`} className="size-full object-cover" />
@@ -115,7 +115,7 @@ function Sent({ order, token, items }: { order: OrderDto; token: string; items: 
       <Alert tone="success">Pedido registrado!</Alert>
       <div>
         <p className="text-ink-soft">O código do seu pedido é</p>
-        <p className="font-display text-5xl font-extrabold text-teal-deep">{order.code}</p>
+        <p className="font-display text-5xl font-extrabold text-navy">{order.code}</p>
       </div>
       <p className="text-lead text-ink-soft">
         Falta só um passo: toque no botão abaixo e envie o pedido pelo WhatsApp. Lá combinamos o pagamento e a
@@ -130,7 +130,7 @@ function Sent({ order, token, items }: { order: OrderDto; token: string; items: 
         </Button>
       </div>
       <p className="text-sm text-ink-soft">
-        Guarde o código. O pedido também fica em <Link href="/meus-pedidos" className="font-semibold text-teal-deep underline underline-offset-4">Meus pedidos</Link>, na sua conta, em qualquer aparelho.
+        Guarde o código. O pedido também fica em <Link href="/meus-pedidos" className="font-semibold text-navy underline underline-offset-4">Meus pedidos</Link>, na sua conta, em qualquer aparelho.
       </p>
     </div>
   );
@@ -328,7 +328,7 @@ export function CartView() {
               <Link
                 href="/politica-de-privacidade"
                 target="_blank"
-                className="font-semibold text-teal-deep underline underline-offset-4"
+                className="font-semibold text-navy underline underline-offset-4"
               >
                 política de privacidade
                 <span className="sr-only"> (abre em nova aba)</span>

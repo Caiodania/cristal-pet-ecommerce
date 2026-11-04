@@ -23,7 +23,7 @@ export default function ConfirmarPage() {
           </>
         }
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         <Suspense fallback={<Loading>Carregando…</Loading>}>
           <ConfirmarCorpo />
         </Suspense>

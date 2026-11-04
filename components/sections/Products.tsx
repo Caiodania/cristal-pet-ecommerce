@@ -8,7 +8,7 @@ import { Accent, Section, SectionHeader } from "@/components/ui/Section";
  */
 export function Products() {
   return (
-    <Section id="tamanhos" tone="cream" wave="magenta" labelledBy="tamanhos-titulo">
+    <Section id="tamanhos" tone="snow" wave="navy" labelledBy="tamanhos-titulo">
       <SectionHeader
         eyebrow="Monte a sua"
         titleId="tamanhos-titulo"

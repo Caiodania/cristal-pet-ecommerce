@@ -212,7 +212,7 @@ export function MinhaContaCorpo() {
         <div className="flex flex-wrap items-center gap-4">
           <span
             aria-hidden="true"
-            className="grid size-16 place-items-center rounded-full bg-magenta font-display text-3xl font-extrabold text-white shadow-soft"
+            className="grid size-16 place-items-center rounded-full bg-navy font-display text-3xl font-extrabold text-white shadow-soft"
           >
             {(user.name ?? user.email).trim().charAt(0).toUpperCase()}
           </span>
@@ -250,7 +250,7 @@ export function MinhaContaCorpo() {
       </Card>
 
       {user.isAdmin && (
-        <Card className="rounded-3xl border-magenta/40">
+        <Card className="rounded-3xl border-navy/40">
           <h2 className="font-display text-xl font-extrabold">Painel do dono</h2>
           <p className="mt-1 text-ink-soft">Pedidos dos clientes, dados de envio, fotos e arquivos para a impressora 3D.</p>
           <div className="mt-4">
@@ -272,7 +272,7 @@ export function MinhaContaCorpo() {
       </Card>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/politica-de-privacidade" className="inline-flex min-h-11 items-center text-sm font-semibold text-teal-deep underline underline-offset-4">
+        <Link href="/politica-de-privacidade" className="inline-flex min-h-11 items-center text-sm font-semibold text-navy underline underline-offset-4">
           Política de privacidade
         </Link>
         <Button

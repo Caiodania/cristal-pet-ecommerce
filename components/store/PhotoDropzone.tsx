@@ -51,12 +51,12 @@ export function PhotoDropzone({ photo, onChange, petName }: PhotoDropzoneProps) 
         <p className="mt-1 text-ink-soft">A prévia fica pronta em instantes e você só pede se gostar.</p>
       </div>
 
-      <div className="rounded-card border border-teal/50 bg-teal-mist p-4 sm:p-5">
+      <div className="rounded-card border border-silver/50 bg-silver-mist p-4 sm:p-5">
         <p className="font-display font-extrabold">Dicas para uma escultura mais fiel</p>
         <ul className="mt-3 grid gap-2 sm:grid-cols-2">
           {photoTips.map((tip) => (
             <li key={tip} className="flex items-start gap-2 text-sm">
-              <CheckIcon className="mt-0.5 shrink-0 text-base text-teal-deep" />
+              <CheckIcon className="mt-0.5 shrink-0 text-base text-navy" />
               {tip}
             </li>
           ))}
@@ -76,8 +76,8 @@ export function PhotoDropzone({ photo, onChange, petName }: PhotoDropzoneProps) 
         }}
         className={cn(
           "grid place-items-center gap-4 rounded-card border-2 border-dashed p-6 text-center transition-colors sm:p-8",
-          "has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-magenta",
-          dragging ? "border-magenta bg-magenta/5" : "border-magenta/50 bg-white",
+          "has-[input:focus-visible]:outline-[3px] has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-navy",
+          dragging ? "border-navy bg-navy/5" : "border-navy/50 bg-white",
         )}
       >
         <input
@@ -101,14 +101,14 @@ export function PhotoDropzone({ photo, onChange, petName }: PhotoDropzoneProps) 
             <p className="text-sm text-ink-soft">{photo.name}</p>
             <label
               htmlFor={inputId}
-              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-ink px-5 text-sm font-semibold hover:bg-ink hover:text-cream"
+              className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full border-2 border-ink px-5 text-sm font-semibold hover:bg-ink hover:text-snow"
             >
               <UploadIcon /> Trocar foto
             </label>
           </>
         ) : (
           <>
-            <span className="grid size-20 place-items-center rounded-full bg-magenta/10 text-magenta">
+            <span className="grid size-20 place-items-center rounded-full bg-navy/10 text-navy">
               <UploadIcon className="text-4xl" />
             </span>
             <div>
@@ -117,7 +117,7 @@ export function PhotoDropzone({ photo, onChange, petName }: PhotoDropzoneProps) 
             </div>
             <label
               htmlFor={inputId}
-              className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-magenta px-7 font-semibold text-white shadow-soft hover:brightness-110 hover:shadow-lift"
+              className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-navy px-7 font-semibold text-white shadow-soft hover:brightness-110 hover:shadow-lift"
             >
               <CameraIcon /> Escolher foto
             </label>

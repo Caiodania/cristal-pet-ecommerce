@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { NaoEncontrada } from "@/components/ui/NaoEncontrada";
 import { Loading } from "@/components/ui/Status";
 import { ApiError } from "@/lib/loja/api";
+import { site } from "@/content/site";
 import { account, useAccount } from "@/lib/loja/conta";
 
 type AdminContextValue = {
@@ -74,12 +75,12 @@ export function AdminBar() {
   const { logout } = useAdmin();
   const { user } = useAccount();
   const link =
-    "inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-ink-soft hover:bg-sand hover:text-ink";
+    "inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold text-ink-soft hover:bg-pearl hover:text-ink";
   return (
     <header className="border-b border-line bg-white">
       <div className="container-page flex min-h-16 flex-wrap items-center justify-between gap-x-4 gap-y-1 py-1">
         <Link href="/admin" className="font-display text-lg font-extrabold">
-          Painel <span className="font-extrabold text-teal-deep">Cristal Pet</span>
+          Painel <span className="font-extrabold text-navy">{site.shortName}</span>
         </Link>
         <nav aria-label="Painel" className="flex flex-wrap items-center gap-1">
           <Link href="/admin" className={link}>

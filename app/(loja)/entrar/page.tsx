@@ -22,7 +22,7 @@ export default function EntrarPage() {
         }
         description="Para gerar prévias de escultura e acompanhar os seus pedidos."
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         {/* useSearchParams (para onde voltar depois do login) exige Suspense no export estático */}
         <Suspense fallback={<Loading>Carregando…</Loading>}>
           <EntrarCorpo />

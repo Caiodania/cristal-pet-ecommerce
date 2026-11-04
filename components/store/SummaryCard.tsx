@@ -40,7 +40,7 @@ export function SummaryCard({ chosen, photoUrl, previewUrl }: SummaryCardProps) 
     >
       <h2 className="font-display text-xl font-extrabold">Sua escultura</h2>
 
-      <div className="mt-3 rounded-soft bg-gradient-to-b from-teal-mist to-sand px-4 pb-1 pt-3">
+      <div className="mt-3 rounded-soft bg-gradient-to-b from-silver-mist to-pearl px-4 pb-1 pt-3">
         <SculptureIllustration
           pose={chosen.poseId ?? "sentado"}
           tint={color?.swatch ?? "#f3f0e8"}

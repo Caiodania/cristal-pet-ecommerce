@@ -79,7 +79,7 @@ export function CompareSlider({
       onPointerCancel={() => (dragging.current = false)}
       className={cn(
         "relative aspect-[4/5] w-full cursor-ew-resize touch-pan-y select-none overflow-hidden",
-        "rounded-[2rem] border-4 border-white bg-sand shadow-lift",
+        "rounded-[2rem] border-4 border-white bg-pearl shadow-lift",
         className,
       )}
     >
@@ -110,7 +110,7 @@ export function CompareSlider({
       <span className="pointer-events-none absolute left-4 top-4 rounded-full bg-ink px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
         {beforeLabel}
       </span>
-      <span className="pointer-events-none absolute right-4 top-4 rounded-full bg-magenta px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+      <span className="pointer-events-none absolute right-4 top-4 rounded-full bg-navy px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
         {afterLabel}
       </span>
 
@@ -139,7 +139,7 @@ export function CompareSlider({
         <span
           className={cn(
             "absolute left-1/2 top-1/2 grid size-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full",
-            "bg-white text-magenta shadow-lift ring-4 ring-magenta/25",
+            "bg-white text-navy shadow-lift ring-4 ring-navy/25",
           )}
         >
           <svg viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">

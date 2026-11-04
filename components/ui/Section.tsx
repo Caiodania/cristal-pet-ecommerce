@@ -1,25 +1,25 @@
 import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/cn";
-import { ClawMark, WaveDivider } from "./decor";
+import { HeartMark, WaveDivider } from "./decor";
 
-export type SectionTone = "cream" | "sand" | "mist" | "teal" | "magenta" | "ink";
+export type SectionTone = "snow" | "pearl" | "mist" | "silver" | "navy" | "ink";
 
-// Pares de cor já medidos (texto sobre fundo): ink/cream 16,5 · ink/teal 7,8 ·
-// branco/magenta 4,95 · cream/ink 16,5.
+// Pares de cor já medidos (texto sobre fundo): ink/snow 17,7 · ink/silver 11,3 ·
+// branco/navy 15,6 · snow/ink 17,7.
 const tones: Record<SectionTone, string> = {
-  cream: "bg-cream text-ink",
-  sand: "bg-sand text-ink",
-  mist: "bg-teal-mist text-ink",
-  teal: "bg-teal text-ink",
-  magenta: "bg-magenta text-white",
-  ink: "bg-ink text-cream",
+  snow: "bg-snow text-ink",
+  pearl: "bg-pearl text-ink",
+  mist: "bg-silver-mist text-ink",
+  silver: "bg-silver-sheen text-ink",
+  navy: "bg-navy text-white",
+  ink: "bg-ink text-snow",
 };
 
 // Faixas coloridas trocam a cor do foco, do destaque do título e dos botões.
-const surfaces: Partial<Record<SectionTone, "dark" | "teal" | "magenta">> = {
+const surfaces: Partial<Record<SectionTone, "dark" | "silver" | "navy">> = {
   ink: "dark",
-  teal: "teal",
-  magenta: "magenta",
+  silver: "silver",
+  navy: "navy",
 };
 
 type SectionProps = {
@@ -38,7 +38,7 @@ type SectionProps = {
 /** Seção da página: fundo, ritmo vertical, largura do conteúdo e onda opcional. */
 export function Section({
   id,
-  tone = "cream",
+  tone = "snow",
   labelledBy,
   contained = true,
   wave,
@@ -93,13 +93,13 @@ export function SectionHeader({
         <p
           className={cn(
             "mb-3 flex items-center gap-2 text-eyebrow font-extrabold uppercase",
-            // eyebrow pequeno precisa de 4,5:1: teal-deep no claro, ink no teal,
-            // branco no magenta, teal no escuro
-            "text-teal-deep [[data-surface=teal]_&]:text-ink [[data-surface=magenta]_&]:text-white [[data-surface=dark]_&]:text-teal",
+            // eyebrow pequeno precisa de 4,5:1: navy no claro, ink no prata,
+            // branco no marinho, prata no escuro
+            "text-navy [[data-surface=silver]_&]:text-ink [[data-surface=navy]_&]:text-white [[data-surface=dark]_&]:text-silver",
             centered && "justify-center",
           )}
         >
-          <ClawMark className="size-5 shrink-0" />
+          <HeartMark className="size-4 shrink-0" />
           {eyebrow}
         </p>
       )}
@@ -113,7 +113,7 @@ export function SectionHeader({
         <p
           className={cn(
             "mt-5 text-lead text-ink-soft",
-            "[[data-surface=teal]_&]:text-ink/85 [[data-surface=magenta]_&]:text-white [[data-surface=dark]_&]:text-cream/80",
+            "[[data-surface=silver]_&]:text-ink/85 [[data-surface=navy]_&]:text-white [[data-surface=dark]_&]:text-snow/80",
             centered && "mx-auto max-w-2xl",
           )}
         >
@@ -125,19 +125,19 @@ export function SectionHeader({
 }
 
 /**
- * Palavra de destaque do título, como no site da Cristal Pet. Magenta no fundo
- * claro (título grande: 4,7:1); sobre o verde-água o magenta reprovaria, então
- * vira uma "etiqueta" magenta com texto branco (4,95:1); no escuro, teal; no
- * magenta, sublinhado ondulado.
+ * Palavra de destaque do título. No fundo claro: texto marinho sobre um "marca-texto"
+ * prateado; na faixa prata, uma etiqueta marinho com texto branco (15,6:1); na faixa
+ * marinho, texto branco com sublinhado ondulado prateado; no escuro, texto prata.
  */
 export function Accent({ children }: { children: ReactNode }) {
   return (
     <em
       className={cn(
-        "font-extrabold not-italic text-magenta",
-        "[[data-surface=teal]_&]:rounded-xl [[data-surface=teal]_&]:bg-magenta [[data-surface=teal]_&]:px-2 [[data-surface=teal]_&]:text-white [[data-surface=teal]_&]:[box-decoration-break:clone]",
-        "[[data-surface=dark]_&]:text-teal",
-        "[[data-surface=magenta]_&]:text-white [[data-surface=magenta]_&]:underline [[data-surface=magenta]_&]:decoration-wavy [[data-surface=magenta]_&]:decoration-2 [[data-surface=magenta]_&]:underline-offset-8",
+        "font-extrabold not-italic text-navy",
+        "px-1 [box-decoration-break:clone] bg-[linear-gradient(transparent_62%,var(--color-silver)_62%,var(--color-silver)_94%,transparent_94%)]",
+        "[[data-surface=silver]_&]:rounded-xl [[data-surface=silver]_&]:bg-navy [[data-surface=silver]_&]:bg-none [[data-surface=silver]_&]:px-2 [[data-surface=silver]_&]:text-white",
+        "[[data-surface=dark]_&]:bg-none [[data-surface=dark]_&]:text-silver",
+        "[[data-surface=navy]_&]:bg-none [[data-surface=navy]_&]:px-0 [[data-surface=navy]_&]:text-white [[data-surface=navy]_&]:underline [[data-surface=navy]_&]:decoration-wavy [[data-surface=navy]_&]:decoration-silver [[data-surface=navy]_&]:decoration-2 [[data-surface=navy]_&]:underline-offset-8",
       )}
     >
       {children}

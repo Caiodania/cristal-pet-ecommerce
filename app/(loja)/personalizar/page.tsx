@@ -24,7 +24,7 @@ export default function PersonalizarPage() {
         }
         description="Seis passos rápidos. Você vê a prévia antes de pedir."
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         {/* useSearchParams (tamanho já escolhido na vitrine) exige Suspense no export estático */}
         <Suspense fallback={<Loading>Carregando…</Loading>}>
           <Configurator />

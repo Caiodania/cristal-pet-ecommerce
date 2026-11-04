@@ -17,32 +17,28 @@ const linkClass =
   "inline-flex min-h-11 items-center font-semibold text-ink underline-offset-4 hover:underline";
 
 const socialClass =
-  "grid size-11 place-items-center rounded-full border-2 border-ink text-lg text-ink transition-colors hover:bg-ink hover:text-teal";
+  "grid size-11 place-items-center rounded-full border-2 border-ink text-lg text-ink transition-colors hover:bg-ink hover:text-silver";
 
 /**
- * Rodapé da marca: faixa verde-água com loja, políticas e atendimento, e barra
- * magenta com o copyright (como no site da Cristal Pet). Horário real, nunca "24h".
+ * Rodapé da marca: faixa prata com loja, políticas e atendimento, e barra
+ * azul marinho com o copyright. Horário real, nunca "24h".
  */
 export function SiteFooter() {
   return (
     <footer>
-      <div data-surface="teal" className="relative overflow-hidden bg-teal text-ink">
+      <div data-surface="silver" className="relative overflow-hidden bg-silver-sheen text-ink">
         <Bubbles className="-right-24 -top-24 w-96 opacity-40" />
         <div className="container-page relative grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:py-16">
           <div>
-            <Link href="/" className="inline-flex items-center gap-3">
+            {/* o logo completo numa plaquinha branca: o desenho (dourado, rosa e marinho) foi feito para fundo claro */}
+            <Link href="/" className="inline-block rounded-3xl bg-white p-3 shadow-soft">
               <Image
                 src={images.logo.src}
-                alt=""
+                alt={`${site.name} ${site.descriptor}`}
                 width={images.logo.width}
                 height={images.logo.height}
-                className="size-20"
+                className="h-auto w-44 sm:w-48"
               />
-              <span className="font-display text-xl font-extrabold">
-                Cristal Pet{" "}
-                {/* magenta direto no verde-água reprova (2,2:1): vira etiqueta com texto branco */}
-                <span className="rounded-lg bg-magenta px-1.5 text-white">Esculturas</span>
-              </span>
             </Link>
             <p className="mt-4 max-w-xs font-semibold">{site.tagline}.</p>
             <p className="mt-2 max-w-xs text-sm">
@@ -107,7 +103,7 @@ export function SiteFooter() {
                 href={site.social.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Instagram da Cristal Pet (abre em nova aba)"
+                aria-label="Instagram (abre em nova aba)"
                 className={socialClass}
               >
                 <FaInstagram aria-hidden="true" />
@@ -116,7 +112,7 @@ export function SiteFooter() {
                 href={site.social.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Facebook da Cristal Pet (abre em nova aba)"
+                aria-label="Facebook (abre em nova aba)"
                 className={socialClass}
               >
                 <FaFacebookF aria-hidden="true" />
@@ -126,7 +122,7 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div data-surface="magenta" className="bg-magenta text-white">
+      <div data-surface="navy" className="bg-navy text-white">
         <p className="container-page py-4 text-sm">
           © {new Date().getFullYear()} {site.name}. Todos os direitos reservados.
           {/* TODO-CLIENTE: CNPJ, razão social e endereço (obrigatórios na loja) */}

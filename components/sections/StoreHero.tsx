@@ -3,7 +3,7 @@ import { FaPaw, FaWandMagicSparkles } from "react-icons/fa6";
 import { Button } from "@/components/ui/Button";
 import { CreateButton } from "@/components/ui/CtaButtons";
 import { CompareSlider } from "@/components/ui/CompareSlider";
-import { Bubbles, ClawMark, Paw, SpinBadge, TiltedOutline } from "@/components/ui/decor";
+import { Bubbles, HeartMark, SpinBadge, TiltedOutline } from "@/components/ui/decor";
 import { CheckIcon } from "@/components/ui/icons";
 import { Accent, Section } from "@/components/ui/Section";
 import { previewsPerAccount } from "@/content/estatua";
@@ -13,30 +13,33 @@ const points = ["Prévia antes de pedir", "Impressa em 3D", `${previewsPerAccoun
 
 /**
  * Primeira dobra da loja. Texto à esquerda, e à direita o comparador: arraste
- * o divisor e a foto da Mel vira a escultura dela. Faixa verde-água da marca,
- * com bolhas, patinhas e manchas de cor em movimento lento. Um CTA primário.
+ * o divisor e a foto da Mel vira a escultura dela. Faixa prata da marca, com
+ * brilhos, patinhas e manchas de luz em movimento lento. Um CTA primário.
  */
 export function StoreHero() {
   const { photo, sculpture } = exemplos[0];
   return (
-    <Section tone="teal" wave="cream" labelledBy="hero-titulo" className="overflow-hidden">
-      {/* fundo: manchas de luz e cor, bolhas e patinhas (tudo decorativo) */}
+    <Section tone="silver" wave="snow" labelledBy="hero-titulo" className="overflow-hidden">
+      {/* fundo: manchas de luz, brilhos e patinhas (tudo decorativo) */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <div className="drift absolute -right-32 -top-40 size-[34rem] rounded-full bg-white/25 blur-3xl" />
         <div
-          className="drift absolute -bottom-40 -left-40 size-[30rem] rounded-full bg-[#9ff0e3]/45 blur-3xl"
+          className="drift absolute -bottom-40 -left-40 size-[30rem] rounded-full bg-white/55 blur-3xl"
           style={{ animationDelay: "-6s" }}
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_30%,rgb(255_255_255/0.22),transparent_55%)]" />
       </div>
       <Bubbles className="-left-32 top-10 w-80 opacity-30" />
       <Bubbles className="-right-28 bottom-0 w-96 opacity-40" />
-      <Paw className="float-slower bottom-40 left-8 hidden w-6 rotate-12 opacity-25 lg:block" />
+      <FaPaw
+        aria-hidden="true"
+        className="float-slower pointer-events-none absolute bottom-40 left-8 hidden size-6 rotate-12 text-navy opacity-20 lg:block"
+      />
 
       <div className="relative grid items-center gap-14 lg:grid-cols-[1.12fr_0.88fr] lg:gap-10">
         <div>
           <p className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-1.5 text-eyebrow font-extrabold uppercase backdrop-blur">
-            <ClawMark className="size-5" />
+            <HeartMark className="size-4" />
             Esculturas 3D personalizadas
           </p>
           <h1
@@ -60,7 +63,7 @@ export function StoreHero() {
           <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2">
             {points.map((point) => (
               <li key={point} className="flex items-center gap-2 font-bold">
-                <span className="grid size-6 place-items-center rounded-full bg-white/80 text-teal-deep">
+                <span className="grid size-6 place-items-center rounded-full bg-white/80 text-navy">
                   <CheckIcon className="text-sm" />
                 </span>
                 {point}
@@ -71,7 +74,7 @@ export function StoreHero() {
 
         <div className="relative mx-auto w-full max-w-md lg:max-w-lg">
           <div className="relative">
-            {/* contorno magenta inclinado atrás da moldura, a marca registrada da Cristal Pet */}
+            {/* contorno marinho inclinado atrás da moldura */}
             <TiltedOutline rotate={3} x={14} y={12} className="rounded-[2rem]" />
             {sculpture ? (
               <CompareSlider before={photo} after={sculpture} priority className="relative" />
@@ -88,10 +91,10 @@ export function StoreHero() {
 
             {/* adesivos flutuantes */}
             <span className="float-slow pointer-events-none absolute -left-3 top-24 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-extrabold shadow-lift sm:-left-8">
-              <FaWandMagicSparkles aria-hidden="true" className="text-magenta" />
+              <FaWandMagicSparkles aria-hidden="true" className="text-navy" />
               Prévia grátis
             </span>
-            <span className="float-slower pointer-events-none absolute -right-2 bottom-28 inline-flex items-center gap-2 rounded-full bg-magenta px-4 py-2 text-sm font-extrabold text-white shadow-lift sm:-right-6">
+            <span className="float-slower pointer-events-none absolute -right-2 bottom-28 inline-flex items-center gap-2 rounded-full bg-navy px-4 py-2 text-sm font-extrabold text-white shadow-lift sm:-right-6">
               <FaPaw aria-hidden="true" />
               Nome em relevo
             </span>

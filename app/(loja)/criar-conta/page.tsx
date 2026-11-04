@@ -22,7 +22,7 @@ export default function CriarContaPage() {
         }
         description="Com a conta você gera as prévias da sua escultura e acompanha os pedidos em qualquer aparelho."
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         <Suspense fallback={<Loading>Carregando…</Loading>}>
           <CriarContaCorpo />
         </Suspense>

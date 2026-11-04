@@ -28,14 +28,14 @@ export function QuotaMeter({ quota, className, label = true }: { quota: QuotaDto
               key={i}
               className={cn(
                 "h-2.5 flex-1 rounded-full transition-colors duration-500",
-                i < used ? "bg-magenta" : "border-2 border-magenta/40 bg-white",
+                i < used ? "bg-navy" : "border-2 border-navy/40 bg-white",
               )}
             />
           ))}
         </div>
       ) : (
-        <div aria-hidden="true" className="h-2.5 overflow-hidden rounded-full bg-magenta-mist">
-          <div className="h-full rounded-full bg-magenta transition-[width] duration-500" style={{ width: `${(used / limit) * 100}%` }} />
+        <div aria-hidden="true" className="h-2.5 overflow-hidden rounded-full bg-silver-mist">
+          <div className="h-full rounded-full bg-navy transition-[width] duration-500" style={{ width: `${(used / limit) * 100}%` }} />
         </div>
       )}
     </div>

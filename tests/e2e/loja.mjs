@@ -119,7 +119,7 @@ const SCAN = `(() => {
   const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4) };
   const lum = (c) => 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b);
   const blend = (f, b) => ({ r: f.a * f.r + (1 - f.a) * b.r, g: f.a * f.g + (1 - f.a) * b.g, b: f.a * f.b + (1 - f.a) * b.b, a: 1 });
-  const bgOf = (el) => { let e = el; while (e) { const s = getComputedStyle(e); if (s.backgroundImage !== 'none' && !s.backgroundImage.startsWith('radial')) return null; const c = parse(s.backgroundColor); if (c && c.a > 0.5) return c; e = e.parentElement } return { r: 250, g: 249, b: 245, a: 1 } };
+  const bgOf = (el) => { let e = el; while (e) { const s = getComputedStyle(e); if (s.backgroundImage !== 'none' && !s.backgroundImage.startsWith('radial')) return null; const c = parse(s.backgroundColor); if (c && c.a > 0.5) return c; e = e.parentElement } return { r: 255, g: 255, b: 255, a: 1 } };
   const contrast = [], seen = new Set();
   for (const el of document.querySelectorAll('body *')) {
     // componentes inativos (desabilitados) e enfeites escondidos da leitura (aria-hidden: números
@@ -351,7 +351,7 @@ try {
   await go('/admin')
   await waitFor(`document.body.innerText.includes('Página não encontrada')`, 8000, 'visitante vê "não encontrada"')
   const visitor = await evaluate(`({ t: document.body.innerText, pw: !!document.querySelector('input[type=password]'), title: document.title })`)
-  check('visitante em /admin: vê a página "não encontrada", sem login do painel e sem pista do painel', !visitor.pw && !/[Pp]ainel|[Pp]edidos/.test(visitor.t) && visitor.title === 'Página não encontrada | Cristal Pet Esculturas', JSON.stringify(visitor))
+  check('visitante em /admin: vê a página "não encontrada", sem login do painel e sem pista do painel', !visitor.pw && !/[Pp]ainel|[Pp]edidos/.test(visitor.t) && visitor.title === 'Página não encontrada | AUmor de Patas', JSON.stringify(visitor))
   await shot('10-admin-visitante')
   const visitorApi = await evaluate(`Promise.all(['/api/admin/stats', '/api/admin/orders', '/api/admin/accounts'].map(async (p) => { const r = await fetch(p); return { status: r.status, body: await r.text() } }))`)
   check('visitante na API do painel: 404 idêntico ao de uma rota que não existe', visitorApi.every((r) => r.status === 404 && r.body === notFound.body), JSON.stringify(visitorApi).slice(0, 200))
@@ -377,7 +377,7 @@ try {
     const call = (path, body) => fetch(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }).then((r) => r.status)
     const login = { email: ${JSON.stringify(ownerEmail)}, password: ${JSON.stringify(accountPassword)} }
     if ((await call('/api/auth/login', login)) === 200) return 'entrou'
-    const created = await call('/api/auth/signup', { name: 'Dona da Cristal', ...login })
+    const created = await call('/api/auth/signup', { name: 'Dona da Loja', ...login })
     return created === 200 || created === 201 ? 'cadastrou' : 'erro ' + created
   })()`)
   check('conta do dono criada ou aberta (e-mail de ADMIN_EMAILS)', ownerHow === 'entrou' || ownerHow === 'cadastrou', `${ownerHow} — o servidor foi iniciado com ADMIN_EMAILS=${ownerEmail}?`)

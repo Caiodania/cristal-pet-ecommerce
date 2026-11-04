@@ -9,27 +9,33 @@ import { MobileMenu } from "./MobileMenu";
 import { NavLink } from "./NavLink";
 
 /**
- * Cabeçalho fixo no topo: fundo creme a 90% com desfoque. No desktop mostra o
+ * Cabeçalho fixo no topo: fundo branco a 90% com desfoque. No desktop mostra o
  * menu (a partir de lg), a conta ("Faça login" ou o menu "Minha conta"), o carrinho
- * e, em tela larga (xl), "Meus pedidos" e o botão "Criar escultura"; no celular e
+ * e, em tela larga (xl), o botão "Criar escultura" (e "Meus pedidos" só a partir de 2xl:
+ * o nome da marca ocupa espaço; o atalho também está no menu da conta); no celular e
  * no tablet, o logo, a conta, o carrinho e o menu em popover (o "Criar" fica na
  * barra de abas de baixo).
  */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-cream/90 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-line bg-snow/90 backdrop-blur-md">
       <div className="container-page flex h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2.5 rounded-full py-1 pr-2">
+        <Link href="/" className="flex min-w-0 items-center gap-2 rounded-full py-1 sm:shrink-0 sm:gap-3 sm:pr-2">
+          {/* o emblema do logo (coração com o cão e o gato) + o nome em texto de verdade: nítido em qualquer tamanho.
+              No celular o espaço é curto (conta, carrinho e menu ao lado): emblema menor, nome numa linha e sem a frase "Esculturas Pet". */}
           <Image
-            src={images.logo.src}
+            src={images.emblem.src}
             alt=""
-            width={images.logo.width}
-            height={images.logo.height}
+            width={images.emblem.width}
+            height={images.emblem.height}
             priority
-            className="size-12 md:size-14"
+            className="h-8 w-auto shrink-0 min-[400px]:h-9 sm:h-12"
           />
-          <span className="font-display text-lg font-extrabold leading-none">
-            Cristal Pet <span className="text-magenta">Esculturas</span>
+          <span className="grid gap-1 leading-none">
+            <span className="font-display text-[0.9375rem] font-extrabold leading-tight tracking-tight text-navy min-[400px]:text-base sm:whitespace-nowrap sm:text-xl sm:leading-none">
+              {site.name}
+            </span>
+            <span className="sr-only whitespace-nowrap text-[0.6875rem] font-bold uppercase tracking-[0.28em] text-ink-soft sm:not-sr-only">{site.descriptor}</span>
             <span className="sr-only"> — {site.tagline}</span>
           </span>
         </Link>
@@ -40,8 +46,8 @@ export function SiteHeader() {
               <li key={item.href}>
                 <NavLink
                   href={item.href}
-                  className="inline-flex min-h-11 items-center rounded-full px-4 whitespace-nowrap text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-sand hover:text-ink"
-                  activeClassName="bg-sand text-ink"
+                  className="inline-flex min-h-11 items-center rounded-full px-4 whitespace-nowrap text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-pearl hover:text-ink"
+                  activeClassName="bg-pearl text-ink"
                 >
                   {item.label}
                 </NavLink>
@@ -53,8 +59,8 @@ export function SiteHeader() {
         <div className="flex items-center gap-1">
           <NavLink
             href="/meus-pedidos"
-            className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-4 text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-sand hover:text-ink xl:inline-flex"
-            activeClassName="bg-sand text-ink"
+            className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-4 text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-pearl hover:text-ink 2xl:inline-flex"
+            activeClassName="bg-pearl text-ink"
           >
             Meus pedidos
           </NavLink>

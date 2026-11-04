@@ -29,7 +29,7 @@ export function WhatsAppFloat({
       aria-label={`${label} (abre em nova aba)`}
       className={cn(
         "fixed bottom-4 right-4 z-40 sm:bottom-6 sm:right-6",
-        "flex h-14 items-center gap-2.5 rounded-full bg-ink px-4 text-cream shadow-lift sm:px-5",
+        "flex h-14 items-center gap-2.5 rounded-full bg-ink px-4 text-snow shadow-lift sm:px-5",
         "transition-[background-color,translate] motion-safe:duration-200 hover:bg-ink/90 motion-safe:hover:-translate-y-0.5",
         className,
       )}

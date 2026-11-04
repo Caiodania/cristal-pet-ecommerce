@@ -1,15 +1,17 @@
 // Exemplos de esculturas da vitrine: o pet de verdade (foto) e a escultura feita
 // a partir dele. As fotos são de pets atendidos pela Cristal Pet.
 //
-// TODO-FOTO: as esculturas ainda não existem. Para publicar:
+// Esculturas prontas: Mel, Luna, Toby e Apolo (as quatro do carrossel). Os demais
+// pets abaixo são opcionais: quando houver mais esculturas, para publicar:
 //   1. gere uma imagem por pet (prompts prontos em docs/prompts-esculturas.md);
 //   2. salve em public/images/esculturas/_originais/<id>.png (ou .jpg/.webp);
 //   3. rode `npm run esculturas`: o script converte para o formato do site e
 //      atualiza content/esculturas-disponiveis.json.
-// Enquanto uma escultura não existir, o cartão mostra "em breve".
+// Enquanto uma escultura não existir, o cartão do pet só aparece como "em breve"
+// se faltarem cartões para completar quatro (não é o caso hoje).
 //
 // TODO-CLIENTE: confirmar com os tutores a autorização de uso das fotos dos pets
-// e os nomes (os nomes abaixo, exceto Mel e Kobe, são de exemplo).
+// e dos nomes (os nomes de Duque, Sol, Nina, Neve e Pipoca são de exemplo).
 
 import disponiveis from "./esculturas-disponiveis.json";
 import type { Img } from "./images";
@@ -52,10 +54,11 @@ const pet = (
 /** A ordem importa: o primeiro é o do hero da vitrine. */
 export const exemplos: Exemplo[] = [
   pet("mel", "Mel", "lulu da pomerânia creme, sentada", 640, 825),
+  pet("luna", "Luna", "shih tzu creme e branca, sentada", 640, 853),
+  pet("toby", "Toby", "cão caramelo e branco, sentado", 640, 927),
+  pet("apolo", "Apolo", "golden retriever, sentado", 640, 853),
   pet("duque", "Duque", "cocker spaniel dourado, sentado", 640, 853),
   pet("sol", "Sol", "golden retriever", 640, 875),
-  pet("bela", "Bela", "shih tzu branca", 640, 853),
-  pet("bob", "Bob", "cão caramelo e branco, sentado", 640, 927),
   pet("nina", "Nina", "lulu da pomerânia branca", 640, 853),
   pet("kobe", "Kobe", "lulu da pomerânia creme, deitado", 640, 1138),
   pet("neve", "Neve", "cão branco de pelo longo", 591, 910),

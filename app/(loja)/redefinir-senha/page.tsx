@@ -24,7 +24,7 @@ export default function RedefinirSenhaPage() {
           </>
         }
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         {/* o token vem depois do # do endereço: só o navegador enxerga, então a página é montada lá */}
         <Suspense fallback={<Loading>Carregando…</Loading>}>
           <RedefinirCorpo />

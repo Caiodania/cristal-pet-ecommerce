@@ -33,8 +33,8 @@ export function Stepper({ steps, current, onGo }: StepperProps) {
               aria-hidden="true"
               className={cn(
                 "grid size-9 place-items-center rounded-full border-2 font-display text-sm font-extrabold transition-all duration-300",
-                done && "border-magenta bg-magenta text-white",
-                active && "border-magenta bg-white text-magenta ring-4 ring-magenta/20",
+                done && "border-navy bg-navy text-white",
+                active && "border-navy bg-white text-navy ring-4 ring-navy/20",
                 !done && !active && "border-line bg-white text-ink-soft",
               )}
             >
@@ -60,7 +60,7 @@ export function Stepper({ steps, current, onGo }: StepperProps) {
                   aria-hidden="true"
                   className={cn(
                     "absolute left-1/2 top-[1.375rem] h-0.5 w-full transition-colors duration-300",
-                    done ? "bg-magenta" : "bg-line",
+                    done ? "bg-navy" : "bg-line",
                   )}
                 />
               )}

@@ -30,7 +30,7 @@ export default function Home() {
       <HowItWorks />
       <Products />
       <Benefits />
-      <FaqSection tone="cream" wave="magenta" />
+      <FaqSection tone="snow" wave="navy" />
       <FinalCta />
     </main>
   );

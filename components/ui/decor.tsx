@@ -3,17 +3,17 @@ import { FaPaw } from "react-icons/fa6";
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/cn";
 
-// Peças decorativas da marca Cristal Pet (do site institucional). Todas são
-// aria-hidden: nenhuma carrega informação.
+// Peças decorativas da marca AUmor de Patas. Todas são aria-hidden: nenhuma
+// carrega informação.
 
-type Tone = "cream" | "sand" | "mist" | "teal" | "magenta" | "ink";
+type Tone = "snow" | "pearl" | "mist" | "silver" | "navy" | "ink";
 
 const waveColor: Record<Tone, string> = {
-  cream: "text-cream",
-  sand: "text-sand",
-  mist: "text-teal-mist",
-  teal: "text-teal",
-  magenta: "text-magenta",
+  snow: "text-snow",
+  pearl: "text-pearl",
+  mist: "text-silver-mist",
+  silver: "text-silver",
+  navy: "text-navy",
   ink: "text-ink",
 };
 
@@ -41,8 +41,8 @@ export function WaveDivider({ tone }: { tone: Tone }) {
 }
 
 /**
- * Contorno magenta inclinado atrás de fotos e cartões (marca registrada do site
- * institucional). Vai dentro de um contêiner `relative`, antes do conteúdo.
+ * Contorno marinho inclinado atrás de fotos e cartões (a moldura da marca). Vai
+ * dentro de um contêiner `relative`, antes do conteúdo.
  */
 export function TiltedOutline({
   rotate = -3,
@@ -60,8 +60,8 @@ export function TiltedOutline({
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute inset-0 rounded-[inherit] border-[3px] border-magenta",
-        "[[data-surface=magenta]_&]:border-white",
+        "pointer-events-none absolute inset-0 rounded-[inherit] border-[3px] border-navy",
+        "[[data-surface=navy]_&]:border-white",
         className,
       )}
       style={style}
@@ -69,7 +69,7 @@ export function TiltedOutline({
   );
 }
 
-/** Bolhas de sabão da marca, em baixa opacidade, como pano de fundo. */
+/** Bolhas (gotas de brilho), em baixa opacidade, como pano de fundo das faixas. */
 export function Bubbles({ className }: { className?: string }) {
   return (
     <Image
@@ -84,32 +84,11 @@ export function Bubbles({ className }: { className?: string }) {
   );
 }
 
-/** Patinha da marca. */
-export function Paw({ className }: { className?: string }) {
+/** Coraçãozinho que antecede os títulos (o coração do logo). Herda a cor do texto ao lado. */
+export function HeartMark({ className }: { className?: string }) {
   return (
-    <Image
-      src="/images/marca/patinhas.png"
-      alt=""
-      aria-hidden="true"
-      width={34}
-      height={44}
-      loading="lazy"
-      className={cn("pointer-events-none absolute h-auto select-none", className)}
-    />
-  );
-}
-
-/** As três marquinhas de garra laranja que antecedem os títulos no site da marca. */
-export function ClawMark({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-      className={cn("text-claw", className)}
-    >
-      <path d="M6 3L4 11M12 3L10 11M18 3L16 11" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false" className={cn(className)}>
+      <path d="M12 21.2C5.2 16.6 2 13.1 2 9.2 2 6.2 4.2 4 7 4c1.9 0 3.7 1 5 2.8C13.3 5 15.1 4 17 4c2.8 0 5 2.2 5 5.2 0 3.9-3.2 7.4-10 12Z" />
     </svg>
   );
 }
@@ -126,7 +105,7 @@ export function SpinBadge({ className }: { className?: string }) {
           <textPath href="#spin-badge-path">ESCULTURA 3D • FEITA SOB MEDIDA • </textPath>
         </text>
       </svg>
-      <FaPaw className="relative text-2xl text-magenta" />
+      <FaPaw className="relative text-2xl text-navy" />
     </div>
   );
 }

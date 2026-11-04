@@ -29,7 +29,7 @@ export const faq: FaqItem[] = [
   {
     question: "Quem faz a escultura?",
     answer:
-      "A escultura é impressa em 3D pela própria equipe da Cristal Pet, a partir do modelo criado com a foto do seu pet.",
+      "A escultura é impressa em 3D pela nossa própria equipe, a partir do modelo criado com a foto do seu pet.",
   },
   {
     question: "Como é feito o pagamento?",

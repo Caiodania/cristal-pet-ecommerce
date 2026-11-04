@@ -11,11 +11,11 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 export const metadata: Metadata = {
   title: "Contato",
   description:
-    "Fale com a Cristal Pet pelo WhatsApp ou e-mail. Atendimento de segunda a sexta, das 8h às 17h, e aos sábados, das 8h às 13h.",
+    `Fale com a ${site.shortName} pelo WhatsApp ou e-mail. Atendimento de segunda a sexta, das 8h às 17h, e aos sábados, das 8h às 13h.`,
   alternates: { canonical: "/contato" },
 };
 
-const linkClass = "inline-flex min-h-11 items-center font-semibold text-teal-deep underline underline-offset-4";
+const linkClass = "inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4";
 
 // O formulário de contato (Netlify Forms, com honeypot) entra na etapa de formulários.
 export default function ContatoPage() {
@@ -26,19 +26,19 @@ export default function ContatoPage() {
         titleId="contato-titulo"
         title={
           <>
-            Fale com a <Accent>Cristal Pet</Accent>
+            Fale com a <Accent>{site.shortName}</Accent>
           </>
         }
         description={`O jeito mais rápido é o WhatsApp. Atendemos ${site.hoursSentence}.`}
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         <div className="flex justify-center">
           <WhatsAppButton message={site.whatsapp.messages.duvida}>Falar no WhatsApp</WhatsAppButton>
         </div>
 
         <ul className="mx-auto mt-12 grid max-w-4xl gap-5 sm:grid-cols-2">
           <Card as="li">
-            <FaWhatsapp aria-hidden="true" className="text-3xl text-magenta" />
+            <FaWhatsapp aria-hidden="true" className="text-3xl text-navy" />
             <h2 className="mt-3 font-display text-xl font-extrabold">WhatsApp</h2>
             <a
               href={buildWhatsAppUrl()}
@@ -52,7 +52,7 @@ export default function ContatoPage() {
           </Card>
 
           <Card as="li">
-            <FaEnvelope aria-hidden="true" className="text-3xl text-magenta" />
+            <FaEnvelope aria-hidden="true" className="text-3xl text-navy" />
             <h2 className="mt-3 font-display text-xl font-extrabold">E-mail</h2>
             <a href={`mailto:${site.email}`} className={`${linkClass} break-all`}>
               {site.email}
@@ -60,7 +60,7 @@ export default function ContatoPage() {
           </Card>
 
           <Card as="li">
-            <FaClock aria-hidden="true" className="text-3xl text-magenta" />
+            <FaClock aria-hidden="true" className="text-3xl text-navy" />
             <h2 className="mt-3 font-display text-xl font-extrabold">Horário</h2>
             <ul className="text-ink-soft">
               {site.hours.map((line) => (
@@ -72,7 +72,7 @@ export default function ContatoPage() {
           </Card>
 
           <Card as="li">
-            <FaLocationDot aria-hidden="true" className="text-3xl text-magenta" />
+            <FaLocationDot aria-hidden="true" className="text-3xl text-navy" />
             <h2 className="mt-3 font-display text-xl font-extrabold">Endereço</h2>
             <address className="not-italic text-ink-soft">
               {site.address.street}, {site.address.city} - {site.address.region}

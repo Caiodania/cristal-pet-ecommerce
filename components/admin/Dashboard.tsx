@@ -149,7 +149,7 @@ export function Dashboard() {
                     <th scope="row">
                       <Link
                         href={`/admin/pedido?id=${order.id}`}
-                        className="font-display text-lg font-semibold text-teal-deep underline underline-offset-4"
+                        className="font-display text-lg font-semibold text-navy underline underline-offset-4"
                       >
                         {order.code}
                       </Link>
@@ -237,7 +237,7 @@ function FilterCard({
       aria-pressed={active}
       className={cn(
         "grid w-full gap-0.5 rounded-card border-2 p-3 text-left transition-colors",
-        active ? "border-teal-deep bg-teal-mist" : "border-line bg-white hover:border-field",
+        active ? "border-navy bg-silver-mist" : "border-line bg-white hover:border-field",
       )}
     >
       <span className="text-sm font-semibold text-ink-soft">{label}</span>

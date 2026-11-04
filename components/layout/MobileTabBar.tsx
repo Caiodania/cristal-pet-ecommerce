@@ -24,7 +24,7 @@ const itemClass =
   "relative flex min-h-16 flex-1 flex-col items-center justify-center gap-1 px-1 " +
   "text-xs font-semibold text-ink-soft transition-colors hover:text-ink";
 const activeClass =
-  "text-teal-deep after:absolute after:inset-x-5 after:top-0 after:h-0.5 after:rounded-full after:bg-teal-deep";
+  "text-navy after:absolute after:inset-x-5 after:top-0 after:h-0.5 after:rounded-full after:bg-navy";
 
 /**
  * Barra de abas fixa no rodapé, só no celular. "Ajuda" abre o WhatsApp, então
@@ -34,7 +34,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="Atalhos"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-cream/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-snow/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
     >
       <ul className="flex">
         {tabs.map(({ label, href, Icon }) => (

@@ -72,7 +72,7 @@ function UserRow({ user, onChange }: { user: AdminUserDto; onChange: (next: Admi
             Salvar
           </Button>
           {message && (
-            <span role="status" className={message.ok ? "text-sm text-teal-deep" : "text-sm font-semibold text-danger"}>
+            <span role="status" className={message.ok ? "text-sm text-navy" : "text-sm font-semibold text-danger"}>
               {message.text}
             </span>
           )}

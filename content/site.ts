@@ -3,9 +3,11 @@
 // TODO-CLIENTE.
 
 export const site = {
-  // TODO-CLIENTE: nome comercial da loja de esculturas (e logo próprio).
-  name: "Cristal Pet Esculturas",
-  shortName: "Cristal Pet",
+  // Nome e logo: AUmor de Patas (o cliente mandou o logo; fica em assets/marca/).
+  name: "AUmor de Patas",
+  shortName: "AUmor de Patas",
+  /** A frase que acompanha o nome no logo. */
+  descriptor: "Esculturas Pet",
   tagline: "Esculturas 3D do seu pet",
   locale: "pt-BR",
 
@@ -18,6 +20,8 @@ export const site = {
       duvida: "Olá! Tenho uma dúvida sobre as esculturas 3D.",
     },
   },
+  // TODO-CLIENTE: telefone, e-mail, endereço, horário e redes abaixo ainda são os
+  // da Cristal Pet Móvel (o site anterior). Trocar pelos da AUmor de Patas.
   email: "cristalpetmovel@gmail.com",
 
   address: {
@@ -36,13 +40,13 @@ export const site = {
   social: {
     instagram: "https://www.instagram.com/cristalpetmovel",
     // TODO-CLIENTE: este link parece ser de perfil pessoal; trocar pela
-    // página comercial da Cristal Pet no Facebook.
+    // página comercial da AUmor de Patas no Facebook.
     facebook: "https://www.facebook.com/cristal.moraes.1232/",
   },
 
   // TODO-CLIENTE: CNPJ e razão social para o rodapé.
-  // TODO-CLIENTE: endereço do site institucional da Cristal Pet Móvel (banho e
-  // tosa), para o rodapé apontar para ele.
+  // TODO-CLIENTE: se a AUmor de Patas tiver um site institucional, o endereço dele
+  // para o rodapé apontar.
 } as const;
 
 /** Menu principal do cabeçalho (desktop) e do menu do celular. */

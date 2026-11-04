@@ -20,7 +20,7 @@ export default function CarrinhoPage() {
         }
         description="Confira as esculturas e envie o pedido. O pagamento é combinado no WhatsApp."
       />
-      <Section tone="cream" className="pt-6!">
+      <Section tone="snow" className="pt-6!">
         <CartView />
       </Section>
     </main>

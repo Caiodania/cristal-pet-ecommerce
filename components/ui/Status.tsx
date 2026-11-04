@@ -6,15 +6,17 @@ import {
 } from "@/lib/loja/tipos";
 import { cn } from "@/lib/cn";
 
-// Pares de cor já medidos (texto sobre fundo): novo 4,95 · confirmado ≥ 5 ·
-// produção 16,5 · pronto 7,8 · entregue 5,8 · cancelado 6,4.
+// Pares de cor já medidos (texto sobre fundo): novo 15,6 · confirmado 12,7 ·
+// produção 15,6 · pronto 11,3 · entregue 8 · cancelado 8. Cada status tem um
+// desenho próprio (cheio, tinta, contorno, prata, cinza, tracejado), então não
+// dependem só da cor para serem distinguidos.
 const tone: Record<OrderStatus, string> = {
-  new: "bg-magenta text-white",
-  confirmed: "bg-teal-mist text-teal-deep ring-1 ring-inset ring-teal-deep/30",
-  in_production: "bg-ink text-cream",
-  ready: "bg-teal text-ink",
-  delivered: "bg-sand text-ink-soft ring-1 ring-inset ring-ink-soft/30",
-  canceled: "bg-white text-ink-soft ring-1 ring-inset ring-ink-soft/40",
+  new: "bg-navy text-white",
+  confirmed: "bg-silver-mist text-navy ring-1 ring-inset ring-navy/30",
+  in_production: "bg-white text-navy ring-2 ring-inset ring-navy",
+  ready: "bg-silver text-ink",
+  delivered: "bg-pearl text-ink-soft ring-1 ring-inset ring-ink-soft/30",
+  canceled: "bg-white text-ink-soft ring-1 ring-inset ring-ink-soft/40 line-through",
 };
 
 /** Etiqueta do status. `audience="customer"` usa as palavras do cliente. */
@@ -63,7 +65,7 @@ export function Timeline({
               aria-hidden="true"
               className={cn(
                 "absolute left-0 top-1.5 size-3 rounded-full",
-                index === events.length - 1 ? "bg-teal-deep" : "bg-field",
+                index === events.length - 1 ? "bg-navy" : "bg-field",
               )}
             />
             {index < events.length - 1 && (
@@ -103,8 +105,8 @@ export function Alert({
 }) {
   const styles = {
     error: "border-danger bg-white text-danger",
-    info: "border-teal-deep bg-teal-mist text-ink",
-    success: "border-teal-deep bg-teal-mist text-ink",
+    info: "border-navy bg-silver-mist text-ink",
+    success: "border-navy bg-silver-mist text-ink",
   } as const;
   return (
     <div

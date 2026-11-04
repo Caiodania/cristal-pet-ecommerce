@@ -19,7 +19,7 @@ const links = [...nav, { label: "Meus pedidos", href: "/meus-pedidos" }];
 export function MobileMenu() {
   const panelRef = useRef<HTMLDivElement>(null);
   const { status, user } = useAccount();
-  const rowClass = "flex min-h-12 w-full items-center gap-3 rounded-soft px-3 text-start text-lg font-semibold hover:bg-sand";
+  const rowClass = "flex min-h-12 w-full items-center gap-3 rounded-soft px-3 text-start text-lg font-semibold hover:bg-pearl";
 
   return (
     <div className="lg:hidden">
@@ -28,7 +28,7 @@ export function MobileMenu() {
         popoverTarget="menu-celular"
         popoverTargetAction="toggle"
         aria-label="Menu"
-        className="mobile-menu-button grid size-11 place-items-center rounded-full text-ink hover:bg-sand"
+        className="mobile-menu-button grid size-11 place-items-center rounded-full text-ink hover:bg-pearl"
       >
         <MenuIcon className="icon-open text-2xl" />
         <CloseIcon className="icon-close text-2xl" />
@@ -59,12 +59,12 @@ export function MobileMenu() {
                 {user ? (
                   <>
                     <Link href="/minha-conta" className={rowClass}>
-                      <UserIcon className="text-xl text-magenta" />
+                      <UserIcon className="text-xl text-navy" />
                       Minha conta
                     </Link>
                     {user.isAdmin && (
                       <Link href="/admin" className={rowClass}>
-                        <FaGear aria-hidden="true" className="text-xl text-magenta" />
+                        <FaGear aria-hidden="true" className="text-xl text-navy" />
                         Painel do dono
                       </Link>
                     )}
@@ -88,7 +88,7 @@ export function MobileMenu() {
                       openAuth({ tab: "login" });
                     }}
                   >
-                    <UserIcon className="text-xl text-magenta" />
+                    <UserIcon className="text-xl text-navy" />
                     Faça login ou crie sua conta
                   </button>
                 )}

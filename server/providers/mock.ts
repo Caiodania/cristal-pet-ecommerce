@@ -30,10 +30,10 @@ function decodeJob(jobId: string): Job {
 function statueSvg({ hex, pose, name }: { hex: string; pose: string; name: string }): string {
   const sculpture = sculptureSvgBody({ pose: poseId(pose), tint: hex, name, uid: "m" });
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
-<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9f6f3"/><stop offset="1" stop-color="#e4dccd"/></linearGradient></defs>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eff2f8"/><stop offset="1" stop-color="#dde2ea"/></linearGradient></defs>
 <rect width="800" height="1000" fill="url(#bg)"/>
-<text x="400" y="64" text-anchor="middle" font-family="sans-serif" font-size="26" font-weight="700" fill="#4a463f">PRÉVIA DE DEMONSTRAÇÃO</text>
-<text x="400" y="98" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#5f5b55">Simulada: não é a escultura final</text>
+<text x="400" y="64" text-anchor="middle" font-family="sans-serif" font-size="26" font-weight="700" fill="#0b2347">PRÉVIA DE DEMONSTRAÇÃO</text>
+<text x="400" y="98" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#40506a">Simulada: não é a escultura final</text>
 <svg x="40" y="190" width="720" height="624" viewBox="${ILUSTRACAO_VIEWBOX}">${sculpture}</svg>
 </svg>`;
 }

@@ -140,7 +140,7 @@ export function CheckboxField({
           type="checkbox"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-error` : undefined}
-          className={cn("mt-0.5 size-6 shrink-0 accent-[var(--color-teal-deep)]", className)}
+          className={cn("mt-0.5 size-6 shrink-0 accent-[var(--color-navy)]", className)}
         />
         <label htmlFor={id} className="text-ink-soft">
           {label}
