@@ -1,13 +1,31 @@
 // Tipos compartilhados entre o site (navegador) e o servidor (Netlify Functions).
 // Só imports relativos e nenhuma API de navegador: o servidor importa este arquivo.
 
-/** As escolhas do cliente para UMA escultura. */
-export type ItemConfig = {
+export type ProductType = "escultura" | "quadro";
+
+/** Sem productType é uma escultura antiga, preservada por compatibilidade. */
+export type SculptureConfig = {
+  productType?: "escultura";
   sizeId: string;
   poseId: string;
   colorId: string;
+  styleId?: never;
+  frameId?: never;
   petName?: string;
 };
+
+/** Quadro impresso por um parceiro; nunca passa pelo provedor de modelos 3D. */
+export type PortraitConfig = {
+  productType: "quadro";
+  sizeId: string;
+  styleId: string;
+  frameId: string;
+  poseId?: never;
+  colorId?: never;
+  petName?: string;
+};
+
+export type ItemConfig = SculptureConfig | PortraitConfig;
 
 // ───────── Prévia (etapa 1 da IA: foto → imagem da escultura) ─────────
 
@@ -75,7 +93,7 @@ export function formatPhone(phone: string): string {
 export type OrderStatus =
   | "new" // enviado pelo cliente
   | "confirmed" // combinado (e pago) no WhatsApp
-  | "in_production" // na impressora
+  | "in_production" // impressão 3D ou produção do quadro pelo parceiro
   | "ready" // pronto para entregar
   | "delivered"
   | "canceled";
@@ -196,12 +214,8 @@ export type OrderEventDto = {
   note?: string;
 };
 
-export type OrderItemDto = {
+export type OrderItemDto = ItemConfig & {
   id: string;
-  sizeId: string;
-  poseId: string;
-  colorId: string;
-  petName?: string;
   /** Preço unitário estimado; null = a combinar. */
   unitCents: number | null;
   previewId: string;
@@ -271,6 +285,8 @@ export type AdminOrderSummaryDto = {
   cityState?: string;
   deliveryMethod?: DeliveryMethod;
   itemCount: number;
+  sculptureCount: number;
+  portraitCount: number;
   /** Quantos itens já têm o arquivo 3D pronto (e quantos estão sendo gerados agora). */
   modelsReady: number;
   modelsRunning: number;

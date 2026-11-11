@@ -326,7 +326,7 @@ export function SignupForm({
   return (
     <form ref={firstError} onSubmit={submit} noValidate className="grid gap-4">
       <p className="rounded-soft bg-silver-mist p-3 text-sm font-semibold">
-        Grátis: cada conta gera até {config?.previewsPerAccount ?? previewsPerAccount} prévias de escultura, sem pagar nada.
+        Grátis: cada conta gera até {config?.previewsPerAccount ?? previewsPerAccount} prévias, compartilhadas entre esculturas e quadros.
       </p>
       <GoogleButton next={next} />
       <TextField label="Seu nome" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} error={errors.name} maxLength={60} required />

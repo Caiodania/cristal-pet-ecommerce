@@ -1,5 +1,7 @@
 # Guia: ligar o banco (Supabase) ao site da Netlify e rodar os testes
 
+**Instalação existente:** o Supabase e a Netlify da loja já estão funcionando. Para adicionar quadros e Nano Banana, siga [a atualização desta versão](nano-banana.md): aplique somente a migration `0004_quadros.sql` depois das três existentes e publique o código. O roteiro abaixo é para uma instalação nova; não recrie o projeto nem as tabelas da loja.
+
 Ponto de partida: o site já está publicado na Netlify (`cristal-pet-ecommerce.netlify.app`) com o código que tem a loja e o login. Falta o **banco**. O banco é o **Supabase** (não é o "Dados e armazenamento" da Netlify, e o login também não é o "Identidade" da Netlify: não use esses dois).
 
 Enquanto as variáveis não existirem, o site abre normalmente, mas tudo o que usa a API (login, prévia, pedido) responde erro. Isso é esperado: em produção o servidor se recusa a subir com dados em memória.

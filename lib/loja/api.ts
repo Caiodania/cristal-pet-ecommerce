@@ -118,10 +118,10 @@ export const api = {
     request<PreviewDto>("POST", "/api/previews", { json: input }),
   uploadPhoto: (id: string, photo: Blob) =>
     request<PreviewDto>("PUT", `/api/previews/${id}/photo`, { body: photo, timeoutMs: 60_000 }),
-  startPreview: (id: string) => request<PreviewDto>("POST", `/api/previews/${id}/start`, { json: {} }),
+  startPreview: (id: string) => request<PreviewDto>("POST", `/api/previews/${id}/start`, { json: {}, timeoutMs: 65_000 }),
   getPreview: (id: string) => request<PreviewDto>("GET", `/api/previews/${id}`),
-  regeneratePreview: (id: string, input: { options?: ItemConfig }) =>
-    request<PreviewDto>("POST", `/api/previews/${id}/regenerate`, { json: input }),
+  regeneratePreview: (id: string, input: { options?: ItemConfig; deferStart?: boolean }) =>
+    request<PreviewDto>("POST", `/api/previews/${id}/regenerate`, { json: input, timeoutMs: 65_000 }),
 
   createOrder: (input: {
     previewIds: string[];

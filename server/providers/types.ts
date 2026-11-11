@@ -3,13 +3,11 @@
 // registra em providers/index.ts. O resto do servidor não conhece fornecedor
 // nenhum. Passo a passo em docs/backend.md ("Como ligar uma IA de verdade").
 //
-// Modelo de execução: JOB ASSÍNCRONO. `submit` dispara o trabalho e devolve um
-// `jobId`; `poll` consulta o andamento. O site consulta o servidor a cada
-// poucos segundos e o servidor consulta o provedor (sem webhook, sem fila). Se
-// o seu fornecedor só tiver webhook, dá para acrescentar depois sem mudar nada
-// do lado do site.
+// Modelo de execução: `submit` devolve jobId para polling ou também `result`
+// para geração síncrona (Gemini). Nesse caso o serviço persiste os bytes antes
+// de responder; nenhum trabalho depende da vida da instância da função.
 
-import type { ItemConfig } from "../../lib/loja/tipos";
+import type { PortraitConfig, SculptureConfig } from "../../lib/loja/tipos";
 
 /** Um arquivo devolvido pelo provedor: bytes na mão ou um link para baixar. */
 export type FileRef = {
@@ -34,11 +32,20 @@ export type SourceImage = {
 };
 
 /** As escolhas do cliente, já com os nomes legíveis para montar o prompt. */
-export type StatueOptions = ItemConfig & {
+export type StatueOptions = SculptureConfig & {
   poseLabel: string;
   colorLabel: string;
   colorHex: string;
 };
+
+export type PortraitOptions = PortraitConfig & {
+  styleLabel: string;
+  stylePrompt: string;
+  frameLabel: string;
+  aspectRatio: string;
+};
+
+export type ImageOptions = StatueOptions | PortraitOptions;
 
 export type Failure = {
   status: "failed";
@@ -58,10 +65,19 @@ export type ImagePoll =
   | { status: "succeeded"; image: FileRef; costCents?: number }
   | Failure;
 
+/** Provedores síncronos entregam os bytes para o serviço persistir antes de responder. */
+export type ImageSubmission = {
+  jobId: string;
+  costCents?: number;
+  result?: Exclude<ImagePoll, { status: "processing" }>;
+};
+
 export interface ImageProvider {
   readonly name: string;
   /** "mock" = simulado (o site avisa "modo demonstração"). */
   readonly mode: "mock" | "live";
+  /** Reserva conservadora do custo por tentativa, feita atomicamente antes do envio. */
+  readonly estimatedCostCents?: number;
   submit(input: {
     photo: SourceImage;
     /** Prompt já montado (veja providers/prompts.ts, é o lugar de afinar o resultado). */
@@ -71,8 +87,8 @@ export interface ImageProvider {
      * cliente é a primeira imagem; estas vêm depois). Vazio = nenhuma.
      */
     styleReferences?: StyleReference[];
-    options: StatueOptions;
-  }): Promise<{ jobId: string; costCents?: number }>;
+    options: ImageOptions;
+  }): Promise<ImageSubmission>;
   poll(jobId: string): Promise<ImagePoll>;
 }
 

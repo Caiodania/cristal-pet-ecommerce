@@ -1,5 +1,7 @@
 # Modelo do sistema: loja de esculturas 3D do pet
 
+**Evolução: quadros e Nano Banana.** A loja mantém esculturas como foco principal e acrescenta `/quadros` e `/quadros/personalizar`. Quadros usam tamanho, estilo e moldura, produção terceirizada, o mesmo carrinho/pedido/endereço e os mesmos estados. A cota de prévias é compartilhada. O painel permite baixar foto e arte e copiar especificações; somente esculturas têm a etapa 3D. A migration aditiva `0004_quadros.sql` preserva pedidos legados e reserva atomicamente o custo antes de gerar. O provedor de imagem `nano-banana` já está implementado; a ativação está em [nano-banana.md](nano-banana.md). As seções abaixo registram a arquitetura original das esculturas.
+
 **Status: implementado com IA simulada.** O projeto é uma **loja** (comercial), não um site institucional. A marca da loja é a **AUmor de Patas** (logo e paleta do cliente: azul marinho, prata e branco). O banho e tosa e tudo o que é institucional da Cristal Pet vivem no outro site. Aqui só há o necessário para vender esculturas de pets impressas em 3D pelo dono.
 
 **Decisões do cliente:** a estátua é impressa na impressora 3D do próprio dono; **pagamento e fechamento pelo WhatsApp**; o visitante navega sem conta, mas **gerar a prévia exige conta** (cada conta tem 3 prévias grátis, para limitar o gasto com a IA); carrinho e "Meus pedidos" como no Nobre Pata; painel para o dono ver e tocar os pedidos; uma IA gera a imagem da escultura e outra IA (ou sistema) transforma essa imagem em arquivo pronto para a impressora.

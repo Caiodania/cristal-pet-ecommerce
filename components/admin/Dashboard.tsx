@@ -137,8 +137,8 @@ export function Dashboard() {
                   <th scope="col">Pedido</th>
                   <th scope="col">Cliente</th>
                   <th scope="col">Envio</th>
-                  <th scope="col">Esculturas</th>
-                  <th scope="col">Arquivo 3D</th>
+                  <th scope="col">Itens</th>
+                  <th scope="col">Produção</th>
                   <th scope="col">Valor</th>
                   <th scope="col">Status</th>
                 </tr>
@@ -167,23 +167,33 @@ export function Dashboard() {
                       </span>
                     </td>
                     <td>
-                      <span className="cell-label">Esculturas</span>
+                      <span className="cell-label">Itens</span>
                       <span className="flex items-center gap-3">
                         {order.thumbUrl && (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={fileUrl(order.thumbUrl)} alt="" className="size-10 rounded-soft object-cover" />
                         )}
-                        {order.itemCount}
+                        <span>
+                          {(order.sculptureCount ?? order.itemCount) > 0 && (
+                            <span className="block">{order.sculptureCount ?? order.itemCount} {(order.sculptureCount ?? order.itemCount) === 1 ? "escultura" : "esculturas"}</span>
+                          )}
+                          {order.portraitCount > 0 && <span className="block">{order.portraitCount} {order.portraitCount === 1 ? "quadro" : "quadros"}</span>}
+                        </span>
                       </span>
                     </td>
                     <td>
-                      <span className="cell-label">Arquivo 3D</span>
+                      <span className="cell-label">Produção</span>
                       <span>
-                        {order.modelsRunning > 0
-                          ? "Gerando…"
-                          : order.modelsReady === 0
-                            ? "—"
-                            : `${order.modelsReady} de ${order.itemCount} ${order.modelsReady === 1 ? "pronto" : "prontos"}`}
+                        {order.portraitCount > 0 && <span className="block text-sm">Quadros: parceiro</span>}
+                        {(order.sculptureCount ?? order.itemCount) > 0 && (
+                          <span className="block text-sm">
+                            {order.modelsRunning > 0
+                              ? "3D: gerando…"
+                              : order.modelsReady === 0
+                                ? "3D: a gerar"
+                                : `3D: ${order.modelsReady} de ${order.sculptureCount ?? order.itemCount} ${order.modelsReady === 1 ? "pronto" : "prontos"}`}
+                          </span>
+                        )}
                       </span>
                     </td>
                     <td>

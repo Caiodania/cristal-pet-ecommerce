@@ -71,13 +71,9 @@ export type PreviewRecord = {
   expiresAt: string;
 };
 
-export type OrderItemRecord = {
+export type OrderItemRecord = ItemConfig & {
   id: string;
   previewId: string;
-  sizeId: string;
-  poseId: string;
-  colorId: string;
-  petName?: string;
   unitCents: number | null;
   catalogVersion: string;
 };
@@ -130,7 +126,7 @@ export type ProfileWithUsage = ProfileRecord & { previewsUsed: number; orderCoun
 export type NewOrder = Omit<
   OrderRecord,
   "id" | "createdAt" | "updatedAt" | "events" | "items" | "status"
-> & { items: Omit<OrderItemRecord, "id">[] };
+> & { items: (ItemConfig & Omit<OrderItemRecord, keyof ItemConfig | "id">)[] };
 
 export type OrderListFilter = {
   status?: OrderStatus;
@@ -168,6 +164,13 @@ export interface Store {
    * `limit` é o limite padrão; o bônus da conta soma a ele.
    */
   reservePreview(input: NewPreview, limit: number): Promise<PreviewRecord>;
+  /** Reserva a tentativa/custo antes de chamar a IA, sem corrida entre Functions. */
+  claimPreviewGeneration(publicId: string, input: {
+    provider: string;
+    estimatedCostCents: number;
+    dailyBudgetCents: number;
+    accountLimit: number;
+  }): Promise<PreviewRecord>;
   /** Prévias que contam na cota: prontas, em geração, expiradas e as recém-criadas (< 1 h) que ainda esperam a foto. */
   countUserPreviews(userId: string): Promise<number>;
   getPreview(publicId: string): Promise<PreviewRecord | null>;
@@ -175,7 +178,7 @@ export interface Store {
   updatePreview(publicId: string, patch: Partial<PreviewRecord>): Promise<PreviewRecord>;
   /** Prévias criadas desde `since`, para o limite diário por rede. */
   countPreviews(filter: { ipHash: string; since: Date }): Promise<number>;
-  /** Soma do custo de IA (imagem + modelo 3D) das prévias criadas desde `since`. */
+  /** Soma conservadora de IA das prévias criadas ou reiniciadas desde `since`. */
   sumCosts(since: Date): Promise<number>;
 
   // Pedidos

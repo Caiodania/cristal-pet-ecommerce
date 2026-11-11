@@ -16,7 +16,9 @@ async function loadItem(ctx: Ctx, orderId: string, itemId: string) {
   const order = await ctx.store.getOrderById(orderId);
   const item = order?.items.find((i) => i.id === itemId);
   if (!order || !item) throw new HttpError(404, "not_found", "Item do pedido não encontrado.");
+  if (item.productType === "quadro") throw new HttpError(409, "model_not_applicable", "Quadros são produzidos por um parceiro e não usam arquivo 3D.");
   const preview = await ctx.store.getPreviewById(item.previewId);
+  if (preview?.options.productType === "quadro") throw new HttpError(409, "model_not_applicable", "Quadros não usam arquivo 3D.");
   if (!preview?.imagePath) throw new HttpError(409, "image_missing", "Este item não tem imagem de prévia.");
   return { order, item, preview };
 }
@@ -28,6 +30,7 @@ export async function modelDtoOf(
   downloadName: string,
   progress?: number,
 ): Promise<ModelDto> {
+  if (rec.options.productType === "quadro") return { status: "none" };
   const dto: ModelDto = {
     status: rec.modelStatus,
     errorMessage: rec.modelError,

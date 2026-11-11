@@ -5,9 +5,8 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { CreateButton } from "@/components/ui/CtaButtons";
 import { Alert, Loading, StatusBadge, Timeline, formatDateTime } from "@/components/ui/Status";
-import { catalog } from "@/content/estatua";
+import { productDetails, productLabel } from "@/lib/loja/produtos";
 import { LoginPrompt } from "@/components/conta/LoginPrompt";
 import { ApiError, api, fileUrl } from "@/lib/loja/api";
 import { useAccount } from "@/lib/loja/conta";
@@ -15,9 +14,6 @@ import { useOrderHistory, type OrderRef } from "@/lib/loja/carrinho";
 import { formatCents } from "@/lib/loja/estimativa";
 import { orderSupportUrl } from "@/lib/loja/pedido-whatsapp";
 import type { MyOrderDto, OrderDto } from "@/lib/loja/tipos";
-
-const labelOf = <T extends { id: string; label: string }>(list: T[], id: string) =>
-  list.find((item) => item.id === id)?.label ?? id;
 
 type Loaded = { state: "loading" } | { state: "ok"; order: OrderDto } | { state: "error"; message: string; notFound: boolean };
 
@@ -92,22 +88,21 @@ export function OrderView() {
           <span className="text-ink-soft">Feito em {formatDateTime(o.createdAt)}</span>
         </div>
 
-        <ul className="grid gap-4" aria-label="Esculturas do pedido">
+        <ul className="grid gap-4" aria-label="Itens do pedido">
           {o.items.map((item) => (
             <Card as="li" key={item.id} className="flex gap-4 sm:gap-6">
               <div className="size-24 shrink-0 overflow-hidden rounded-soft bg-pearl sm:size-32">
                 {item.imageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={fileUrl(item.imageUrl)} alt={`Prévia da escultura${item.petName ? ` de ${item.petName}` : ""}`} className="size-full object-cover" />
+                  <img src={fileUrl(item.imageUrl)} alt={`Prévia: ${productLabel(item)}${item.petName ? ` de ${item.petName}` : ""}`} className="size-full object-contain" />
                 ) : null}
               </div>
               <div className="grid content-start gap-1">
                 <h3 className="font-display text-xl font-extrabold">
-                  {item.petName ? `Escultura de ${item.petName}` : "Escultura do seu pet"}
+                  {productLabel(item)} {item.petName ? `de ${item.petName}` : "do seu pet"}
                 </h3>
                 <p className="text-ink-soft">
-                  {labelOf(catalog.sizes, item.sizeId)} · {labelOf(catalog.poses, item.poseId)} ·{" "}
-                  {labelOf(catalog.colors, item.colorId)}
+                  {productDetails(item)}
                 </p>
                 <p className="font-semibold">{formatCents(item.unitCents)}</p>
               </div>
@@ -148,7 +143,7 @@ function OrderRow({ order: ref }: { order: OrderRef }) {
       <div className="grid gap-1">
         <p className="font-display text-2xl font-extrabold text-navy">{ref.code}</p>
         <p className="text-sm text-ink-soft">
-          {formatDateTime(ref.createdAt)} · {ref.itemCount} {ref.itemCount === 1 ? "escultura" : "esculturas"}
+          {formatDateTime(ref.createdAt)} · {ref.itemCount} {ref.itemCount === 1 ? "item" : "itens"}
           {loaded.state === "ok" && ` · ${formatCents(loaded.order.estimateCents)}`}
         </p>
       </div>
@@ -171,7 +166,7 @@ function AccountOrderRow({ order }: { order: MyOrderDto }) {
       <div className="grid gap-1">
         <p className="font-display text-2xl font-extrabold text-navy">{order.code}</p>
         <p className="text-sm text-ink-soft">
-          {formatDateTime(order.createdAt)} · {order.itemCount} {order.itemCount === 1 ? "escultura" : "esculturas"} ·{" "}
+          {formatDateTime(order.createdAt)} · {order.itemCount} {order.itemCount === 1 ? "item" : "itens"} ·{" "}
           {formatCents(order.estimateCents)}
         </p>
       </div>
@@ -259,7 +254,10 @@ export function MyOrders() {
         <div className="mx-auto grid max-w-md justify-items-center gap-4 text-center">
           <p className="font-display text-2xl font-extrabold">Você ainda não fez nenhum pedido</p>
           <p className="text-ink-soft">Os pedidos que você enviar ficam aqui, na sua conta.</p>
-          <CreateButton />
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button href="/personalizar">Criar escultura</Button>
+            <Button href="/quadros/personalizar" variant="secondary">Criar meu quadro</Button>
+          </div>
         </div>
       )}
 

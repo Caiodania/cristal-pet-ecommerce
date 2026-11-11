@@ -36,6 +36,12 @@ export type ServerConfig = {
   // Provedores de IA
   imageProvider: string;
   modelProvider: string;
+  geminiApiKey?: string;
+  geminiImageModel: string;
+  /** Prazo menor que os 60 s da função síncrona, reservando margem para salvar a imagem. */
+  geminiTimeoutMs: number;
+  /** Reserva conservadora por tentativa, em centavos de real; não é uma fatura do Google. */
+  geminiEstimatedCostCents: number;
   /** Quando gerar o arquivo 3D sozinho: nunca (só pelo painel), ao receber o pedido, ou ao confirmar. */
   modelAuto: "never" | "order" | "confirmed";
   /** Imagens de referência de estilo enviadas à IA junto com a foto (caminhos relativos). */
@@ -104,6 +110,11 @@ export function loadConfig(env: Env = process.env): ServerConfig {
     throw new Error("Configure ADMIN_SESSION_SECRET em produção.");
   }
 
+  const geminiTimeoutMs = int(env.GEMINI_TIMEOUT_MS, 45_000);
+  if (geminiTimeoutMs < 1_000 || geminiTimeoutMs > 50_000) {
+    throw new Error("GEMINI_TIMEOUT_MS deve ficar entre 1000 e 50000 para caber na função da Netlify.");
+  }
+
   return {
     isProd,
     siteUrl: (env.SITE_URL || env.URL || "http://localhost:8888").replace(/\/$/, ""),
@@ -123,6 +134,10 @@ export function loadConfig(env: Env = process.env): ServerConfig {
 
     imageProvider: env.IMAGE_PROVIDER ?? "mock",
     modelProvider: env.MODEL_PROVIDER ?? "mock",
+    geminiApiKey: env.GEMINI_API_KEY || undefined,
+    geminiImageModel: env.GEMINI_IMAGE_MODEL || "gemini-3.1-flash-image",
+    geminiTimeoutMs,
+    geminiEstimatedCostCents: int(env.GEMINI_ESTIMATED_COST_CENTS, 0),
     modelAuto: (["never", "order", "confirmed"].includes(env.MODEL_AUTO ?? "")
       ? env.MODEL_AUTO
       : "never") as ServerConfig["modelAuto"],

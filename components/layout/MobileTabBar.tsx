@@ -1,8 +1,8 @@
 import type { ComponentType, ReactNode, SVGProps } from "react";
-import { FaWhatsapp } from "react-icons/fa6";
+import { FaRegImage, FaWhatsapp } from "react-icons/fa6";
 import { site } from "@/content/site";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
-import { BagIcon, CubeIcon, HomeIcon, ReceiptIcon } from "@/components/ui/icons";
+import { BagIcon, CubeIcon, ReceiptIcon } from "@/components/ui/icons";
 import { CartBadge } from "./CartLink";
 import { NavLink } from "./NavLink";
 
@@ -13,10 +13,10 @@ type Tab = {
   badge?: ReactNode;
 };
 
-// Início · Criar · Pedidos · Ajuda (WhatsApp) · Carrinho, como na loja de referência.
+// As duas coleções ficam acessíveis sem abrir o menu; o logo leva ao início.
 const tabs: Tab[] = [
-  { label: "Início", href: "/", Icon: HomeIcon },
-  { label: "Criar", href: "/personalizar", Icon: CubeIcon },
+  { label: "Esculturas", href: "/personalizar", Icon: CubeIcon },
+  { label: "Quadros", href: "/quadros", Icon: FaRegImage },
   { label: "Pedidos", href: "/meus-pedidos", Icon: ReceiptIcon },
 ];
 
@@ -40,7 +40,7 @@ export function MobileTabBar() {
         {tabs.map(({ label, href, Icon }) => (
           <li key={href} className="flex flex-1">
             <NavLink href={href} className={itemClass} activeClassName={activeClass}>
-              <Icon className="text-2xl" />
+              <Icon aria-hidden="true" className="text-2xl" />
               {label}
             </NavLink>
           </li>

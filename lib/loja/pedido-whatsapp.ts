@@ -1,21 +1,18 @@
 // Mensagens de WhatsApp do pedido. O texto é a "nota de pedido" que chega ao
 // dono: precisa trazer o essencial mesmo se o link do site não abrir.
 
-import { catalog } from "../../content/estatua";
 import { site } from "../../content/site";
 import { buildWhatsAppUrl } from "../whatsapp";
 import { formatCents } from "./estimativa";
 import type { ItemConfig } from "./tipos";
+import { productDetails, productLabel } from "./produtos";
 
 function describe(item: ItemConfig): string {
-  const size = catalog.sizes.find((s) => s.id === item.sizeId)?.label ?? item.sizeId;
-  const pose = catalog.poses.find((p) => p.id === item.poseId)?.label ?? item.poseId;
-  const color = catalog.colors.find((c) => c.id === item.colorId)?.label ?? item.colorId;
-  return [size, pose, color, item.petName ? `"${item.petName}"` : null].filter(Boolean).join(" · ");
+  return [productLabel(item), productDetails(item), item.petName ? `"${item.petName}"` : null].filter(Boolean).join(" · ");
 }
 
 function lines(items: ItemConfig[]): string[] {
-  return items.map((item, i) => `${i + 1}x ${describe(item)}`);
+  return items.map((item, i) => `${i + 1}. 1x ${describe(item)}`);
 }
 
 /** Pedido já gravado no site: leva o código e o link de acompanhamento. */
@@ -26,7 +23,7 @@ export function orderMessage(input: {
   trackUrl: string;
 }): string {
   return [
-    "Olá! Fiz um pedido de escultura 3D pelo site.",
+    "Olá! Fiz um pedido personalizado do meu pet pelo site.",
     "",
     `Pedido: ${input.code}`,
     ...lines(input.items),
@@ -42,7 +39,7 @@ export function orderMessage(input: {
  */
 export function fallbackMessage(items: ItemConfig[]): string {
   return [
-    "Olá! Quero fazer um pedido de escultura 3D (o site não conseguiu registrar o pedido).",
+    "Olá! Quero fazer um pedido personalizado do meu pet (o site não conseguiu registrar o pedido).",
     "",
     ...lines(items),
     "",

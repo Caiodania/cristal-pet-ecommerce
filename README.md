@@ -1,10 +1,12 @@
-# AUmor de Patas · Esculturas Pet
+# AUmor de Patas · Esculturas e quadros pet
 
-Loja de **esculturas 3D de pets**: o cliente envia a foto, vê a prévia e pede; a escultura é impressa em 3D pelo dono; pagamento e entrega são combinados pelo **WhatsApp**. O visitante navega sem conta; para **gerar a prévia** é preciso criar uma conta grátis (cada conta tem 3 prévias, o que limita o gasto com a IA). Tem **painel do dono** para tocar os pedidos e baixar o arquivo de impressão.
+Loja de **esculturas 3D e quadros personalizados de pets**, com foco nas esculturas. O cliente envia a foto, vê a prévia e pede; esculturas são impressas em 3D pela loja e quadros são impressos e emoldurados por um parceiro. Pagamento e entrega são combinados pelo **WhatsApp**. A conta tem 3 prévias compartilhadas entre os dois produtos. Carrinho, pedido, acompanhamento e painel aceitam itens mistos.
+
+**Atualização de quadros e Nano Banana:** a vitrine de quadros fica em `/quadros` e o configurador em `/quadros/personalizar`. O Supabase e a Netlify existentes são mantidos. Antes do deploy, aplique somente `supabase/migrations/0004_quadros.sql`; siga [a ativação do Nano Banana](docs/nano-banana.md) para as variáveis da função. Sem ativação, as prévias continuam explicitamente simuladas. O painel oferece foto, arte e especificações para encaminhamento manual ao parceiro; quadros não geram STL. Tamanhos, molduras e preços provisórios ficam em `content/quadros.ts`.
 
 É um projeto **comercial** (loja). A marca é a **AUmor de Patas** (logo e paleta enviados pelo cliente: azul marinho, prata e branco). O que é institucional da Cristal Pet (banho e tosa móvel) fica no outro site.
 
-**Stack:** Next.js (App Router) + TypeScript + Tailwind v4, export estático (`out/`) publicado na **Netlify**; uma **Netlify Function** para a API; **Supabase** (Postgres + Storage) em produção; dois **provedores de IA** plugáveis (hoje simulados).
+**Stack:** Next.js (App Router) + TypeScript + Tailwind v4, export estático (`out/`) publicado na **Netlify**; uma **Netlify Function** para a API; **Supabase** (Postgres + Storage) em produção; prévias via **Nano Banana/Gemini** ou mock e provedor 3D separado (ainda simulado).
 
 ## Começar
 

@@ -18,7 +18,7 @@ export default function MeusPedidosPage() {
             Meus <Accent>pedidos</Accent>
           </>
         }
-        description="Acompanhe o andamento das suas esculturas. Os pedidos ficam na sua conta, em qualquer aparelho."
+        description="Acompanhe suas esculturas e seus quadros. Os pedidos ficam na sua conta, em qualquer aparelho."
       />
       <Section tone="snow" className="pt-6!">
         <MyOrders />

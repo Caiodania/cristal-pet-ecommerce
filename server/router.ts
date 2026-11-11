@@ -105,7 +105,8 @@ const routes: Route[] = [
     handler: async ({ ctx }) => {
       const { image, model } = ctx.providers;
       const body: ConfigDto = {
-        mode: image.mode === "mock" || model.mode === "mock" ? "demo" : "live",
+        // A prévia de quadros não usa o provedor 3D; o mock 3D permanece avisado no painel.
+        mode: image.mode === "mock" ? "demo" : "live",
         imageProvider: { name: image.name, mode: image.mode },
         modelProvider: { name: model.name, mode: model.mode },
         previewsPerAccount: ctx.config.previewsPerAccount,
@@ -265,10 +266,14 @@ const routes: Route[] = [
       const user = await requireUser(ctx, req);
       limit(`preview:${ip}`, 30, HOUR);
       const body = requireRecord(await readJson(req));
+      if (body.deferStart !== undefined && typeof body.deferStart !== "boolean") {
+        throw new HttpError(400, "invalid_input", "deferStart deve ser verdadeiro ou falso.");
+      }
       const dto = await regeneratePreview(ctx, params.id, {
         user,
         ip,
         options: body.options === undefined ? undefined : parseItemConfig(body.options),
+        deferStart: body.deferStart === true,
       });
       return json(dto, { status: 201 });
     },

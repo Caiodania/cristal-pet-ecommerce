@@ -19,7 +19,7 @@ type StepperProps = {
  */
 export function Stepper({ steps, current, onGo }: StepperProps) {
   return (
-    <nav aria-label="Etapas da escultura">
+    <nav aria-label="Etapas da personalização">
       <p className="font-bold sm:hidden">
         Passo {current + 1} de {steps.length}: {steps[current].label}
       </p>

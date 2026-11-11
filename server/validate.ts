@@ -35,7 +35,17 @@ export function parseSessionId(value: unknown): string {
 
 export function parseItemConfig(raw: unknown, catalog: Catalog = defaultCatalog): ItemConfig {
   const o = requireRecord(raw, "item");
-  const config: ItemConfig = {
+  if (o.productType !== undefined && o.productType !== "escultura" && o.productType !== "quadro") {
+    throw bad("Tipo de produto inválido.");
+  }
+  const config: ItemConfig = o.productType === "quadro" ? {
+    productType: "quadro",
+    sizeId: String(o.sizeId ?? ""),
+    styleId: String(o.styleId ?? ""),
+    frameId: String(o.frameId ?? ""),
+    petName: cleanText(o.petName, 30),
+  } : {
+    ...(o.productType === "escultura" ? { productType: "escultura" as const } : {}),
     sizeId: String(o.sizeId ?? ""),
     poseId: String(o.poseId ?? ""),
     colorId: String(o.colorId ?? ""),
@@ -88,7 +98,7 @@ export function parseCustomer(raw: unknown): Customer {
   const name = cleanText(o.name, 80);
   if (!name || name.length < 2) throw bad("Informe o nome de quem vai receber.");
   const phone = parsePhone(o.phone);
-  if (o.delivery !== "entrega" && o.delivery !== "retirada") throw bad("Escolha como quer receber a escultura.");
+  if (o.delivery !== "entrega" && o.delivery !== "retirada") throw bad("Escolha como quer receber o pedido.");
   return {
     name,
     phone,

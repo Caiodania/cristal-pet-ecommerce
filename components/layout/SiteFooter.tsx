@@ -8,9 +8,11 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 const shop = [
   { label: "Criar minha escultura", href: "/personalizar" },
+  { label: "Criar meu quadro", href: "/quadros/personalizar" },
   { label: "Carrinho", href: "/carrinho" },
   { label: "Meus pedidos", href: "/meus-pedidos" },
-  ...nav,
+  ...nav.filter((item) => item.href !== "/personalizar"),
+  { label: "Perguntas frequentes", href: "/#faq" },
 ];
 
 const linkClass =

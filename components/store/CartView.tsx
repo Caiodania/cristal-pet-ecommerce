@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { CreateButton } from "@/components/ui/CtaButtons";
 import { CheckboxField, TextAreaField, TextField } from "@/components/ui/Field";
 import { Alert, Loading } from "@/components/ui/Status";
 import { ArrowRightIcon, TrashIcon } from "@/components/ui/icons";
-import { catalog } from "@/content/estatua";
+import { productDetails, productLabel } from "@/lib/loja/produtos";
 import { ApiError, api, fileUrl } from "@/lib/loja/api";
 import { LoginPrompt } from "@/components/conta/LoginPrompt";
 import { EMPTY_ENTREGA, EntregaForm, toAddress, validateEntrega, type EntregaErrors, type EntregaValues } from "./EntregaForm";
@@ -17,9 +16,6 @@ import { account, useAccount } from "@/lib/loja/conta";
 import { estimate, formatCents } from "@/lib/loja/estimativa";
 import { fallbackMessage, orderMessage, whatsappUrl } from "@/lib/loja/pedido-whatsapp";
 import type { OrderDto } from "@/lib/loja/tipos";
-
-const labelOf = <T extends { id: string; label: string }>(list: T[], id: string) =>
-  list.find((item) => item.id === id)?.label ?? id;
 
 // ───────── Item do carrinho ─────────
 
@@ -69,7 +65,7 @@ function CartItemRow({
       <div className="size-24 shrink-0 overflow-hidden rounded-soft bg-pearl sm:size-32">
         {preview.status === "ok" && preview.imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview.imageUrl} alt={`Prévia da escultura${options.petName ? ` de ${options.petName}` : ""}`} className="size-full object-cover" />
+          <img src={preview.imageUrl} alt={`Prévia: ${productLabel(options)}${options.petName ? ` de ${options.petName}` : ""}`} className="size-full object-contain" />
         ) : (
           <div className="grid size-full place-items-center p-2 text-center text-xs text-ink-soft">
             {preview.status === "loading" ? "Carregando…" : "Sem imagem"}
@@ -78,21 +74,20 @@ function CartItemRow({
       </div>
       <div className="grid min-w-0 flex-1 content-start gap-1">
         <h3 className="font-display text-xl font-extrabold">
-          {options.petName ? `Escultura de ${options.petName}` : "Escultura do seu pet"}
+          {productLabel(options)} {options.petName ? `de ${options.petName}` : "do seu pet"}
         </h3>
         <p className="text-ink-soft">
-          {labelOf(catalog.sizes, options.sizeId)} · {labelOf(catalog.poses, options.poseId)} ·{" "}
-          {labelOf(catalog.colors, options.colorId)}
+          {productDetails(options)}
         </p>
         <p className="font-semibold">{formatCents(unitCents)}</p>
         {preview.status === "gone" && (
           <p role="alert" className="text-sm font-semibold text-danger">
-            Esta prévia expirou. Remova e crie a escultura de novo.
+            Esta prévia expirou. Remova o item e gere uma nova prévia.
           </p>
         )}
         <div className="mt-2">
           <Button variant="ghost" size="sm" icon={<TrashIcon />} onClick={onRemove}>
-            Remover<span className="sr-only"> {options.petName ?? "escultura"} do carrinho</span>
+            Remover<span className="sr-only"> {productLabel(options)} {options.petName ?? ""} do carrinho</span>
           </Button>
         </div>
       </div>
@@ -102,11 +97,11 @@ function CartItemRow({
 
 // ───────── Pedido enviado ─────────
 
-function Sent({ order, token, items }: { order: OrderDto; token: string; items: CartItem[] }) {
+function Sent({ order, token }: { order: OrderDto; token: string; items: CartItem[] }) {
   const trackUrl = `${window.location.origin}/pedido?c=${order.code}&t=${token}`;
   const message = orderMessage({
     code: order.code,
-    items: items.map((i) => i.options),
+    items: order.items,
     estimateCents: order.estimateCents,
     trackUrl,
   });
@@ -160,7 +155,7 @@ export function CartView() {
   const [sent, setSent] = useState<{ order: OrderDto; token: string; items: CartItem[] }>();
   const formRef = useRef<HTMLFormElement>(null);
 
-  const markGone = (id: string) => setGone((current) => (current.includes(id) ? current : [...current, id]));
+  const markGone = useCallback((id: string) => setGone((current) => (current.includes(id) ? current : [...current, id])), []);
 
   if (sent) return <Sent {...sent} />;
 
@@ -180,8 +175,11 @@ export function CartView() {
     return (
       <div className="mx-auto grid max-w-md justify-items-center gap-4 text-center">
         <p className="font-display text-2xl font-extrabold">Seu carrinho está vazio</p>
-        <p className="text-ink-soft">Crie a escultura do seu pet e ela aparece aqui.</p>
-        <CreateButton />
+        <p className="text-ink-soft">Crie uma escultura ou um quadro do seu pet para começar.</p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button href="/personalizar">Criar escultura</Button>
+          <Button href="/quadros/personalizar" variant="secondary">Criar meu quadro</Button>
+        </div>
       </div>
     );
   }
@@ -209,8 +207,8 @@ export function CartView() {
       requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus());
       return;
     }
-    if (gone.length) {
-      setFailure({ message: "Remova do carrinho as esculturas com a prévia expirada.", offerFallback: false });
+    if (cart.items.some((item) => gone.includes(item.id))) {
+      setFailure({ message: "Remova do carrinho os itens com a prévia expirada.", offerFallback: false });
       return;
     }
 
@@ -245,7 +243,7 @@ export function CartView() {
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_24rem] lg:items-start">
-      <ul className="grid gap-4" aria-label="Esculturas no carrinho">
+      <ul className="grid gap-4" aria-label="Itens no carrinho">
         {cart.items.map((item, index) => (
           <CartItemRow
             key={item.id}
@@ -255,9 +253,12 @@ export function CartView() {
             onGone={markGone}
           />
         ))}
-        <li>
+        <li className="flex flex-wrap gap-2">
           <Button href="/personalizar" variant="ghost">
-            + Criar outra escultura
+            + Criar uma escultura
+          </Button>
+          <Button href="/quadros/personalizar" variant="ghost">
+            + Criar um quadro
           </Button>
         </li>
       </ul>

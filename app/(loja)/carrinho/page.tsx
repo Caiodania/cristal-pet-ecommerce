@@ -18,7 +18,7 @@ export default function CarrinhoPage() {
             Seu <Accent>carrinho</Accent>
           </>
         }
-        description="Confira as esculturas e envie o pedido. O pagamento é combinado no WhatsApp."
+        description="Confira os itens e envie o pedido. O pagamento é combinado no WhatsApp."
       />
       <Section tone="snow" className="pt-6!">
         <CartView />

@@ -4,6 +4,7 @@
 
 import { ORDER_STATUSES, type OrderStatus } from "../../lib/loja/tipos";
 import { uuid } from "../crypto";
+import { HttpError } from "../http";
 import {
   QuotaExceededError,
   type NewOrder,
@@ -159,6 +160,33 @@ export function createMemoryStore(now: () => Date = () => new Date()): Store {
       return countUser(userId);
     },
 
+    async claimPreviewGeneration(publicId, input) {
+      const record = previews.get(publicId);
+      if (!record) throw new HttpError(404, "not_found", "Prévia não encontrada.");
+      if (record.status !== "queued" && !(record.status === "failed" && record.errorCode !== "rejected")) {
+        throw new HttpError(409, "conflict", "Esta prévia já foi iniciada.");
+      }
+      if (!record.photoPath) throw new HttpError(409, "photo_missing", "Envie a foto antes de gerar a prévia.");
+      const limit = input.accountLimit + mustProfile(record.userId).bonusPreviews;
+      const used = countUser(record.userId);
+      if (!countsForQuota(record) && used >= limit) throw new QuotaExceededError(used, limit);
+      const since = now().getTime() - DAY_MS;
+      const recent = (p: PreviewRecord) => Math.max(Date.parse(p.createdAt), Date.parse(p.startedAt ?? p.createdAt)) >= since;
+      let spent = 0;
+      for (const p of previews.values()) if (recent(p)) spent += p.imageCostCents + p.modelCostCents;
+      // Tentativas antigas passam a pertencer à janela atual de forma conservadora.
+      const carried = recent(record) ? 0 : record.imageCostCents + record.modelCostCents;
+      if (input.dailyBudgetCents > 0 && spent + carried + input.estimatedCostCents > input.dailyBudgetCents) {
+        throw new HttpError(503, "budget_exceeded", "O limite diário de prévias foi atingido. Fale com a gente pelo WhatsApp.");
+      }
+      Object.assign(record, {
+        status: "generating", imageProvider: input.provider, imageJobId: undefined,
+        imageCostCents: record.imageCostCents + input.estimatedCostCents,
+        startedAt: now().toISOString(), errorCode: undefined, errorMessage: undefined,
+      });
+      return clone(record);
+    },
+
     async getPreview(publicId) {
       const record = previews.get(publicId);
       return record ? clone(record) : null;
@@ -189,7 +217,7 @@ export function createMemoryStore(now: () => Date = () => new Date()): Store {
     async sumCosts(since) {
       let sum = 0;
       for (const p of previews.values()) {
-        if (new Date(p.createdAt) >= since) sum += p.imageCostCents + p.modelCostCents;
+        if (Math.max(Date.parse(p.createdAt), Date.parse(p.startedAt ?? p.createdAt)) >= since.getTime()) sum += p.imageCostCents + p.modelCostCents;
       }
       return sum;
     },

@@ -16,14 +16,16 @@ export type LocalStore<T> = {
   getServerSnapshot: () => T;
 };
 
-export function createLocalStore<T>(key: string, empty: T): LocalStore<T> {
+export function createLocalStore<T>(key: string, empty: T, normalize?: (value: unknown) => T): LocalStore<T> {
   let cache: T | undefined;
   const listeners = new Set<() => void>();
 
   const read = (): T => {
     try {
       const raw = window.localStorage.getItem(key);
-      return raw ? (JSON.parse(raw) as T) : empty;
+      if (!raw) return empty;
+      const value: unknown = JSON.parse(raw);
+      return normalize ? normalize(value) : (value as T);
     } catch {
       return empty;
     }

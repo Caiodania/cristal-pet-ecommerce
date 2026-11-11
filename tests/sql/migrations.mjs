@@ -123,6 +123,38 @@ check(
   !!(await fails(`select create_order($1::jsonb, '[]'::jsonb)`, [JSON.stringify({ code: "CP-EEE555", view_token: "t5", delivery_method: "drone", consent_at: new Date().toISOString() })])),
 );
 
+// ───────── quadros (0004) sobre dados já existentes ─────────
+await db.exec(readFileSync(new URL("0004_quadros.sql", root), "utf8"));
+check("0004 aplica preservando pedidos existentes", !!(await one(`select id from orders where id = $1`, [orderId])));
+const oldItem = await one(`select * from order_items where order_id = $1`, [orderId]);
+check("item antigo continua escultura com as opções preservadas", oldItem.product_type === "escultura" && oldItem.options.poseId === "sentado" && oldItem.options.colorId === "branco");
+const portraitOptions = { productType: "quadro", sizeId: "30x40", styleId: "aquarela", frameId: "natural", petName: "Mel" };
+const portraitPreview = (await one(`select reserve_preview($1::jsonb, 3) as id`, [JSON.stringify({ public_id: "bru-quadro", user_id: bruId, ip_hash: "h", options: portraitOptions, image_provider: "mock" })])).id;
+const legacyPreview = (await one(`select id from previews where public_id = 'bru-1'`)).id;
+const mixedId = (await one(`select create_order($1::jsonb, $2::jsonb) as id`, [
+  JSON.stringify({ code: "CP-MIX111", view_token: "mixed", user_id: bruId, delivery_method: "entrega", shipping_address: address, consent_at: new Date().toISOString() }),
+  JSON.stringify([
+    { preview_id: portraitPreview, size_id: "30x40", product_type: "quadro", options: portraitOptions, catalog_version: "quadros-1" },
+    { preview_id: legacyPreview, size_id: "media", pose_id: "sentado", color_id: "branco", catalog_version: "t" },
+  ]),
+])).id;
+const mixed = await all(`select * from order_items where order_id = $1 order by product_type`, [mixedId]);
+check("pedido misto guarda quadro e escultura com opções independentes", mixed.length === 2 && mixed[0].product_type === "escultura" && mixed[1].options.frameId === "natural" && mixed[1].pose_id === null && mixed[1].color_id === null);
+check("opções de quadro incompletas são recusadas", !!(await fails(`update order_items set options = options - 'frameId' where order_id = $1 and product_type = 'quadro'`, [mixedId])));
+check("tipo de produto inválido é recusado", !!(await fails(`update order_items set product_type = 'outro' where order_id = $1`, [mixedId])));
+
+const generationUser = (await one(`insert into auth.users (email) values ('geracao@x.com') returning id`)).id;
+const generationPreview = (await one(`select reserve_preview($1::jsonb, 3) as id`, [JSON.stringify({ public_id: "generation-1", user_id: generationUser, ip_hash: "h", options: portraitOptions, image_provider: "nano-banana" })])).id;
+await db.query(`update previews set photo_path = 'photos/test.jpg' where id = $1`, [generationPreview]);
+const claimed = (await one(`select claim_preview_generation('generation-1', 'nano-banana', 20, 30, 3) as preview`)).preview;
+check("geração reserva estado e custo antes da IA", claimed.status === "generating" && claimed.image_cost_cents === 20 && !!claimed.started_at);
+check("mesma geração não pode ser iniciada duas vezes", (await fails(`select claim_preview_generation('generation-1', 'nano-banana', 20, 100, 3)`))?.message.includes("generation_conflict"));
+await db.query(`update previews set status = 'failed' where id = $1`, [generationPreview]);
+check("nova tentativa não ultrapassa orçamento já reservado", (await fails(`select claim_preview_generation('generation-1', 'nano-banana', 20, 30, 3)`))?.message.includes("budget_exceeded"));
+check("tentativa recusada não aumenta custo", (await one(`select image_cost_cents from previews where id = $1`, [generationPreview])).image_cost_cents === 20);
+await one(`select claim_preview_generation('generation-1', 'nano-banana', 20, 100, 3)`);
+check("retry autorizado acumula o custo", (await one(`select image_cost_cents from previews where id = $1`, [generationPreview])).image_cost_cents === 40);
+
 // ───────── sessões e remoção de conta ─────────
 await db.query(`insert into customer_sessions (token_hash, user_id, expires_at) values ('hash1', $1, now() + interval '30 days')`, [anaId]);
 check("sessão guarda hash, conta e validade", (await one(`select count(*)::int n from customer_sessions where user_id = $1`, [anaId])).n === 1);

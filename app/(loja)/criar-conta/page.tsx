@@ -20,7 +20,7 @@ export default function CriarContaPage() {
             Crie a sua <Accent>conta grátis</Accent>
           </>
         }
-        description="Com a conta você gera as prévias da sua escultura e acompanha os pedidos em qualquer aparelho."
+        description="Com a conta você gera prévias de esculturas e quadros e acompanha os pedidos em qualquer aparelho."
       />
       <Section tone="snow" className="pt-6!">
         <Suspense fallback={<Loading>Carregando…</Loading>}>

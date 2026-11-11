@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
   // Provisório: o texto final de SEO entra na etapa de SEO.
   description:
-    "Envie a foto do seu pet, veja a prévia e peça uma escultura 3D feita sob medida. Pedido e pagamento combinados pelo WhatsApp.",
+    "Transforme a foto do seu pet em um quadro personalizado ou uma escultura 3D. Veja a prévia e combine pedido e pagamento pelo WhatsApp.",
   openGraph: {
     type: "website",
     locale: "pt_BR",

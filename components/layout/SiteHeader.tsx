@@ -4,17 +4,14 @@ import { images } from "@/content/images";
 import { nav, site } from "@/content/site";
 import { AccountMenu } from "@/components/conta/AccountMenu";
 import { CartLink } from "./CartLink";
-import { CreateButton } from "@/components/ui/CtaButtons";
 import { MobileMenu } from "./MobileMenu";
 import { NavLink } from "./NavLink";
 
 /**
  * Cabeçalho fixo no topo: fundo branco a 90% com desfoque. No desktop mostra o
  * menu (a partir de lg), a conta ("Faça login" ou o menu "Minha conta"), o carrinho
- * e, em tela larga (xl), o botão "Criar escultura" (e "Meus pedidos" só a partir de 2xl:
- * o nome da marca ocupa espaço; o atalho também está no menu da conta); no celular e
- * no tablet, o logo, a conta, o carrinho e o menu em popover (o "Criar" fica na
- * barra de abas de baixo).
+ * e "Meus pedidos" a partir de 2xl. No celular e no tablet, o logo, a conta,
+ * o carrinho e o menu em popover; as duas coleções ficam na barra de abas.
  */
 export function SiteHeader() {
   return (
@@ -22,7 +19,7 @@ export function SiteHeader() {
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex min-w-0 items-center gap-2 rounded-full py-1 sm:shrink-0 sm:gap-3 sm:pr-2">
           {/* o emblema do logo (coração com o cão e o gato) + o nome em texto de verdade: nítido em qualquer tamanho.
-              No celular o espaço é curto (conta, carrinho e menu ao lado): emblema menor, nome numa linha e sem a frase "Esculturas Pet". */}
+              No celular o espaço é curto: emblema menor, nome numa linha e descrição só para leitores de tela. */}
           <Image
             src={images.emblem.src}
             alt=""
@@ -66,10 +63,6 @@ export function SiteHeader() {
           </NavLink>
           <AccountMenu />
           <CartLink />
-          {/* num wrapper: "hidden" no próprio botão perde para o inline-flex dele */}
-          <div className="ml-1 hidden xl:block">
-            <CreateButton size="sm">Criar escultura</CreateButton>
-          </div>
           <MobileMenu />
         </div>
       </div>

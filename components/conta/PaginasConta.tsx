@@ -199,7 +199,7 @@ export function MinhaContaCorpo() {
     return (
       <LoginPrompt
         title="Entre para ver a sua conta"
-        text="Faça login ou crie uma conta grátis para gerar prévias de escultura e acompanhar os seus pedidos."
+        text="Faça login ou crie uma conta grátis para gerar prévias de esculturas e quadros e acompanhar os seus pedidos."
         onSuccess={() => router.refresh()}
       />
     );
@@ -224,7 +224,7 @@ export function MinhaContaCorpo() {
       </Card>
 
       <Card className="rounded-3xl">
-        <h2 className="font-display text-xl font-extrabold">Prévias de escultura</h2>
+        <h2 className="font-display text-xl font-extrabold">Prévias de esculturas e quadros</h2>
         <p className="mt-1 text-ink-soft">
           Cada conta gera um número limitado de prévias grátis. Elas contam quando a prévia é gerada.
         </p>
@@ -232,14 +232,17 @@ export function MinhaContaCorpo() {
         <div className="mt-5 flex flex-wrap gap-3">
           {noMore ? (
             <Button
-              href={buildWhatsAppUrl(`Olá! Usei todas as prévias da minha conta (${user.email}) e quero fazer mais uma escultura.`)}
+              href={buildWhatsAppUrl(`Olá! Usei todas as prévias da minha conta (${user.email}) e quero criar mais uma prévia.`)}
               size="md"
               icon={<FaWhatsapp aria-hidden="true" className="text-xl" />}
             >
               Pedir mais prévias no WhatsApp
             </Button>
           ) : (
+            <>
             <CreateButton size="md">Criar uma escultura</CreateButton>
+            <Button href="/quadros/personalizar" variant="secondary" size="md">Criar um quadro</Button>
+            </>
           )}
         </div>
         {noMore && (
@@ -252,7 +255,7 @@ export function MinhaContaCorpo() {
       {user.isAdmin && (
         <Card className="rounded-3xl border-navy/40">
           <h2 className="font-display text-xl font-extrabold">Painel do dono</h2>
-          <p className="mt-1 text-ink-soft">Pedidos dos clientes, dados de envio, fotos e arquivos para a impressora 3D.</p>
+          <p className="mt-1 text-ink-soft">Pedidos, dados de envio, artes dos quadros e arquivos 3D das esculturas.</p>
           <div className="mt-4">
             <Button href="/admin" size="md">
               Abrir o painel
@@ -263,7 +266,7 @@ export function MinhaContaCorpo() {
 
       <Card className="rounded-3xl">
         <h2 className="font-display text-xl font-extrabold">Pedidos</h2>
-        <p className="mt-1 text-ink-soft">Acompanhe o andamento das suas esculturas em qualquer aparelho.</p>
+        <p className="mt-1 text-ink-soft">Acompanhe o andamento das suas esculturas e dos seus quadros em qualquer aparelho.</p>
         <div className="mt-4">
           <Button href="/meus-pedidos" variant="secondary" size="md">
             Ver meus pedidos

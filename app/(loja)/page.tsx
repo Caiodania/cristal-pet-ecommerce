@@ -6,6 +6,7 @@ import { HowItWorks } from "@/components/sections/HowItWorks";
 import { Products } from "@/components/sections/Products";
 import { Showcase } from "@/components/sections/Showcase";
 import { StoreHero } from "@/components/sections/StoreHero";
+import { PortraitCollection } from "@/components/sections/PortraitCollection";
 
 // Vitrine da loja: hero com um CTA, exemplos, como funciona, produtos com preço,
 // benefícios e perguntas. Tons de fundo alternados entre as seções.
@@ -30,6 +31,7 @@ export default function Home() {
       <HowItWorks />
       <Products />
       <Benefits />
+      <PortraitCollection />
       <FaqSection tone="snow" wave="navy" />
       <FinalCta />
     </main>

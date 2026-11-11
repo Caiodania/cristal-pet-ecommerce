@@ -20,7 +20,41 @@ export type CartItem = {
 };
 
 const EMPTY_CART: CartItem[] = [];
-const cartStore = createLocalStore<CartItem[]>("cp:carrinho:v1", EMPTY_CART);
+
+/** Lê a versão existente do carrinho sem confundir esculturas antigas com quadros. */
+export function normalizeCart(value: unknown): CartItem[] {
+  if (!Array.isArray(value)) return [];
+  const items: CartItem[] = [];
+  const ids = new Set<string>();
+  const previewIds = new Set<string>();
+  const hasText = (entry: unknown): entry is string => typeof entry === "string" && entry.trim().length > 0;
+
+  for (const entry of value) {
+    if (!entry || typeof entry !== "object") continue;
+    const { id, previewId, addedAt, options } = entry as Record<string, unknown>;
+    if (!hasText(id) || !hasText(previewId) || !hasText(addedAt) || ids.has(id) || previewIds.has(previewId)) continue;
+    if (!options || typeof options !== "object") continue;
+    const config = options as Record<string, unknown>;
+    if (!hasText(config.sizeId)) continue;
+    const petName = typeof config.petName === "string" ? config.petName : undefined;
+    let normalized: ItemConfig;
+    if (config.productType === "quadro") {
+      if (!hasText(config.styleId) || !hasText(config.frameId)) continue;
+      normalized = { productType: "quadro", sizeId: config.sizeId, styleId: config.styleId, frameId: config.frameId, petName };
+    } else if (config.productType === undefined || config.productType === "escultura") {
+      if (!hasText(config.poseId) || !hasText(config.colorId)) continue;
+      normalized = { productType: "escultura", sizeId: config.sizeId, poseId: config.poseId, colorId: config.colorId, petName };
+    } else {
+      continue;
+    }
+    items.push({ id, previewId, addedAt, options: normalized });
+    ids.add(id);
+    previewIds.add(previewId);
+  }
+  return items;
+}
+
+const cartStore = createLocalStore<CartItem[]>("cp:carrinho:v1", EMPTY_CART, normalizeCart);
 
 /** Esvazia o carrinho (troca de conta). */
 export const clearCart = () => cartStore.set(EMPTY_CART);

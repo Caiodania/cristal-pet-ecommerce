@@ -5,13 +5,13 @@ import { BagIcon } from "@/components/ui/icons";
 import { useCart } from "@/lib/loja/carrinho";
 import { cn } from "@/lib/cn";
 
-/** Ícone do carrinho com o contador de esculturas (lido do navegador, sem servidor). */
+/** Ícone do carrinho com o contador de itens (lido do navegador, sem servidor). */
 export function CartLink({ className }: { className?: string }) {
   const { count } = useCart();
   return (
     <Link
       href="/carrinho"
-      aria-label={count > 0 ? `Carrinho, ${count} ${count === 1 ? "escultura" : "esculturas"}` : "Carrinho vazio"}
+      aria-label={count > 0 ? `Carrinho, ${count} ${count === 1 ? "item" : "itens"}` : "Carrinho vazio"}
       className={cn("relative grid size-11 place-items-center rounded-full text-ink hover:bg-pearl", className)}
     >
       <BagIcon className="text-2xl" />

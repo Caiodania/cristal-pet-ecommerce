@@ -11,13 +11,14 @@
 //                      pergunta ao provedor e, quando termina, guarda a imagem
 
 import { catalog } from "../../content/estatua";
+import { portraitCatalog } from "../../content/quadros";
 import type { PreviewDto } from "../../lib/loja/tipos";
 import { randomToken, sha256Hex } from "../crypto";
 import type { Ctx } from "../context";
 import { HttpError } from "../http";
-import { buildStatuePrompt } from "../providers/prompts";
+import { buildPortraitPrompt, buildStatuePrompt } from "../providers/prompts";
 import { loadStyleReferences } from "../providers/style-references";
-import type { FileRef, StatueOptions } from "../providers/types";
+import type { FileRef, ImageOptions, ImagePoll, PortraitOptions, StatueOptions } from "../providers/types";
 import { QuotaExceededError, type NewPreview, type PreviewRecord, type ProfileRecord } from "../store/types";
 import { sniffImage } from "../validate";
 import { quotaOf } from "./accounts";
@@ -86,6 +87,7 @@ async function reserve(ctx: Ctx, input: NewPreview): Promise<PreviewRecord> {
 }
 
 export function statueOptions(rec: PreviewRecord): StatueOptions {
+  if (rec.options.productType === "quadro") throw new HttpError(409, "model_not_applicable", "Quadros não usam opções de escultura.");
   const pose = catalog.poses.find((p) => p.id === rec.options.poseId);
   const color = catalog.colors.find((c) => c.id === rec.options.colorId);
   return {
@@ -94,6 +96,41 @@ export function statueOptions(rec: PreviewRecord): StatueOptions {
     colorLabel: color?.label ?? rec.options.colorId,
     colorHex: color?.swatch ?? "#cccccc",
   };
+}
+
+export function imageOptions(rec: PreviewRecord): ImageOptions {
+  if (rec.options.productType !== "quadro") return statueOptions(rec);
+  const size = portraitCatalog.sizes.find((s) => s.id === rec.options.sizeId);
+  const style = portraitCatalog.styles.find((s) => s.id === rec.options.styleId);
+  const frame = portraitCatalog.frames.find((f) => f.id === rec.options.frameId);
+  if (!size || !style || !frame) throw new HttpError(400, "invalid_input", "As opções do quadro não estão disponíveis.");
+  const options: PortraitOptions = {
+    ...rec.options,
+    styleLabel: style.label,
+    stylePrompt: style.prompt,
+    frameLabel: frame.label,
+    aspectRatio: size.widthCm / size.heightCm === 3 / 4 ? "3:4" : "2:3",
+  };
+  return options;
+}
+
+/** Persiste bytes antes de responder, inclusive para provedores síncronos. */
+async function finishImage(ctx: Ctx, rec: PreviewRecord, result: Exclude<ImagePoll, { status: "processing" }>): Promise<PreviewRecord> {
+  if (result.status === "failed") {
+    return ctx.store.updatePreview(rec.publicId, {
+      status: result.code === "rejected" ? "rejected" : "failed",
+      errorCode: result.code, errorMessage: result.message,
+      imageJobId: rec.imageJobId, imageCostCents: rec.imageCostCents,
+    });
+  }
+  const bytes = await resolveFile(result.image);
+  const imagePath = `images/${rec.id}.${extOf(result.image.contentType)}`;
+  await ctx.files.put(imagePath, bytes, result.image.contentType);
+  return ctx.store.updatePreview(rec.publicId, {
+    status: "ready", imagePath, imageContentType: result.image.contentType,
+    imageJobId: rec.imageJobId,
+    imageCostCents: rec.imageCostCents + (result.costCents ?? 0),
+  });
 }
 
 export async function previewDto(ctx: Ctx, rec: PreviewRecord, remaining?: number): Promise<PreviewDto> {
@@ -179,29 +216,49 @@ export async function startPreview(ctx: Ctx, publicId: string, user: ProfileReco
   const photo = await ctx.files.get(rec.photoPath);
   if (!photo) throw new HttpError(409, "photo_missing", "A foto não foi encontrada. Envie de novo.");
 
-  const options = statueOptions(rec);
-  const styleReferences = await loadStyleReferences(ctx.config.styleReferenceFiles);
-  const job = await ctx.providers.image.submit({
-    photo: {
-      url: await ctx.files.signedUrl(rec.photoPath, URL_TTL_SECONDS),
-      bytes: photo.bytes,
-      contentType: photo.contentType,
-    },
-    prompt: buildStatuePrompt(options, { hasStyleReference: styleReferences.length > 0 }),
-    styleReferences,
-    options,
-  });
-
-  const updated = await ctx.store.updatePreview(publicId, {
-    status: "generating",
-    imageProvider: ctx.providers.image.name,
-    imageJobId: job.jobId,
-    imageCostCents: rec.imageCostCents + (job.costCents ?? 0),
-    startedAt: ctx.now().toISOString(),
-    errorCode: undefined,
-    errorMessage: undefined,
-  });
-  return previewDto(ctx, updated);
+  const options = imageOptions(rec);
+  const styleReferences = options.productType === "quadro" ? [] : await loadStyleReferences(ctx.config.styleReferenceFiles);
+  let claimed: PreviewRecord;
+  try {
+    claimed = await ctx.store.claimPreviewGeneration(publicId, {
+      provider: ctx.providers.image.name,
+      estimatedCostCents: ctx.providers.image.estimatedCostCents ?? 0,
+      dailyBudgetCents: ctx.config.dailyBudgetCents,
+      accountLimit: ctx.config.previewsPerAccount,
+    });
+  } catch (error) {
+    if (error instanceof QuotaExceededError) throw new HttpError(403, "quota_exceeded", quotaMessage(error.limit));
+    throw error;
+  }
+  try {
+    const job = await ctx.providers.image.submit({
+      photo: {
+        url: await ctx.files.signedUrl(rec.photoPath, URL_TTL_SECONDS),
+        bytes: photo.bytes, contentType: photo.contentType,
+      },
+      prompt: options.productType === "quadro"
+        ? buildPortraitPrompt(options)
+        : buildStatuePrompt(options, { hasStyleReference: styleReferences.length > 0 }),
+      styleReferences, options,
+    });
+    const submission = {
+      imageJobId: job.jobId,
+      imageCostCents: claimed.imageCostCents + (job.costCents ?? 0),
+    };
+    // Síncrono: não publica jobId enquanto os bytes ainda estão sendo gravados,
+    // pois outro poll não pode consultar um job que não existe no provedor.
+    const updated = job.result
+      ? await finishImage(ctx, { ...claimed, ...submission }, job.result)
+      : await ctx.store.updatePreview(publicId, submission);
+    return previewDto(ctx, updated);
+  } catch {
+    // Mantém o custo reservado: o provedor pode ter cobrado antes de perder a conexão.
+    const failed = await ctx.store.updatePreview(publicId, {
+      status: "failed", errorCode: "provider_error",
+      errorMessage: "Não foi possível concluir a prévia. Tente novamente ou fale com a gente pelo WhatsApp.",
+    });
+    return previewDto(ctx, failed);
+  }
 }
 
 // ───────── 4. acompanhar ─────────
@@ -213,22 +270,8 @@ export async function getPreview(ctx: Ctx, publicId: string, user: ProfileRecord
     const startedAt = rec.startedAt ? new Date(rec.startedAt).getTime() : ctx.now().getTime();
     const result = await ctx.providers.image.poll(rec.imageJobId);
 
-    if (result.status === "succeeded") {
-      const bytes = await resolveFile(result.image);
-      const imagePath = `images/${rec.id}.${extOf(result.image.contentType)}`;
-      await ctx.files.put(imagePath, bytes, result.image.contentType);
-      rec = await ctx.store.updatePreview(publicId, {
-        status: "ready",
-        imagePath,
-        imageContentType: result.image.contentType,
-        imageCostCents: rec.imageCostCents + (result.costCents ?? 0),
-      });
-    } else if (result.status === "failed") {
-      rec = await ctx.store.updatePreview(publicId, {
-        status: result.code === "rejected" ? "rejected" : "failed",
-        errorCode: result.code,
-        errorMessage: result.message,
-      });
+    if (result.status !== "processing") {
+      rec = await finishImage(ctx, rec, result);
     } else if (ctx.now().getTime() - startedAt > ctx.config.generationTimeoutMs) {
       rec = await ctx.store.updatePreview(publicId, {
         status: "failed",
@@ -236,6 +279,11 @@ export async function getPreview(ctx: Ctx, publicId: string, user: ProfileRecord
         errorMessage: "A geração demorou demais. Tente de novo.",
       });
     }
+  }
+  if (rec.status === "generating" && !rec.imageJobId && rec.startedAt && ctx.now().getTime() - Date.parse(rec.startedAt) > ctx.config.generationTimeoutMs) {
+    rec = await ctx.store.updatePreview(publicId, {
+      status: "failed", errorCode: "timeout", errorMessage: "A geração demorou demais. Tente de novo.",
+    });
   }
   return previewDto(ctx, rec);
 }
@@ -245,7 +293,7 @@ export async function getPreview(ctx: Ctx, publicId: string, user: ProfileRecord
 export async function regeneratePreview(
   ctx: Ctx,
   publicId: string,
-  input: { user: ProfileRecord; ip: string; options?: PreviewRecord["options"] },
+  input: { user: ProfileRecord; ip: string; options?: PreviewRecord["options"]; deferStart?: boolean },
 ): Promise<PreviewDto> {
   const source = await mustGet(ctx, publicId, input.user);
   if (!source.photoPath) throw new HttpError(409, "photo_missing", "Esta prévia não tem foto.");
@@ -262,6 +310,7 @@ export async function regeneratePreview(
     photoPath: source.photoPath,
     photoContentType: source.photoContentType,
   });
+  if (input.deferStart) return previewDto(ctx, created, (await quotaOf(ctx, input.user)).remaining);
   const started = await startPreview(ctx, created.publicId, input.user);
   return { ...started, remaining: (await quotaOf(ctx, input.user)).remaining };
 }

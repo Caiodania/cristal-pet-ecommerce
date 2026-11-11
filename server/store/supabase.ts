@@ -7,7 +7,7 @@
 // docs/backend.md ("Primeira ligação com o Supabase") antes de abrir a loja.
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { ORDER_STATUSES, type OrderStatus } from "../../lib/loja/tipos";
+import { ORDER_STATUSES, type ItemConfig, type OrderStatus } from "../../lib/loja/tipos";
 import { HttpError } from "../http";
 import {
   QuotaExceededError,
@@ -90,12 +90,14 @@ function toProfile(r: Row): ProfileRecord {
 
 function toOrder(r: Row): OrderRecord {
   const items = ((r.order_items as Row[] | null) ?? []).map((i) => ({
+    ...(i.options && typeof i.options === "object" ? i.options as ItemConfig : {
+      sizeId: i.size_id as string,
+      poseId: i.pose_id as string,
+      colorId: i.color_id as string,
+      petName: opt<string>(i.pet_name),
+    }),
     id: i.id as string,
     previewId: i.preview_id as string,
-    sizeId: i.size_id as string,
-    poseId: i.pose_id as string,
-    colorId: i.color_id as string,
-    petName: opt<string>(i.pet_name),
     unitCents: (i.unit_cents as number | null) ?? null,
     catalogVersion: i.catalog_version as string,
   }));
@@ -307,6 +309,26 @@ export function createSupabaseStore(url: string, serviceKey: string): Store {
       return count ?? 0;
     },
 
+    async claimPreviewGeneration(publicId, input) {
+      const { data, error } = await db.rpc("claim_preview_generation", {
+        p_public_id: publicId,
+        p_provider: input.provider,
+        p_cost_cents: input.estimatedCostCents,
+        p_budget_cents: input.dailyBudgetCents,
+        p_account_limit: input.accountLimit,
+      });
+      if (error) {
+        if (error.message.includes("generation_conflict")) throw new HttpError(409, "conflict", "Esta prévia já foi iniciada.");
+        if (error.message.includes("budget_exceeded")) throw new HttpError(503, "budget_exceeded", "O limite diário de prévias foi atingido. Fale com a gente pelo WhatsApp.");
+        if (error.message.includes("quota_exceeded")) {
+          const [used, limit] = String((error as { details?: string }).details ?? "").split("/").map(Number);
+          throw new QuotaExceededError(used || input.accountLimit, limit || input.accountLimit);
+        }
+        fail("iniciar geração", error);
+      }
+      return toPreview(data as Row);
+    },
+
     async getPreview(publicId) {
       const { data, error } = await db.from("previews").select().eq("public_id", publicId).maybeSingle();
       if (error) fail("buscar prévia", error);
@@ -368,6 +390,12 @@ export function createSupabaseStore(url: string, serviceKey: string): Store {
           consent_at: input.consentAt,
         },
         p_items: input.items.map((i) => ({
+          product_type: i.productType ?? "escultura",
+          options: i.productType === "quadro" ? {
+            productType: "quadro", sizeId: i.sizeId, styleId: i.styleId, frameId: i.frameId, petName: i.petName,
+          } : {
+            productType: "escultura", sizeId: i.sizeId, poseId: i.poseId, colorId: i.colorId, petName: i.petName,
+          },
           preview_id: i.previewId,
           size_id: i.sizeId,
           pose_id: i.poseId,

@@ -5,6 +5,7 @@ import { Loading } from "@/components/ui/Status";
 import { CheckIcon } from "@/components/ui/icons";
 import { SculptureIllustration } from "@/components/ui/illustrations";
 import { cn } from "@/lib/cn";
+import { PortraitVisual } from "./PortraitVisual";
 
 const STAGES = ["Analisando a foto", "Modelando o pelo e a expressão", "Esculpindo a base com o nome"];
 
@@ -18,11 +19,13 @@ export function GeneratingCard({
   pose,
   tint,
   name,
+  portrait,
 }: {
   message: string;
   pose?: string;
   tint?: string;
   name?: string;
+  portrait?: { styleId?: string; frameId?: string; sizeId?: string };
 }) {
   const [stage, setStage] = useState(0);
   useEffect(() => {
@@ -33,12 +36,12 @@ export function GeneratingCard({
   return (
     <div className="grid items-center gap-6 rounded-card bg-gradient-to-b from-silver-mist to-pearl p-6 sm:grid-cols-[14rem_1fr]">
       <div className="mx-auto w-44 motion-safe:animate-pulse sm:w-full">
-        <SculptureIllustration pose={pose ?? "sentado"} tint={tint ?? "#f3f0e8"} name={name} />
+        {portrait ? <PortraitVisual {...portrait} name={name} /> : <SculptureIllustration pose={pose ?? "sentado"} tint={tint ?? "#f3f0e8"} name={name} />}
       </div>
       <div className="grid gap-4">
         <Loading>{message}</Loading>
         <ol aria-hidden="true" className="grid gap-2">
-          {STAGES.map((label, index) => (
+          {(portrait ? ["Preparando a foto", "Criando o retrato no seu estilo", "Finalizando a prévia da arte"] : STAGES).map((label, index) => (
             <li
               key={label}
               className={cn(

@@ -20,7 +20,7 @@ export default function EntrarPage() {
             Entre na sua <Accent>conta</Accent>
           </>
         }
-        description="Para gerar prévias de escultura e acompanhar os seus pedidos."
+        description="Para gerar prévias de esculturas e quadros e acompanhar os seus pedidos."
       />
       <Section tone="snow" className="pt-6!">
         {/* useSearchParams (para onde voltar depois do login) exige Suspense no export estático */}

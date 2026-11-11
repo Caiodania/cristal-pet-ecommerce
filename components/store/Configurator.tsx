@@ -12,6 +12,7 @@ import { TodoTag } from "@/components/ui/Placeholder";
 import { Alert } from "@/components/ui/Status";
 import { ArrowRightIcon, CheckIcon, RefreshIcon } from "@/components/ui/icons";
 import { catalog, previewsPerAccount } from "@/content/estatua";
+import { portraitCatalog, portraitPhotoTips } from "@/content/quadros";
 import { optionImage } from "@/content/opcoes";
 import { site } from "@/content/site";
 import { ApiError, api, fileUrl } from "@/lib/loja/api";
@@ -29,6 +30,8 @@ import { OptionVisual, SizeVisual } from "./OptionVisuals";
 import { PhotoDropzone, type ChosenPhoto } from "./PhotoDropzone";
 import { Stepper, type StepInfo } from "./Stepper";
 import { SummaryCard } from "./SummaryCard";
+import { PortraitVisual } from "./PortraitVisual";
+import { PortraitSummary } from "./PortraitSummary";
 
 const STEPS: StepInfo[] = [
   { id: "tamanho", label: "Tamanho" },
@@ -39,6 +42,7 @@ const STEPS: StepInfo[] = [
   { id: "previa", label: "Prévia" },
 ];
 const LAST = STEPS.length - 1;
+const PORTRAIT_STEPS = STEPS.map((step, index) => index === 1 ? { id: "estilo", label: "Estilo" } : index === 2 ? { id: "moldura", label: "Moldura" } : step);
 
 type Gen =
   | { phase: "idle" }
@@ -61,25 +65,31 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // As escolhas ficam guardadas na aba enquanto a pessoa entra ou confirma o e-mail
 // (a foto não: ela escolhe de novo). Só vale quando o endereço não traz escolhas.
-const SAVE_KEY = "cp:config:v1";
-type Saved = { sizeId?: string; poseId?: string; colorId?: string; petName?: string };
-function readSaved(): Saved {
+type Saved = { sizeId?: string; poseId?: string; colorId?: string; styleId?: string; frameId?: string; petName?: string };
+function readSaved(key: string): Saved {
   try {
-    return JSON.parse(window.sessionStorage.getItem(SAVE_KEY) ?? "{}") as Saved;
+    const value: unknown = JSON.parse(window.sessionStorage.getItem(key) ?? "{}");
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    return Object.fromEntries(Object.entries(value).filter(([, entry]) => typeof entry === "string")) as Saved;
   } catch {
     return {};
   }
 }
-const writeSaved = (value: Saved | null) => {
+const writeSaved = (key: string, value: Saved | null) => {
   try {
-    if (value) window.sessionStorage.setItem(SAVE_KEY, JSON.stringify(value));
-    else window.sessionStorage.removeItem(SAVE_KEY);
+    if (value) window.sessionStorage.setItem(key, JSON.stringify(value));
+    else window.sessionStorage.removeItem(key);
   } catch {
     /* sem armazenamento */
   }
 };
-const sameOptions = (a: ItemConfig, b: ItemConfig) =>
-  a.sizeId === b.sizeId && a.poseId === b.poseId && a.colorId === b.colorId && (a.petName ?? "") === (b.petName ?? "");
+const sameOptions = (a: ItemConfig, b: ItemConfig) => {
+  if (a.sizeId !== b.sizeId || (a.petName ?? "") !== (b.petName ?? "")) return false;
+  if (a.productType === "quadro" || b.productType === "quadro") {
+    return a.productType === "quadro" && b.productType === "quadro" && a.styleId === b.styleId && a.frameId === b.frameId;
+  }
+  return a.poseId === b.poseId && a.colorId === b.colorId;
+};
 
 function describeError(error: unknown): Extract<Gen, { phase: "error" }> {
   if (error instanceof ApiError) {
@@ -96,7 +106,10 @@ function describeError(error: unknown): Extract<Gen, { phase: "error" }> {
  * loja de referência. A prévia é gerada no servidor por uma IA de imagem; aqui
  * o navegador envia a foto, acompanha o andamento e adiciona ao carrinho.
  */
-export function Configurator() {
+export function Configurator({ productType = "escultura" }: { productType?: "escultura" | "quadro" }) {
+  const isPortrait = productType === "quadro";
+  const saveKey = isPortrait ? "cp:quadro-config:v1" : "cp:config:v1";
+  const contactMessage = isPortrait ? "Olá! Quero saber mais sobre um quadro personalizado do meu pet." : site.whatsapp.messages.escultura;
   const params = useSearchParams();
   const config = useConfig();
   const cart = useCart();
@@ -107,15 +120,18 @@ export function Configurator() {
     const value = params.get(key);
     return list.some((item) => item.id === value) ? (value ?? undefined) : undefined;
   };
-  const fromUrl = ["tamanho", "tipo", "cor"].some((key) => params.has(key));
-  const [saved] = useState<Saved>(() => (fromUrl || typeof window === "undefined" ? {} : readSaved()));
+  const fromUrl = ["tamanho", "tipo", "cor", "estilo", "moldura"].some((key) => params.has(key));
+  const [saved] = useState<Saved>(() => (fromUrl || typeof window === "undefined" ? {} : readSaved(saveKey)));
   const valid = <T extends { id: string }>(list: T[], id: string | undefined) =>
     list.some((item) => item.id === id) ? id : undefined;
-  const wantedSize = pick(catalog.sizes, "tamanho") ?? valid(catalog.sizes, saved.sizeId);
+  const sizes = isPortrait ? portraitCatalog.sizes : catalog.sizes;
+  const wantedSize = pick<{ id: string }>(sizes, "tamanho") ?? valid<{ id: string }>(sizes, saved.sizeId);
   const wantedPose = pick(catalog.poses, "tipo") ?? valid(catalog.poses, saved.poseId);
   const wantedColor = pick(catalog.colors, "cor") ?? valid(catalog.colors, saved.colorId);
+  const wantedStyle = pick(portraitCatalog.styles, "estilo") ?? valid(portraitCatalog.styles, saved.styleId);
+  const wantedFrame = pick(portraitCatalog.frames, "moldura") ?? valid(portraitCatalog.frames, saved.frameId);
   // com as três escolhas prontas, a pessoa já começa no nome
-  const [step, setStep] = useState(wantedSize && wantedPose && wantedColor ? 3 : 0);
+  const [step, setStep] = useState(wantedSize && (isPortrait ? wantedStyle && wantedFrame : wantedPose && wantedColor) ? 3 : 0);
   // ao mudar de etapa, leva o topo do configurador à vista (o conteúdo muda de altura)
   const top = useRef<HTMLDivElement>(null);
   const firstStep = useRef(true);
@@ -130,15 +146,19 @@ export function Configurator() {
   const [sizeId, setSizeId] = useState<string | undefined>(wantedSize);
   const [poseId, setPoseId] = useState<string | undefined>(wantedPose);
   const [colorId, setColorId] = useState<string | undefined>(wantedColor);
+  const [styleId, setStyleId] = useState<string | undefined>(wantedStyle);
+  const [frameId, setFrameId] = useState<string | undefined>(wantedFrame);
   const [petName, setPetName] = useState(saved.petName ?? "");
   const [photo, setPhoto] = useState<ChosenPhoto | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
   const [gen, setGen] = useState<Gen>({ phase: "idle" });
+  const generating = useRef(false);
   const [added, setAdded] = useState(false);
 
   // guarda as escolhas na aba (para não perdê-las num desvio de login)
   useEffect(() => {
-    writeSaved({ sizeId, poseId, colorId, petName });
-  }, [sizeId, poseId, colorId, petName]);
+    writeSaved(saveKey, { sizeId, poseId, colorId, styleId, frameId, petName });
+  }, [saveKey, sizeId, poseId, colorId, styleId, frameId, petName]);
 
   // id da última prévia que já recebeu a foto (para gerar outra sem reenviar)
   const sourceId = useRef<string | undefined>(undefined);
@@ -172,7 +192,9 @@ export function Configurator() {
   const nameExample = optionImage("nome", "exemplo", "");
 
   const options: ItemConfig | undefined =
-    sizeId && poseId && colorId ? { sizeId, poseId, colorId, petName: petName.trim() || undefined } : undefined;
+    isPortrait
+      ? sizeId && styleId && frameId ? { productType: "quadro", sizeId, styleId, frameId, petName: petName.trim() || undefined } : undefined
+      : sizeId && poseId && colorId ? { sizeId, poseId, colorId, petName: petName.trim() || undefined } : undefined;
   const ready = gen.phase === "ready" ? gen.preview : undefined;
   const stale = ready && options ? !sameOptions(ready.options, options) : false;
   // a conta já usou todas as prévias: não adianta tentar (o servidor também recusa)
@@ -190,6 +212,9 @@ export function Configurator() {
     const startedAt = Date.now();
     let failures = 0;
     while (myRun === run.current) {
+      if (Date.now() - startedAt > 300_000) {
+        return setGen({ phase: "error", message: "A geração está demorando. Consulte o andamento novamente em instantes.", retry: true, previewId: id });
+      }
       await sleep(2000);
       if (myRun !== run.current) return;
       try {
@@ -205,10 +230,11 @@ export function Configurator() {
             previewId: id,
           });
         }
+        if (preview.status === "expired") return setGen({ phase: "error", message: "Esta prévia expirou. Gere uma nova para continuar.", retry: true });
         if (preview.status === "rejected") {
           return setGen({
             phase: "error",
-            message: preview.errorMessage ?? "Esta foto não serve para a escultura. Escolha outra.",
+            message: preview.errorMessage ?? "Esta foto não serve para a prévia. Escolha outra.",
             retry: false,
             changePhoto: true,
           });
@@ -231,7 +257,7 @@ export function Configurator() {
    * para poder gerar a sua prévia") SEM sair da página; ao entrar, continua sozinho.
    */
   function requestGenerate() {
-    if (!options || !photo) return;
+    if (!options || !photo || photoBusy || generating.current) return;
     if (!user) {
       openAuth({
         tab: "signup",
@@ -244,8 +270,10 @@ export function Configurator() {
   }
 
   async function generate() {
-    if (!options || !photo) return;
+    if (!options || !photo || photoBusy || generating.current) return;
+    generating.current = true;
     const myRun = ++run.current;
+    let pendingId: string | undefined;
     setStep(LAST);
     setAdded(false);
     setGen({ phase: "working", message: "Enviando a foto…" });
@@ -253,10 +281,14 @@ export function Configurator() {
       let preview: PreviewDto;
       if (sourceId.current) {
         setGen({ phase: "working", message: "Gerando a prévia…" });
-        preview = await api.regeneratePreview(sourceId.current, { options });
+        const created = await api.regeneratePreview(sourceId.current, { options, deferStart: true });
+        pendingId = created.id;
+        if (myRun !== run.current) return;
+        preview = { ...(await api.startPreview(created.id)), remaining: created.remaining };
       } else {
         const created = await api.createPreview({ options });
         await api.uploadPhoto(created.id, photo.blob);
+        pendingId = created.id;
         if (myRun !== run.current) return;
         setGen({ phase: "working", message: "Gerando a prévia…" });
         preview = { ...(await api.startPreview(created.id)), remaining: created.remaining };
@@ -264,7 +296,8 @@ export function Configurator() {
       if (myRun !== run.current) return;
       sourceId.current = preview.id;
       void account.refresh(); // a cota da conta mudou
-      await waitForPreview(preview.id, myRun);
+      if (preview.status === "ready") setGen({ phase: "ready", preview });
+      else await waitForPreview(preview.id, myRun);
     } catch (error) {
       if (myRun !== run.current) return;
       if (error instanceof ApiError && error.code === "login_required") {
@@ -280,20 +313,33 @@ export function Configurator() {
         return;
       }
       if (error instanceof ApiError && error.code === "quota_exceeded") void account.refresh();
-      setGen(describeError(error));
+      if (pendingId && error instanceof ApiError && ["timeout", "network"].includes(error.code)) {
+        sourceId.current = pendingId;
+        await waitForPreview(pendingId, myRun);
+      } else setGen({ ...describeError(error), previewId: pendingId });
     } finally {
+      generating.current = false;
       void account.refresh();
     }
   }
 
   async function restartFailed(previewId: string) {
+    if (generating.current) return;
+    generating.current = true;
     const myRun = ++run.current;
     setGen({ phase: "working", message: "Gerando a prévia…" });
     try {
-      await api.startPreview(previewId);
-      await waitForPreview(previewId, myRun);
+      let preview = await api.getPreview(previewId);
+      if (myRun !== run.current) return;
+      if (preview.status === "queued" || preview.status === "failed") preview = await api.startPreview(previewId);
+      if (myRun !== run.current) return;
+      if (preview.status === "ready") setGen({ phase: "ready", preview });
+      else await waitForPreview(previewId, myRun);
     } catch (error) {
       if (myRun === run.current) setGen({ ...describeError(error), previewId });
+    } finally {
+      generating.current = false;
+      void account.refresh();
     }
   }
 
@@ -308,7 +354,7 @@ export function Configurator() {
   function addToCart() {
     if (!ready || stale) return;
     cart.add(ready.id, ready.options);
-    writeSaved(null);
+    writeSaved(saveKey, null);
     setAdded(true);
   }
 
@@ -319,27 +365,32 @@ export function Configurator() {
     setSizeId(undefined);
     setPoseId(undefined);
     setColorId(undefined);
+    setStyleId(undefined);
+    setFrameId(undefined);
     setPetName("");
     chosePhoto(null);
-    writeSaved(null);
+    writeSaved(saveKey, null);
   }
 
   const canContinue =
     (step === 0 && !!sizeId) ||
-    (step === 1 && !!poseId) ||
-    (step === 2 && !!colorId) ||
+    (step === 1 && !!(isPortrait ? styleId : poseId)) ||
+    (step === 2 && !!(isPortrait ? frameId : colorId)) ||
     step === 3 ||
-    (step === 4 && !!photo && !!options && !outOfPreviews);
+    (step === 4 && !!photo && !photoBusy && !!options && (!outOfPreviews || Boolean(ready && !stale)));
 
   return (
     <div className="grid gap-8 lg:grid-cols-[1fr_20rem] lg:items-start">
       <div className="grid gap-8">
         <div ref={top} className="scroll-mt-24">
-          <Stepper steps={STEPS} current={step} onGo={setStep} />
+          <Stepper steps={isPortrait ? PORTRAIT_STEPS : STEPS} current={step} onGo={(nextStep) => { if (gen.phase !== "working") setStep(nextStep); }} />
         </div>
 
         <div className="rounded-card border border-line bg-white p-5 shadow-soft sm:p-8">
-          {step === 0 && (
+          {isPortrait && step === 0 && <OptionGroup legend="Qual o tamanho do seu quadro?" name="tamanho" value={sizeId} onChange={setSizeId} hint="Escolha o espaço que o seu pet vai ocupar na parede." note="Medidas da arte. Acabamento e disponibilidade confirmados pelo WhatsApp. Ilustrações fora de escala." options={portraitCatalog.sizes.map((size) => ({ id: size.id, label: size.label, visual: <PortraitVisual sizeId={size.id} />, detail: <>{size.blurb}<strong className="mt-2 block">{formatCents(size.priceCents)}</strong></> }))} />}
+          {isPortrait && step === 1 && <OptionGroup legend="Qual estilo combina com o seu pet?" name="estilo" value={styleId} onChange={setStyleId} hint="A arte será criada a partir da foto do seu pet." note="Ilustrações de referência. A prévia personalizada aparece na última etapa." options={portraitCatalog.styles.map((style) => ({ id: style.id, label: style.label, detail: style.description, visual: <PortraitVisual styleId={style.id} sizeId={sizeId} /> }))} />}
+          {isPortrait && step === 2 && <OptionGroup legend="Como você quer emoldurar?" name="moldura" value={frameId} onChange={setFrameId} hint="O toque final para combinar com a sua casa." note="Simulação de cor. Materiais e acabamento são confirmados antes da produção." options={portraitCatalog.frames.map((frame) => ({ id: frame.id, label: frame.label, swatch: frame.swatch, detail: frame.description, visual: <PortraitVisual frameId={frame.id} styleId={styleId} sizeId={sizeId} /> }))} />}
+          {!isPortrait && step === 0 && (
             <OptionGroup
               legend="Qual o tamanho da escultura?"
               name="tamanho"
@@ -373,7 +424,7 @@ export function Configurator() {
             />
           )}
 
-          {step === 1 && (
+          {!isPortrait && step === 1 && (
             <OptionGroup
               legend="Como você quer a pose?"
               name="tipo"
@@ -390,7 +441,7 @@ export function Configurator() {
             />
           )}
 
-          {step === 2 && (
+          {!isPortrait && step === 2 && (
             <OptionGroup
               legend="Em que cor?"
               name="cor"
@@ -414,17 +465,17 @@ export function Configurator() {
             <div className="grid gap-6">
               <div>
                 <h2 className="font-display text-2xl font-extrabold sm:text-3xl">Qual é o nome do seu pet?</h2>
-                <p className="mt-1 text-ink-soft">Ele fica gravado em alto-relevo na base, na mesma cor da escultura.</p>
+                <p className="mt-1 text-ink-soft">{isPortrait ? "Se quiser, incluímos o nome na composição do retrato." : "Ele fica gravado em alto-relevo na base, na mesma cor da escultura."}</p>
               </div>
               <div className="grid items-center gap-6 md:grid-cols-2">
                 <div>
                   <div className="rounded-card bg-gradient-to-b from-silver-mist to-pearl px-6 pb-2 pt-4">
-                    <SculptureIllustration
+                    {isPortrait ? <PortraitVisual styleId={styleId} frameId={frameId} sizeId={sizeId} name={petName.trim() || undefined} /> : <SculptureIllustration
                       pose={poseId ?? "sentado"}
                       tint={tint}
                       name={petName.trim() || undefined}
                       label="Ilustração da escultura com o nome em relevo na base"
-                    />
+                    />}
                   </div>
                   <p className="mt-2 text-center text-xs text-ink-soft">Ilustração: o nome aparece aqui enquanto você digita.</p>
                 </div>
@@ -436,9 +487,9 @@ export function Configurator() {
                     value={petName}
                     onChange={(e) => setPetName(e.target.value)}
                     autoComplete="off"
-                    hint="Sem nome, a base fica lisa."
+                    hint={isPortrait ? "Deixe vazio para uma arte sem texto." : "Sem nome, a base fica lisa."}
                   />
-                  {nameExample && (
+                  {!isPortrait && nameExample && (
                     <figure className="relative overflow-hidden rounded-card shadow-soft">
                       <Image
                         src={nameExample.src}
@@ -454,7 +505,7 @@ export function Configurator() {
                     </figure>
                   )}
                   <p className="text-sm text-ink-soft">
-                    Tem mais de um pet? Termine esta escultura e crie outra em seguida: as duas seguem juntas no carrinho.
+                    Tem mais de um pet? Termine esta criação e faça outra em seguida: elas podem seguir juntas no carrinho.
                   </p>
                 </div>
               </div>
@@ -468,7 +519,7 @@ export function Configurator() {
                 <LoginPrompt
                   compact
                   title="Crie a sua conta grátis para ver a prévia"
-                  text={`Cada conta gera até ${config?.previewsPerAccount ?? previewsPerAccount} prévias de escultura sem pagar nada. Você pode escolher a foto agora e entrar na hora de gerar.`}
+                  text={`Cada conta gera até ${config?.previewsPerAccount ?? previewsPerAccount} prévias grátis, compartilhadas entre quadros e esculturas. Escolha a foto agora e entre na hora de gerar.`}
                 />
               )}
               {user && quota && <QuotaMeter quota={quota} className="rounded-soft bg-silver-mist p-4" />}
@@ -476,24 +527,24 @@ export function Configurator() {
                 <div className="grid gap-3">
                   <Alert>Você já usou todas as prévias da sua conta. Fale com a gente pelo WhatsApp que a gente ajuda você.</Alert>
                   <div>
-                    <WhatsAppButton size="md" message={site.whatsapp.messages.escultura}>
+                    <WhatsAppButton size="md" message={contactMessage}>
                       Falar no WhatsApp
                     </WhatsAppButton>
                   </div>
                 </div>
               )}
-              <PhotoDropzone photo={photo} onChange={chosePhoto} petName={petName.trim() || undefined} />
+              <PhotoDropzone photo={photo} onChange={chosePhoto} onBusyChange={setPhotoBusy} petName={petName.trim() || undefined} productType={productType} tips={isPortrait ? portraitPhotoTips : undefined} />
             </div>
           )}
 
           {step === LAST && (
             <div className="grid gap-5" aria-live="polite">
-              <h2 className="font-display text-2xl font-extrabold">A prévia da sua escultura</h2>
+              <h2 className="font-display text-2xl font-extrabold">{isPortrait ? "A prévia do seu quadro" : "A prévia da sua escultura"}</h2>
 
               {gen.phase === "idle" && <p className="text-ink-soft">Envie a foto na etapa anterior para gerar a prévia.</p>}
 
               {gen.phase === "working" && (
-                <GeneratingCard message={gen.message} pose={poseId} tint={tint} name={petName.trim() || undefined} />
+                <GeneratingCard message={gen.message} pose={poseId} tint={tint} name={petName.trim() || undefined} portrait={isPortrait ? { styleId, frameId, sizeId } : undefined} />
               )}
 
               {gen.phase === "error" && (
@@ -516,7 +567,7 @@ export function Configurator() {
                       </Button>
                     )}
                     {gen.whatsapp && (
-                      <WhatsAppButton size="md" message={site.whatsapp.messages.escultura}>
+                      <WhatsAppButton size="md" message={contactMessage}>
                         Falar no WhatsApp
                       </WhatsAppButton>
                     )}
@@ -536,14 +587,15 @@ export function Configurator() {
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={fileUrl(ready.imageUrl)}
-                        alt={`Prévia da escultura${ready.options.petName ? ` de ${ready.options.petName}` : ""}`}
+                        alt={`Prévia ${isPortrait ? "do quadro" : "da escultura"}${ready.options.petName ? ` de ${ready.options.petName}` : ""}`}
                         className="relative max-h-[32rem] w-auto max-w-full rounded-card border-4 border-white bg-pearl shadow-lift"
                       />
                     </div>
                   )}
-                  {config?.mode === "demo" && (
-                    <p className="text-center text-sm text-ink-soft">Imagem de demonstração: não é a escultura final.</p>
+                  {config?.imageProvider.mode === "mock" && (
+                    <p className="text-center text-sm text-ink-soft">Imagem de demonstração: não é uma arte gerada a partir da sua foto.</p>
                   )}
+                  {isPortrait && <p className="text-center text-sm text-ink-soft">Confira o rosto, as cores e o nome. A prévia orienta a arte; impressão e acabamento serão confirmados com você antes da produção.</p>}
                   {stale && <Alert tone="info">Você mudou as opções. Gere a prévia de novo para ver como fica.</Alert>}
                 </div>
               )}
@@ -553,6 +605,7 @@ export function Configurator() {
                   <Button
                     size="lg"
                     onClick={stale ? requestGenerate : addToCart}
+                    disabled={Boolean(stale && outOfPreviews)}
                     icon={stale ? <RefreshIcon /> : <CheckIcon />}
                   >
                     {stale ? "Gerar a prévia com as novas opções" : "Gostei! Adicionar ao carrinho"}
@@ -580,14 +633,15 @@ export function Configurator() {
 
               {added && (
                 <div className="grid gap-4">
-                  <Alert tone="success">Escultura adicionada ao carrinho!</Alert>
+                  <Alert tone="success">{isPortrait ? "Quadro adicionado ao carrinho!" : "Escultura adicionada ao carrinho!"}</Alert>
                   <div className="flex flex-wrap gap-3">
                     <Button href="/carrinho" size="lg" icon={<ArrowRightIcon />} iconPosition="end">
                       Ir para o carrinho
                     </Button>
                     <Button variant="secondary" size="lg" onClick={startOver}>
-                      Criar outra escultura
+                      {isPortrait ? "Criar outro quadro" : "Criar outra escultura"}
                     </Button>
+                    <Button href={isPortrait ? "/personalizar" : "/quadros/personalizar"} variant="ghost">{isPortrait ? "Criar também uma escultura" : "Criar também um quadro"}</Button>
                   </div>
                 </div>
               )}
@@ -621,11 +675,11 @@ export function Configurator() {
         </div>
       </div>
 
-      <SummaryCard
+      {isPortrait ? <PortraitSummary chosen={{ productType: "quadro", sizeId, styleId, frameId, petName: petName.trim() || undefined }} photoUrl={photo?.url} previewUrl={ready?.imageUrl && !stale ? fileUrl(ready.imageUrl) : undefined} /> : <SummaryCard
         chosen={{ sizeId, poseId, colorId, petName: petName.trim() || undefined }}
         photoUrl={photo?.url}
         previewUrl={ready?.imageUrl ? fileUrl(ready.imageUrl) : undefined}
-      />
+      />}
     </div>
   );
 }

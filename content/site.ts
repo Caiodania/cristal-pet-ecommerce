@@ -6,9 +6,9 @@ export const site = {
   // Nome e logo: AUmor de Patas (o cliente mandou o logo; fica em assets/marca/).
   name: "AUmor de Patas",
   shortName: "AUmor de Patas",
-  /** A frase que acompanha o nome no logo. */
-  descriptor: "Esculturas Pet",
-  tagline: "Esculturas 3D do seu pet",
+  /** Descrição das coleções da loja. */
+  descriptor: "Esculturas e quadros",
+  tagline: "Seu pet em esculturas e quadros",
   locale: "pt-BR",
 
   whatsapp: {
@@ -17,7 +17,8 @@ export const site = {
     // Mensagens já escritas na conversa, uma por origem do clique.
     messages: {
       escultura: "Olá! Quero fazer uma escultura 3D do meu pet.",
-      duvida: "Olá! Tenho uma dúvida sobre as esculturas 3D.",
+      quadro: "Olá! Quero fazer um quadro personalizado do meu pet.",
+      duvida: "Olá! Tenho uma dúvida sobre os quadros e as esculturas do meu pet.",
     },
   },
   // TODO-CLIENTE: telefone, e-mail, endereço, horário e redes abaixo ainda são os
@@ -51,9 +52,9 @@ export const site = {
 
 /** Menu principal do cabeçalho (desktop) e do menu do celular. */
 export const nav = [
+  { label: "Esculturas", href: "/personalizar" },
+  { label: "Quadros", href: "/quadros" },
   { label: "Como funciona", href: "/#como-funciona" },
-  { label: "Tamanhos", href: "/#tamanhos" },
-  { label: "Perguntas", href: "/#faq" },
   { label: "Contato", href: "/contato" },
 ] as const;
 

@@ -3,6 +3,7 @@
 // navegador mandou. O valor final é sempre combinado no WhatsApp.
 
 import { catalog as defaultCatalog, type Catalog } from "../../content/estatua";
+import { portraitCatalog, type PortraitCatalog } from "../../content/quadros";
 import type { ItemConfig } from "./tipos";
 
 export type PriceResult =
@@ -14,7 +15,17 @@ export type PriceResult =
  * Devolve `unitCents: null` quando o tamanho ainda não tem preço (a definir).
  * Um acréscimo `null` (a definir) conta como 0.
  */
-export function priceItem(config: ItemConfig, catalog: Catalog = defaultCatalog): PriceResult {
+export function priceItem(config: ItemConfig, catalog: Catalog = defaultCatalog, portraits: PortraitCatalog = portraitCatalog): PriceResult {
+  if (config.productType === "quadro") {
+    const size = portraits.sizes.find((s) => s.id === config.sizeId);
+    const style = portraits.styles.find((s) => s.id === config.styleId);
+    const frame = portraits.frames.find((f) => f.id === config.frameId);
+    if (!size) return { ok: false, error: `Tamanho de quadro inválido: ${config.sizeId}` };
+    if (!style) return { ok: false, error: `Estilo inválido: ${config.styleId}` };
+    if (!frame) return { ok: false, error: `Moldura inválida: ${config.frameId}` };
+    if (size.priceCents === null || style.priceDeltaCents === null || frame.priceDeltaCents === null) return { ok: true, unitCents: null };
+    return { ok: true, unitCents: size.priceCents + style.priceDeltaCents + frame.priceDeltaCents };
+  }
   const size = catalog.sizes.find((s) => s.id === config.sizeId);
   const pose = catalog.poses.find((p) => p.id === config.poseId);
   const color = catalog.colors.find((c) => c.id === config.colorId);
@@ -39,10 +50,10 @@ export type Estimate = {
  * existir) vale para todas as peças a partir da 2ª, começando pelas mais
  * baratas, para o desconto nunca recair sobre a mais cara.
  */
-export function estimate(items: ItemConfig[], catalog: Catalog = defaultCatalog): Estimate {
+export function estimate(items: ItemConfig[], catalog: Catalog = defaultCatalog, portraits: PortraitCatalog = portraitCatalog): Estimate {
   const unitCents: (number | null)[] = [];
   for (const item of items) {
-    const result = priceItem(item, catalog);
+    const result = priceItem(item, catalog, portraits);
     if (!result.ok) throw new Error(result.error);
     unitCents.push(result.unitCents);
   }
@@ -55,8 +66,10 @@ export function estimate(items: ItemConfig[], catalog: Catalog = defaultCatalog)
   const subtotal = prices.reduce((sum, p) => sum + p, 0);
   const pct = catalog.secondPieceDiscountPct;
   let discountCents = 0;
-  if (pct && prices.length > 1) {
-    const cheapestFirst = prices.slice().sort((a, b) => a - b);
+  // A oferta antiga vale apenas para esculturas, nunca para itens do parceiro.
+  const sculpturePrices = prices.filter((_, i) => items[i].productType !== "quadro");
+  if (pct && sculpturePrices.length > 1) {
+    const cheapestFirst = sculpturePrices.slice().sort((a, b) => a - b);
     const discounted = cheapestFirst.slice(0, cheapestFirst.length - 1);
     discountCents = Math.round(discounted.reduce((sum, p) => sum + p, 0) * (pct / 100));
   }

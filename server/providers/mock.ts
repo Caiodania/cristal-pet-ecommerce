@@ -13,7 +13,7 @@
 import { ILUSTRACAO_VIEWBOX, sculptureSvgBody } from "../../lib/loja/ilustracao";
 import type { ImageProvider, ModelPoll, PrintModelProvider } from "./types";
 
-type Job = { t: number; d: number; name: string; hex: string; pose: string; h: number | null };
+type Job = { t: number; d: number; name: string; hex: string; pose: string; h: number | null; productType?: "quadro"; style?: string; frame?: string; ratio?: string };
 
 const encodeJob = (job: Job) => `mock.${Buffer.from(JSON.stringify(job)).toString("base64url")}`;
 
@@ -40,6 +40,37 @@ function statueSvg({ hex, pose, name }: { hex: string; pose: string; name: strin
 
 /** O provedor recebe o rótulo do tipo ("Busto"); a ilustração pede o id. */
 const poseId = (label: string) => (/busto/i.test(label) ? "busto" : /pose|foto/i.test(label) ? "na-pose" : "sentado");
+
+const xmlEscape = (value: string) => value.replace(/[<>&"']/g, (char) =>
+  ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;", "'": "&apos;" })[char]!);
+
+/** Ilustração genérica, explicitamente marcada: não usa nem finge retratar a foto. */
+function portraitSvg(job: Job): string {
+  const watercolor = job.style === "aquarela";
+  const royal = job.style === "real";
+  const h = job.ratio === "3:4" ? 1066 : 1200;
+  const frame = job.frame === "branca" ? "#dedbd4" : job.frame === "natural" ? "#bc956c" : "#252525";
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="${h}" viewBox="0 0 800 ${h}">
+<rect width="800" height="${h}" fill="#eef1f5"/>
+<text x="400" y="65" text-anchor="middle" font-family="sans-serif" font-size="26" font-weight="700" fill="#0b2347">PRÉVIA DE DEMONSTRAÇÃO</text>
+<text x="400" y="101" text-anchor="middle" font-family="sans-serif" font-size="20" fill="#40506a">Ilustração genérica: não retrata a sua foto</text>
+<rect x="66" y="150" width="668" height="${h - 220}" fill="${frame}"/>
+<rect x="88" y="172" width="624" height="${h - 264}" fill="${royal ? "#28374e" : "#faf7f0"}"/>
+${watercolor ? '<g opacity=".35"><ellipse cx="310" cy="430" rx="165" ry="175" fill="#a5cad0"/><ellipse cx="505" cy="510" rx="135" ry="160" fill="#e2bda1"/></g>' : ""}
+<g transform="translate(0 ${h === 1066 ? 0 : 50})">
+${royal ? '<path d="M195 790L240 610Q400 530 560 610L605 790Z" fill="#913a46"/><path d="M310 602L400 765L490 602" fill="#e5d6b7"/>' : '<ellipse cx="400" cy="683" rx="175" ry="128" fill="#c69a71"/>'}
+<ellipse cx="255" cy="435" rx="72" ry="140" fill="#8a6148"/>
+<ellipse cx="545" cy="435" rx="72" ry="140" fill="#8a6148"/>
+<ellipse cx="400" cy="455" rx="158" ry="173" fill="#c69a71"/>
+<path d="M385 294Q355 402 372 525L428 525Q445 402 415 294Z" fill="#f5e8d6"/>
+<ellipse cx="341" cy="438" rx="16" ry="21" fill="#252525"/><ellipse cx="459" cy="438" rx="16" ry="21" fill="#252525"/>
+<ellipse cx="400" cy="523" rx="73" ry="53" fill="#f5e8d6"/>
+<path d="M372 507Q400 488 428 507Q421 535 400 538Q379 535 372 507" fill="#252525"/>
+<path d="M400 536V555M400 555Q377 575 361 551M400 555Q423 575 439 551" fill="none" stroke="#252525" stroke-width="5" stroke-linecap="round"/>
+</g>
+<text x="400" y="${h - 160}" text-anchor="middle" font-family="serif" font-size="42" fill="${royal ? "#f5e8d6" : "#0b2347"}">${xmlEscape(job.name || "Seu pet")}</text>
+</svg>`;
+}
 
 // ───────── STL de teste: base cilíndrica + dois "gomos" esféricos ─────────
 
@@ -116,6 +147,7 @@ export function createMockImageProvider(delayMs: number): ImageProvider {
   return {
     name: "mock",
     mode: "mock",
+    estimatedCostCents: 0,
 
     async submit({ options }) {
       return {
@@ -123,9 +155,10 @@ export function createMockImageProvider(delayMs: number): ImageProvider {
           t: Date.now(),
           d: delayMs,
           name: options.petName ?? "",
-          hex: options.colorHex,
-          pose: options.poseLabel,
+          hex: options.productType === "quadro" ? "#c69a71" : options.colorHex,
+          pose: options.productType === "quadro" ? "" : options.poseLabel,
           h: null,
+          ...(options.productType === "quadro" ? { productType: "quadro" as const, style: options.styleId, frame: options.frameId, ratio: options.aspectRatio } : {}),
         }),
         costCents: 0,
       };
@@ -143,7 +176,7 @@ export function createMockImageProvider(delayMs: number): ImageProvider {
       return {
         status: "succeeded",
         image: {
-          bytes: new TextEncoder().encode(statueSvg({ hex: job.hex, pose: job.pose, name: job.name })),
+          bytes: new TextEncoder().encode(job.productType === "quadro" ? portraitSvg(job) : statueSvg({ hex: job.hex, pose: job.pose, name: job.name })),
           contentType: "image/svg+xml",
         },
         costCents: 0,

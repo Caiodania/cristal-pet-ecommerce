@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { Catalog } from "../../content/estatua";
+import { portraitCatalog } from "../../content/quadros";
 import { canTransition, ORDER_STATUSES, ORDER_TRANSITIONS } from "./tipos";
 import { estimate, formatCents, priceItem } from "./estimativa";
 
@@ -74,6 +75,33 @@ describe("estimate", () => {
 
   it("lança erro para item inválido (o servidor valida antes)", () => {
     assert.throws(() => estimate([item("zzz")], priced), /Tamanho inválido/);
+  });
+});
+
+describe("preços de quadros", () => {
+  const portrait = { productType: "quadro" as const, sizeId: "30x40", styleId: "aquarela", frameId: "natural" };
+  const portraits = {
+    ...portraitCatalog,
+    sizes: portraitCatalog.sizes.map((s) => ({ ...s, priceCents: 8000 })),
+    styles: portraitCatalog.styles.map((s) => ({ ...s, priceDeltaCents: 1000 })),
+    frames: portraitCatalog.frames.map((f) => ({ ...f, priceDeltaCents: 2000 })),
+  };
+
+  it("soma arte e moldura, mantendo A combinar enquanto qualquer parte não tiver preço", () => {
+    assert.deepEqual(priceItem(portrait), { ok: true, unitCents: null });
+    assert.deepEqual(priceItem(portrait, priced, portraits), { ok: true, unitCents: 11000 });
+    const unknownFrame = { ...portraits, frames: portraits.frames.map((f) => ({ ...f, priceDeltaCents: null })) };
+    assert.deepEqual(priceItem(portrait, priced, unknownFrame), { ok: true, unitCents: null });
+  });
+
+  it("a promoção de esculturas não inclui quadros nem usa o quadro como primeira peça", () => {
+    const withOffer = { ...priced, secondPieceDiscountPct: 25 };
+    const mixed = estimate([item("g"), portrait], withOffer, portraits);
+    assert.equal(mixed.discountCents, 0);
+    assert.equal(mixed.totalCents, 31000);
+    const three = estimate([item("g"), item("p"), portrait], withOffer, portraits);
+    assert.equal(three.discountCents, 2500);
+    assert.equal(three.totalCents, 38500);
   });
 });
 

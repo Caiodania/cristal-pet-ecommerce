@@ -10,10 +10,12 @@
 
 import type { ServerConfig } from "../env";
 import { createMockImageProvider, createMockModelProvider } from "./mock";
+import { createNanoBananaProvider } from "./nano-banana";
 import type { ImageProvider, PrintModelProvider } from "./types";
 
 const imageProviders: Record<string, (config: ServerConfig) => ImageProvider> = {
   mock: (config) => createMockImageProvider(config.mockDelayMs),
+  "nano-banana": createNanoBananaProvider,
   // exemplo: "openai-image": (config) => createOpenAiImageProvider(process.env.OPENAI_API_KEY!),
 };
 

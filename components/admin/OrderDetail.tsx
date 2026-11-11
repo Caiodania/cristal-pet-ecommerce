@@ -9,7 +9,7 @@ import { TextAreaField, TextField } from "@/components/ui/Field";
 import { Lightbox, type LightboxImage } from "@/components/ui/Lightbox";
 import { Alert, Loading, StatusBadge, Timeline, formatDateTime } from "@/components/ui/Status";
 import { DownloadIcon } from "@/components/ui/icons";
-import { catalog } from "@/content/estatua";
+import { productDetails, productLabel } from "@/lib/loja/produtos";
 import { site } from "@/content/site";
 import { ApiError, api, fileUrl } from "@/lib/loja/api";
 import { formatCents } from "@/lib/loja/estimativa";
@@ -26,9 +26,6 @@ import {
 } from "@/lib/loja/tipos";
 import { useConfig } from "@/lib/loja/useConfig";
 import { AdminBar, lostAccess, useAdmin } from "./AdminGate";
-
-const labelOf = <T extends { id: string; label: string }>(list: T[], id: string) =>
-  list.find((item) => item.id === id)?.label ?? id;
 
 /** Texto do botão para ir a cada status. */
 const ACTION: Record<OrderStatus, string> = {
@@ -250,6 +247,53 @@ function ModelPanel({
   );
 }
 
+// ───────── Produção terceirizada ─────────
+
+function PortraitProductionPanel({ code, item, demo }: { code: string; item: AdminOrderItemDto; demo: boolean }) {
+  const [copy, setCopy] = useState<"idle" | "done" | "failed">("idle");
+  const specifications = [
+    `Pedido ${code} · Item ${item.id}`,
+    `Produto: ${productLabel(item)}`,
+    `Pet: ${item.petName ?? "Sem nome na arte"}`,
+    `Especificações: ${productDetails(item)}`,
+    "Produção: impressão e montagem por parceiro.",
+    "Conferir resolução, corte, cores e acabamento antes de imprimir.",
+  ].join("\n");
+
+  async function copySpecifications() {
+    try {
+      await navigator.clipboard.writeText(specifications);
+      setCopy("done");
+    } catch {
+      setCopy("failed");
+    }
+  }
+
+  return (
+    <section aria-label={`Produção do quadro de ${item.petName ?? "seu pet"}`} className="grid gap-3 rounded-soft bg-pearl p-4">
+      <h4 className="font-semibold">Quadro · produção terceirizada</h4>
+      {demo && <Alert>Arte de demonstração: não representa o pet e não deve ser enviada para produção.</Alert>}
+      <p className="text-sm text-ink-soft">
+        Baixe a arte e a foto original acima e encaminhe ao parceiro com estas especificações.
+        Confirme com ele a qualidade do arquivo, o acabamento e o prazo antes de iniciar a produção.
+      </p>
+      <pre className="whitespace-pre-wrap break-words rounded-soft bg-white p-3 font-sans text-sm">{specifications}</pre>
+      <div>
+        <Button size="sm" variant="secondary" onClick={() => void copySpecifications()}>
+          Copiar especificações do quadro
+        </Button>
+      </div>
+      <p role="status" className="text-sm font-semibold text-navy">
+        {copy === "done" && "Especificações copiadas. Envie junto com os arquivos baixados."}
+        {copy === "failed" && "Selecione as especificações acima e copie manualmente."}
+      </p>
+      <p className="text-sm text-ink-soft">
+        Registre o fornecedor e a previsão de entrega nas anotações internas. Atualize o andamento do pedido quando o parceiro iniciar e concluir a produção.
+      </p>
+    </section>
+  );
+}
+
 // ───────── Envio ─────────
 
 function ShippingCard({ order }: { order: AdminOrderDto }) {
@@ -397,7 +441,7 @@ export function OrderDetail() {
   // enquanto algum arquivo 3D está sendo gerado, pergunta o andamento a cada 3 s
   const orderId = order?.id;
   const running = order?.items
-    .filter((i) => i.model.status === "processing" || i.model.status === "queued")
+    .filter((i) => i.productType !== "quadro" && (i.model.status === "processing" || i.model.status === "queued"))
     .map((i) => i.id)
     .join(",");
   useEffect(() => {
@@ -459,7 +503,7 @@ export function OrderDetail() {
   const gallery: LightboxImage[] =
     order?.items.flatMap((item) => [
       ...(item.photoUrl ? [{ src: fileUrl(item.photoUrl)!, width: 1024, height: 1024, alt: `Foto original de ${item.petName ?? "o pet"}` }] : []),
-      ...(item.imageUrl ? [{ src: fileUrl(item.imageUrl)!, width: 1024, height: 1024, alt: `Prévia da escultura de ${item.petName ?? "o pet"}` }] : []),
+      ...(item.imageUrl ? [{ src: fileUrl(item.imageUrl)!, width: 1024, height: 1024, alt: `Prévia: ${productLabel(item)} de ${item.petName ?? "seu pet"}` }] : []),
     ]) ?? [];
   const open = (url: string | undefined) => {
     const index = gallery.findIndex((g) => g.src === fileUrl(url));
@@ -515,25 +559,24 @@ export function OrderDetail() {
             </div>
 
             <div className="grid gap-8 lg:grid-cols-[1fr_22rem] lg:items-start">
-              <ul className="grid gap-6" aria-label="Esculturas do pedido">
+              <ul className="grid gap-6" aria-label="Itens do pedido">
                 {order.items.map((item) => (
                   <Card as="li" key={item.id} className="grid gap-4">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <h3 className="font-display text-2xl font-extrabold">
-                        {item.petName ? `Escultura de ${item.petName}` : "Escultura do pet"}
+                        {productLabel(item)} {item.petName ? `de ${item.petName}` : "do pet"}
                       </h3>
                       <p className="font-semibold">{formatCents(item.unitCents)}</p>
                     </div>
                     <p className="text-ink-soft">
-                      {labelOf(catalog.sizes, item.sizeId)}
-                      {item.heightCm ? ` (${item.heightCm} cm)` : ""} · {labelOf(catalog.poses, item.poseId)} ·{" "}
-                      {labelOf(catalog.colors, item.colorId)}
+                      {productDetails(item)}
+                      {item.productType !== "quadro" && item.heightCm ? ` · ${item.heightCm} cm de altura` : ""}
                     </p>
 
                     <div className="grid grid-cols-2 gap-3">
                       {[
                         { url: item.photoUrl, label: "Foto original", download: item.photoDownloadUrl },
-                        { url: item.imageUrl, label: "Prévia aprovada", download: item.imageDownloadUrl },
+                        { url: item.imageUrl, label: item.productType === "quadro" ? "Arte aprovada" : "Prévia aprovada", download: item.imageDownloadUrl },
                       ].map(({ url, label, download }) => (
                         <figure key={label} className="grid gap-2">
                           {url ? (
@@ -544,7 +587,7 @@ export function OrderDetail() {
                               aria-label={`Ampliar: ${label}`}
                             >
                               {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={fileUrl(url)} alt="" className="aspect-square w-full object-cover" />
+                              <img src={fileUrl(url)} alt="" className="aspect-square w-full object-contain" />
                             </button>
                           ) : (
                             <div className="grid aspect-square place-items-center rounded-soft bg-pearl text-sm text-ink-soft">
@@ -568,14 +611,18 @@ export function OrderDetail() {
                       ))}
                     </div>
 
-                    <ModelPanel
-                      orderId={order.id}
-                      orderStatus={order.status}
-                      item={item}
-                      demo={config?.mode === "demo"}
-                      providerName={config?.modelProvider.name}
-                      onModel={setItemModel}
-                    />
+                    {item.productType === "quadro" ? (
+                      <PortraitProductionPanel code={order.code} item={item} demo={config?.imageProvider.mode === "mock"} />
+                    ) : (
+                      <ModelPanel
+                        orderId={order.id}
+                        orderStatus={order.status}
+                        item={item}
+                        demo={config?.modelProvider.mode === "mock"}
+                        providerName={config?.modelProvider.name}
+                        onModel={setItemModel}
+                      />
+                    )}
                   </Card>
                 ))}
               </ul>

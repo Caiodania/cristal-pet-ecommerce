@@ -9,6 +9,7 @@
 
 import { catalog } from "../../content/estatua";
 import { estimate } from "../../lib/loja/estimativa";
+import { itemConfigOf, productCatalogVersion } from "../../lib/loja/produtos";
 import {
   ORDER_STATUSES,
   canTransition,
@@ -42,11 +43,8 @@ function fileNameOf(code: string, petName: string | undefined, kind: "foto" | "p
 
 async function itemDto(ctx: Ctx, item: OrderItemRecord, preview: PreviewRecord | null): Promise<OrderItemDto> {
   return {
+    ...itemConfigOf(item),
     id: item.id,
-    sizeId: item.sizeId,
-    poseId: item.poseId,
-    colorId: item.colorId,
-    petName: item.petName,
     unitCents: item.unitCents,
     previewId: preview?.publicId ?? "",
     imageUrl: preview?.imagePath
@@ -82,7 +80,7 @@ export async function adminOrderDto(ctx: Ctx, order: OrderRecord): Promise<Admin
     order.items.map(async (item) => {
       const preview = await ctx.store.getPreviewById(item.previewId);
       const base = await itemDto(ctx, item, preview);
-      const size = catalog.sizes.find((s) => s.id === item.sizeId);
+      const size = item.productType !== "quadro" ? catalog.sizes.find((s) => s.id === item.sizeId) : undefined;
       const model: ModelDto = preview
         ? await modelDtoOf(ctx, preview, downloadNameOf(order.code, item.petName))
         : { status: "none" };
@@ -135,19 +133,19 @@ export async function createOrder(
 ): Promise<{ order: OrderDto; token: string }> {
   const ids = [...new Set(input.previewIds)];
   if (ids.length === 0) throw new HttpError(400, "invalid_input", "O carrinho está vazio.");
-  if (ids.length > MAX_ITEMS) throw new HttpError(400, "invalid_input", `No máximo ${MAX_ITEMS} esculturas por pedido.`);
+  if (ids.length > MAX_ITEMS) throw new HttpError(400, "invalid_input", `No máximo ${MAX_ITEMS} itens por pedido.`);
 
   const previews: PreviewRecord[] = [];
   for (const id of ids) {
     const preview = await ctx.store.getPreview(id);
     if (!preview || preview.userId !== input.user.id) {
-      throw new HttpError(404, "preview_not_found", "Uma das esculturas do carrinho não foi encontrada. Gere a prévia de novo.");
+      throw new HttpError(404, "preview_not_found", "Um dos itens do carrinho não foi encontrado. Gere a prévia de novo.");
     }
     if (preview.status !== "ready") {
       throw new HttpError(409, "preview_not_ready", "Uma das prévias ainda não está pronta.");
     }
     if (await ctx.store.findOrderIdByPreview(preview.id)) {
-      throw new HttpError(409, "preview_used", "Uma das esculturas já está em outro pedido.");
+      throw new HttpError(409, "preview_used", "Um dos itens já está em outro pedido.");
     }
     previews.push(preview);
   }
@@ -174,13 +172,10 @@ export async function createOrder(
         discountCents: estimated.discountCents,
         consentAt: ctx.now().toISOString(),
         items: previews.map((p, i) => ({
+          ...itemConfigOf(p.options),
           previewId: p.id,
-          sizeId: p.options.sizeId,
-          poseId: p.options.poseId,
-          colorId: p.options.colorId,
-          petName: p.options.petName,
           unitCents: estimated.unitCents[i],
-          catalogVersion: catalog.version,
+          catalogVersion: productCatalogVersion(p.options),
         })),
       });
     } catch (error) {
@@ -232,8 +227,10 @@ export async function listOrders(
         cityState: o.shippingAddress ? `${o.shippingAddress.city} - ${o.shippingAddress.state}` : undefined,
         deliveryMethod: o.deliveryMethod,
         itemCount: o.items.length,
-        modelsReady: previews.filter((p) => p?.modelStatus === "ready").length,
-        modelsRunning: previews.filter((p) => p?.modelStatus === "processing" || p?.modelStatus === "queued").length,
+        sculptureCount: o.items.filter((i) => i.productType !== "quadro").length,
+        portraitCount: o.items.filter((i) => i.productType === "quadro").length,
+        modelsReady: previews.filter((p) => p?.options.productType !== "quadro" && p?.modelStatus === "ready").length,
+        modelsRunning: previews.filter((p) => p?.options.productType !== "quadro" && (p?.modelStatus === "processing" || p?.modelStatus === "queued")).length,
         estimateCents: o.estimateCents,
         thumbUrl: first?.imagePath ? await ctx.files.signedUrl(first.imagePath, URL_TTL_SECONDS) : undefined,
       };
@@ -283,6 +280,7 @@ export async function updateOrderAdmin(
 /** Dispara o arquivo 3D de todos os itens; um erro num item não derruba o pedido. */
 async function autoStartModels(ctx: Ctx, order: OrderRecord) {
   for (const item of order.items) {
+    if (item.productType === "quadro") continue;
     try {
       await startModel(ctx, order.id, item.id);
     } catch (error) {
