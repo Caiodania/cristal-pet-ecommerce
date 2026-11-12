@@ -19,15 +19,16 @@ const benefits = [
     text: "Você fala com a gente do início ao fim: pedido, pagamento e entrega combinados em uma conversa.",
   },
 ];
+const iconColors = ["bg-pink-mist text-pink-deep", "bg-gold-mist text-gold-deep", "bg-pearl text-navy"];
 
 /** Três cards de qualidade, na faixa navy da marca. TODO-CLIENTE: acrescentar material e garantia. */
 export function Benefits() {
   return (
     <Section id="qualidade" tone="navy" wave="snow" labelledBy="qualidade-titulo" className="overflow-hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="drift absolute -left-24 top-10 size-96 rounded-full bg-white/10 blur-3xl" />
+        <div className="drift absolute -left-24 top-10 size-96 rounded-full bg-pink/15 blur-3xl" />
         <div
-          className="drift absolute -right-24 bottom-10 size-96 rounded-full bg-silver/20 blur-3xl"
+          className="drift absolute -right-24 bottom-10 size-96 rounded-full bg-gold/15 blur-3xl"
           style={{ animationDelay: "-8s" }}
         />
       </div>
@@ -51,7 +52,7 @@ export function Benefits() {
             >
               <span
                 aria-hidden="true"
-                className="grid size-16 place-items-center rounded-full bg-silver text-3xl text-ink transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110"
+                className={`grid size-16 place-items-center rounded-full text-3xl transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110 ${iconColors[index]}`}
               >
                 <Icon />
               </span>

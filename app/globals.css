@@ -6,27 +6,29 @@
   variável vira utilitário (--color-navy → bg-navy, text-navy…) e também fica
   disponível como variável CSS. Mexer na marca = mexer aqui.
 
-  Paleta pedida pelo cliente: azul marinho, prata e branco.
-    navy    azul marinho: ação (botões), links, texto de destaque, faixas escuras
-    silver  prata: faixas claras, preenchimentos, ícones sobre o marinho
-    snow    branco: fundo da página      pearl / silver-mist: tintas de fundo
+  Paleta da marca: dourado, detalhes pink e azul marinho, sobre branco e creme.
+    gold / gold-mist   ações principais e fundos quentes, com texto navy
+    pink              decoração; pink-deep para texto, seleção e botão com branco
+    navy / ink        leitura, identidade e faixas escuras
+    silver            apoio neutro e referências ao acabamento dos produtos
 
-  Contrastes medidos (WCAG), para saber o que pode ser texto:
-    ink sobre snow 17,7 · ink-soft sobre snow 8,0 · navy sobre snow 15,6
-    ink sobre silver 11,3 · ink-soft sobre silver 5,1 · navy sobre silver 10,0
-    snow sobre navy 15,6 · silver sobre navy 10,0
-  ATENÇÃO: silver-deep sobre snow = 3,05 → só para texto grande ou enfeite;
-  silver sobre snow = 1,6 → NUNCA como texto. O prata puro entra em faixas,
-  preenchimentos e ícones, sempre com texto marinho/ink por cima.
+  Dourado e pink vivos não são texto pequeno sobre branco. Use as variantes
+  deep nos fundos claros. Os pares de texto são medidos em /styleguide.
 */
 @theme {
   /* Cores */
   --color-snow: #ffffff; /* fundo da página */
-  --color-pearl: #f0f3f8; /* seções tonais */
-  --color-line: #d7dde7; /* bordas decorativas (1,4:1: nunca como único indicador) */
+  --color-pearl: #fff9f1; /* creme: seções tonais */
+  --color-line: #e6dfd6; /* bordas decorativas, nunca como único indicador */
+  --color-gold: #e8b84a; /* ações principais com texto marinho */
+  --color-gold-deep: #8b5b0b; /* dourado escuro para texto e ícones */
+  --color-gold-mist: #fff3d6; /* fundo dourado suave */
+  --color-pink: #e94c9b; /* detalhes decorativos */
+  --color-pink-deep: #b42368; /* texto e seleção; botão com texto branco */
+  --color-pink-mist: #fff0f6; /* fundo rosa suave */
   --color-ink: #0a1830; /* texto e superfícies escuras (marinho quase preto) */
   --color-ink-soft: #40506a; /* texto secundário */
-  --color-navy: #0b2347; /* marca: botões, links, destaque, faixas escuras */
+  --color-navy: #0b2347; /* identidade, leitura e faixas escuras */
   --color-silver: #c9cfdb; /* marca: faixas claras, preenchimentos, ícones sobre o marinho */
   --color-silver-deep: #8a94a8; /* prata escuro: enfeites e linhas (nunca texto pequeno) */
   --color-silver-mist: #e3e8f0; /* tinta de fundo: seleção, aberto, avisos */
@@ -94,6 +96,12 @@
   background-image: linear-gradient(180deg, var(--color-silver) 0%, #d4dae4 58%, #e2e6ee 100%);
 }
 
+/* O topo coincide com a onda gold da seção anterior. */
+@utility bg-gold-sheen {
+  background-color: var(--color-gold-mist);
+  background-image: linear-gradient(180deg, var(--color-gold-mist) 0%, var(--color-pearl) 100%);
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
@@ -140,11 +148,11 @@
   }
 
   ::selection {
-    background-color: var(--color-silver);
+    background-color: var(--color-pink-mist);
     color: var(--color-navy);
   }
 
-  /* Foco SEMPRE visível (AA): 15,6:1 (marinho) sobre fundos claros, 10:1 (prata) sobre escuros */
+  /* Foco de alto contraste: marinho no claro e dourado/branco no escuro. */
   :focus-visible {
     outline: 3px solid var(--color-navy);
     outline-offset: 3px;
@@ -152,7 +160,7 @@
 
   [data-surface="dark"] :focus-visible,
   dialog.lightbox :focus-visible {
-    outline-color: var(--color-silver);
+    outline-color: var(--color-gold);
   }
 
   /* faixa marinho: o foco é branco (15,6:1) */
@@ -224,11 +232,11 @@
     box-shadow: var(--shadow-lift);
   }
 
-  /* aberta: fundo suave e uma barra navy na lateral */
+  /* Aberta: rosa suave e uma barra pink, além do indicador de expansão. */
   .accordion details[open] {
-    background-color: var(--color-silver-mist);
-    border-color: var(--color-silver);
-    box-shadow: inset 5px 0 0 var(--color-navy);
+    background-color: var(--color-pink-mist);
+    border-color: var(--color-pink-deep);
+    box-shadow: inset 5px 0 0 var(--color-pink-deep);
   }
 
   .accordion summary {
@@ -498,7 +506,7 @@
     width: 1.5rem;
     height: 1.5rem;
     border: 3px solid var(--color-line);
-    border-top-color: var(--color-navy);
+    border-top-color: var(--color-pink-deep);
     border-radius: 9999px;
     background: none;
     animation: spinner-turn 0.9s linear infinite;
@@ -517,7 +525,7 @@
 
   [data-surface="dark"] progress.spinner {
     border-color: rgb(255 255 255 / 0.25);
-    border-top-color: var(--color-silver);
+    border-top-color: var(--color-gold);
   }
 
   @keyframes spinner-turn {
@@ -668,7 +676,7 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.38) 50%, transparent 70%);
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.16) 50%, transparent 70%);
   translate: -130% 0;
   transition: translate 0.7s ease;
 }
@@ -699,7 +707,7 @@
       inset: 0 0 auto 0;
       z-index: 60;
       height: 4px;
-      background: linear-gradient(90deg, var(--color-silver), var(--color-navy));
+      background: linear-gradient(90deg, var(--color-gold), var(--color-pink));
       transform-origin: 0 50%;
       animation: progress-grow linear both;
       animation-timeline: scroll(root);

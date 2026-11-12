@@ -16,19 +16,19 @@ const shop = [
 ];
 
 const linkClass =
-  "inline-flex min-h-11 items-center font-semibold text-ink underline-offset-4 hover:underline";
+  "inline-flex min-h-11 items-center font-semibold text-ink underline-offset-4 hover:text-pink-deep hover:underline";
 
 const socialClass =
-  "grid size-11 place-items-center rounded-full border-2 border-ink text-lg text-ink transition-colors hover:bg-ink hover:text-silver";
+  "grid size-11 place-items-center rounded-full border-2 border-pink-deep text-lg text-pink-deep transition-colors hover:bg-pink-deep hover:text-white";
 
 /**
- * Rodapé da marca: faixa prata com loja, políticas e atendimento, e barra
+ * Rodapé da marca: faixa dourada clara com loja, políticas e atendimento, e barra
  * azul marinho com o copyright. Horário real, nunca "24h".
  */
 export function SiteFooter() {
   return (
     <footer>
-      <div data-surface="silver" className="relative overflow-hidden bg-silver-sheen text-ink">
+      <div data-surface="gold" className="relative overflow-hidden bg-gold-sheen text-ink">
         <Bubbles className="-right-24 -top-24 w-96 opacity-40" />
         <div className="container-page relative grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4 lg:py-16">
           <div>
@@ -124,7 +124,7 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div data-surface="navy" className="bg-navy text-white">
+      <div data-surface="navy" className="border-t-2 border-gold bg-navy text-white">
         <p className="container-page py-4 text-sm">
           © {new Date().getFullYear()} {site.name}. Todos os direitos reservados.
           {/* TODO-CLIENTE: CNPJ, razão social e endereço (obrigatórios na loja) */}

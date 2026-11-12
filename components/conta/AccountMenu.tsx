@@ -10,7 +10,7 @@ import { account, useAccount } from "@/lib/loja/conta";
 import { openAuth } from "@/lib/loja/dialogo-conta";
 
 const itemClass =
-  "flex min-h-11 w-full items-center gap-3 rounded-soft px-3 text-start font-semibold hover:bg-pearl";
+  "flex min-h-11 w-full items-center gap-3 rounded-soft px-3 text-start font-semibold hover:bg-pink-mist";
 
 /**
  * O canto direito do cabeçalho. Visitante: botão "Faça login" (abre o diálogo
@@ -48,8 +48,8 @@ export function AccountMenu({ className }: { className?: string }) {
         onClick={() => openAuth({ tab: "login" })}
         aria-label="Faça login"
         className={cn(
-          "inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full font-bold text-ink transition-colors hover:bg-pearl",
-          "size-11 md:w-auto md:border-2 md:border-ink md:px-4 md:hover:bg-ink md:hover:text-snow",
+          "inline-flex min-h-11 items-center justify-center gap-2 whitespace-nowrap rounded-full font-bold text-pink-deep transition-colors hover:bg-pink-mist",
+          "size-11 md:w-auto md:border-2 md:border-pink-deep md:px-4 md:hover:bg-pink-deep md:hover:text-snow",
           className,
         )}
       >
@@ -71,11 +71,11 @@ export function AccountMenu({ className }: { className?: string }) {
         aria-label="Minha conta"
         title="Minha conta"
         onClick={() => setOpen((o) => !o)}
-        className="flex min-h-11 items-center gap-2 rounded-full pr-1 hover:bg-pearl md:pr-3"
+        className="flex min-h-11 items-center gap-2 rounded-full pr-1 hover:bg-gold-mist md:pr-3"
       >
         <span
           aria-hidden="true"
-          className="grid size-10 place-items-center rounded-full bg-navy font-display text-lg font-extrabold text-white shadow-soft"
+          className="grid size-10 place-items-center rounded-full bg-gold font-display text-lg font-extrabold text-navy shadow-soft"
         >
           {initial}
         </span>
@@ -85,7 +85,7 @@ export function AccountMenu({ className }: { className?: string }) {
       {open && (
         <div
           id={panelId}
-          className="absolute right-0 top-full z-50 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-line bg-white p-2 shadow-lift"
+          className="absolute right-0 top-full z-50 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-line border-t-4 border-t-gold bg-white p-2 shadow-lift"
         >
           <div className="px-3 pb-3 pt-2">
             <p className="font-display text-lg font-extrabold">{firstName ? `Olá, ${firstName}!` : "Olá!"}</p>
@@ -95,14 +95,14 @@ export function AccountMenu({ className }: { className?: string }) {
           <ul className="grid gap-0.5 border-t border-line pt-2">
             <li>
               <Link href="/minha-conta" onClick={() => setOpen(false)} className={itemClass}>
-                <UserIcon className="text-xl text-navy" />
+                <UserIcon className="text-xl text-pink-deep" />
                 Minha conta
                 <ChevronRightIcon className="ml-auto text-lg text-ink-soft" />
               </Link>
             </li>
             <li>
               <Link href="/meus-pedidos" onClick={() => setOpen(false)} className={itemClass}>
-                <ReceiptIcon className="text-xl text-navy" />
+                <ReceiptIcon className="text-xl text-pink-deep" />
                 Meus pedidos
                 <ChevronRightIcon className="ml-auto text-lg text-ink-soft" />
               </Link>
@@ -111,7 +111,7 @@ export function AccountMenu({ className }: { className?: string }) {
             {user.isAdmin && (
               <li>
                 <Link href="/admin" onClick={() => setOpen(false)} className={itemClass}>
-                  <FaGear aria-hidden="true" className="text-xl text-navy" />
+                  <FaGear aria-hidden="true" className="text-xl text-pink-deep" />
                   Painel do dono
                   <ChevronRightIcon className="ml-auto text-lg text-ink-soft" />
                 </Link>

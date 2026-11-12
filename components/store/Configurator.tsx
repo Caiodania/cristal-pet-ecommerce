@@ -469,7 +469,7 @@ export function Configurator({ productType = "escultura" }: { productType?: "esc
               </div>
               <div className="grid items-center gap-6 md:grid-cols-2">
                 <div>
-                  <div className="rounded-card bg-gradient-to-b from-silver-mist to-pearl px-6 pb-2 pt-4">
+                  <div className="rounded-card bg-gradient-to-b from-gold-mist to-pearl px-6 pb-2 pt-4">
                     {isPortrait ? <PortraitVisual styleId={styleId} frameId={frameId} sizeId={sizeId} name={petName.trim() || undefined} /> : <SculptureIllustration
                       pose={poseId ?? "sentado"}
                       tint={tint}
@@ -522,7 +522,7 @@ export function Configurator({ productType = "escultura" }: { productType?: "esc
                   text={`Cada conta gera até ${config?.previewsPerAccount ?? previewsPerAccount} prévias grátis, compartilhadas entre quadros e esculturas. Escolha a foto agora e entre na hora de gerar.`}
                 />
               )}
-              {user && quota && <QuotaMeter quota={quota} className="rounded-soft bg-silver-mist p-4" />}
+              {user && quota && <QuotaMeter quota={quota} className="rounded-soft bg-gold-mist p-4" />}
               {outOfPreviews && (
                 <div className="grid gap-3">
                   <Alert>Você já usou todas as prévias da sua conta. Fale com a gente pelo WhatsApp que a gente ajuda você.</Alert>
@@ -580,7 +580,7 @@ export function Configurator({ productType = "escultura" }: { productType?: "esc
                   {ready.imageUrl && (
                     <div className="relative mx-auto w-fit max-w-full rotate-1 rounded-card">
                       <TiltedOutline rotate={-3} x={-8} y={10} />
-                      <span className="absolute -top-3 left-4 z-10 rounded-full bg-navy px-4 py-1 text-sm font-bold text-white shadow-soft">
+                      <span className="absolute -top-3 left-4 z-10 rounded-full bg-pink-deep px-4 py-1 text-sm font-bold text-white shadow-soft">
                         Prévia pronta!
                       </span>
                       {/* link assinado do servidor: não passa pelo otimizador de imagens */}

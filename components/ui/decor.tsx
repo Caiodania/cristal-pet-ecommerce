@@ -6,13 +6,15 @@ import { cn } from "@/lib/cn";
 // Peças decorativas da marca AUmor de Patas. Todas são aria-hidden: nenhuma
 // carrega informação.
 
-type Tone = "snow" | "pearl" | "mist" | "silver" | "navy" | "ink";
+type Tone = "snow" | "pearl" | "mist" | "silver" | "gold" | "pink" | "navy" | "ink";
 
 const waveColor: Record<Tone, string> = {
   snow: "text-snow",
   pearl: "text-pearl",
   mist: "text-silver-mist",
   silver: "text-silver",
+  gold: "text-gold-mist",
+  pink: "text-pink-mist",
   navy: "text-navy",
   ink: "text-ink",
 };
@@ -41,7 +43,7 @@ export function WaveDivider({ tone }: { tone: Tone }) {
 }
 
 /**
- * Contorno marinho inclinado atrás de fotos e cartões (a moldura da marca). Vai
+ * Contorno dourado inclinado atrás de fotos e cartões (a moldura da marca). Vai
  * dentro de um contêiner `relative`, antes do conteúdo.
  */
 export function TiltedOutline({
@@ -60,8 +62,7 @@ export function TiltedOutline({
     <span
       aria-hidden="true"
       className={cn(
-        "pointer-events-none absolute inset-0 rounded-[inherit] border-[3px] border-navy",
-        "[[data-surface=navy]_&]:border-white",
+        "pointer-events-none absolute inset-0 rounded-[inherit] border-[3px] border-gold",
         className,
       )}
       style={style}
@@ -105,7 +106,7 @@ export function SpinBadge({ className }: { className?: string }) {
           <textPath href="#spin-badge-path">ESCULTURA 3D • FEITA SOB MEDIDA • </textPath>
         </text>
       </svg>
-      <FaPaw className="relative text-2xl text-navy" />
+      <FaPaw className="relative text-2xl text-pink-deep" />
     </div>
   );
 }

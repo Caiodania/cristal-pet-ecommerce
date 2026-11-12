@@ -8,8 +8,8 @@
 //   cor-branco   a própria foto da Mel (resina branca)
 //   cor-<outra>  a mesma foto recolorida: a luminosidade (luz e sombra) é mantida
 //                e mapeada para a paleta da cor. É uma SIMULAÇÃO, não uma peça real.
-//   tipo-sentado a foto da Mel inteira
-//   tipo-busto   recorte da cabeça e do peito da Mel
+//   tipo-sentado a foto da Mel inteira (somente se não houver imagem própria)
+//   tipo-busto   recorte da cabeça e do peito da Mel (somente se não houver imagem própria)
 //
 // Para trocar por imagens de verdade: gere as imagens (veja
 // docs/prompts-esculturas.md), salve com o MESMO nome em
@@ -62,13 +62,17 @@ for (const [id, palette] of Object.entries(palettes)) {
   await save(`cor-${id}`, sharp(out, { raw: { width: info.width, height: info.height, channels: 3 } }));
 }
 
-// tipos
-await save("tipo-sentado", sharp(source));
-// busto: cabeça e peito (4:5), cortando antes das patas
-await save(
-  "tipo-busto",
-  sharp(source).extract({ left: 300, top: 230, width: 1000, height: 1250 }),
-);
+// Tipos: não sobrescrever os modelos fornecidos pelo cliente.
+if (!existsSync(`${outDir}/tipo-sentado.jpg`)) {
+  await save("tipo-sentado", sharp(source));
+}
+if (!existsSync(`${outDir}/tipo-busto.jpg`)) {
+  // Busto provisório: cabeça e peito (4:5), cortando antes das patas.
+  await save(
+    "tipo-busto",
+    sharp(source).extract({ left: 300, top: 230, width: 1000, height: 1250 }),
+  );
+}
 
 // nome em relevo: recorte real da base da Mel (patas e letras), para o passo do nome
 await save("nome-exemplo", sharp(source).extract({ left: 640, top: 1200, width: 640, height: 800 }));

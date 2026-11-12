@@ -55,9 +55,13 @@ for (const job of jobs) {
     const input = path.join(job.originals, file);
     const meta = await sharp(input).metadata();
     const ratio = (meta.width ?? 1) / (meta.height ?? 1);
+    const isPose = job.outDir === "public/images/opcoes" && id.startsWith("tipo-");
     await sharp(input)
-      // "cover" recorta o excesso para o formato 4:5 sem esticar a imagem
-      .resize(job.width, job.height, { fit: "cover", position: "attention" })
+      // Tipos preservam a foto inteira, incluindo a base da escultura.
+      // As demais imagens mantêm o recorte 4:5 usado na vitrine.
+      .resize(job.width, job.height, isPose
+        ? { fit: "contain", background: "#fff9f1" }
+        : { fit: "cover", position: "attention" })
       .webp({ quality: job.quality })
       .toFile(path.join(job.outDir, `${id}.webp`));
     converted += 1;

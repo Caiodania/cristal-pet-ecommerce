@@ -4,7 +4,7 @@ Loja de **esculturas 3D e quadros personalizados de pets**, com foco nas escultu
 
 **Atualização de quadros e Nano Banana:** a vitrine de quadros fica em `/quadros` e o configurador em `/quadros/personalizar`. O Supabase e a Netlify existentes são mantidos. Antes do deploy, aplique somente `supabase/migrations/0004_quadros.sql`; siga [a ativação do Nano Banana](docs/nano-banana.md) para as variáveis da função. Sem ativação, as prévias continuam explicitamente simuladas. O painel oferece foto, arte e especificações para encaminhamento manual ao parceiro; quadros não geram STL. Tamanhos, molduras e preços provisórios ficam em `content/quadros.ts`.
 
-É um projeto **comercial** (loja). A marca é a **AUmor de Patas** (logo e paleta enviados pelo cliente: azul marinho, prata e branco). O que é institucional da Cristal Pet (banho e tosa móvel) fica no outro site.
+É um projeto **comercial** (loja). A marca é a **AUmor de Patas**: azul marinho com dourado, detalhes pink e fundos claros, conforme a atualização visual solicitada pelo cliente. Os tokens ficam em `app/globals.css`, com amostras e contrastes em `/styleguide`. O que é institucional da Cristal Pet (banho e tosa móvel) fica no outro site.
 
 **Stack:** Next.js (App Router) + TypeScript + Tailwind v4, export estático (`out/`) publicado na **Netlify**; uma **Netlify Function** para a API; **Supabase** (Postgres + Storage) em produção; prévias via **Nano Banana/Gemini** ou mock e provedor 3D separado (ainda simulado).
 

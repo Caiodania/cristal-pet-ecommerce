@@ -35,8 +35,8 @@ type OptionGroupProps = {
 const frame = cn(
   "relative flex h-full overflow-hidden rounded-card border-2 border-line bg-white shadow-soft",
   "transition-[border-color,box-shadow,background-color,transform] duration-200",
-  "hover:border-navy/50 hover:shadow-lift motion-safe:hover:-translate-y-0.5",
-  "peer-checked:border-navy peer-checked:bg-white peer-checked:shadow-lift",
+  "hover:border-pink-deep/60 hover:shadow-lift motion-safe:hover:-translate-y-0.5",
+  "peer-checked:border-pink-deep peer-checked:bg-pink-mist peer-checked:shadow-lift",
   "peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-navy",
   "[&_.ok]:scale-50 [&_.ok]:opacity-0 peer-checked:[&_.ok]:scale-100 peer-checked:[&_.ok]:opacity-100",
 );
@@ -102,13 +102,13 @@ export function OptionGroup({
                 {option.detail && <span className="text-sm text-ink-soft">{option.detail}</span>}
               </span>
               {option.badge && (
-                <span className="absolute left-3 top-3 rounded-full bg-ink px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                <span className="absolute left-3 top-3 rounded-full bg-gold px-3 py-1 text-xs font-bold uppercase tracking-wide text-navy">
                   {option.badge}
                 </span>
               )}
               <span
                 aria-hidden="true"
-                className="ok absolute right-3 top-3 grid size-7 place-items-center rounded-full bg-navy text-white shadow-soft transition duration-200"
+                className="ok absolute right-3 top-3 grid size-7 place-items-center rounded-full bg-pink-deep text-white shadow-soft transition duration-200"
               >
                 <CheckIcon className="text-base" />
               </span>

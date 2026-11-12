@@ -8,16 +8,16 @@ import { site } from "@/content/site";
 
 /**
  * Chamada final, em faixa azul marinho (branco: 15,6:1) com a escultura da Mel de
- * novo à vista e a onda para o rodapé prata.
+ * novo à vista e a onda para o rodapé dourado claro.
  */
 export function FinalCta() {
   const sculpture = exemplos[0].sculpture;
   return (
-    <Section tone="navy" wave="silver" labelledBy="cta-final-titulo" className="overflow-hidden">
+    <Section tone="navy" wave="gold" labelledBy="cta-final-titulo" className="overflow-hidden">
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="drift absolute -right-20 -top-24 size-[28rem] rounded-full bg-white/15 blur-3xl" />
+        <div className="drift absolute -right-20 -top-24 size-[28rem] rounded-full bg-pink/20 blur-3xl" />
         <div
-          className="drift absolute -bottom-32 left-1/4 size-[26rem] rounded-full bg-silver/25 blur-3xl"
+          className="drift absolute -bottom-32 left-1/4 size-[26rem] rounded-full bg-gold/15 blur-3xl"
           style={{ animationDelay: "-7s" }}
         />
       </div>
@@ -56,7 +56,7 @@ export function FinalCta() {
               />
             </figure>
             <span className="float-slow pointer-events-none absolute -left-4 bottom-10 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-extrabold text-ink shadow-lift">
-              <FaWandMagicSparkles aria-hidden="true" className="text-navy" />
+              <FaWandMagicSparkles aria-hidden="true" className="text-pink-deep" />
               Prévia grátis
             </span>
           </div>

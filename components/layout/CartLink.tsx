@@ -28,7 +28,7 @@ export function CartBadge({ className }: { className?: string }) {
     <span
       aria-hidden="true"
       className={cn(
-        "absolute right-0.5 top-0.5 grid min-w-5 place-items-center rounded-full bg-navy px-1 text-[0.6875rem] font-bold leading-5 text-white",
+        "absolute right-0.5 top-0.5 grid min-w-5 place-items-center rounded-full bg-pink-deep px-1 text-[0.6875rem] font-bold leading-5 text-white",
         className,
       )}
     >

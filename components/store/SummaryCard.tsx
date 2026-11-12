@@ -36,11 +36,11 @@ export function SummaryCard({ chosen, photoUrl, previewUrl }: SummaryCardProps) 
   return (
     <aside
       aria-label="Resumo da sua escultura"
-      className="rounded-card border border-line bg-white p-5 shadow-soft lg:sticky lg:top-24"
+      className="rounded-card border border-line border-t-4 border-t-gold bg-white p-5 shadow-soft lg:sticky lg:top-24"
     >
       <h2 className="font-display text-xl font-extrabold">Sua escultura</h2>
 
-      <div className="mt-3 rounded-soft bg-gradient-to-b from-silver-mist to-pearl px-4 pb-1 pt-3">
+      <div className="mt-3 rounded-soft bg-gradient-to-b from-gold-mist to-pearl px-4 pb-1 pt-3">
         <SculptureIllustration
           pose={chosen.poseId ?? "sentado"}
           tint={color?.swatch ?? "#f3f0e8"}
@@ -78,7 +78,7 @@ export function SummaryCard({ chosen, photoUrl, previewUrl }: SummaryCardProps) 
         ))}
       </dl>
 
-      <div className="mt-4 border-t border-line pt-4">
+      <div className="mt-4 rounded-soft bg-gold-mist p-3">
         <p className="flex justify-between gap-3">
           <span className="text-ink-soft">Valor estimado</span>
           <strong>{complete ? formatCents(total ?? null) : "—"}</strong>

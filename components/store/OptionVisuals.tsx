@@ -29,7 +29,7 @@ export function OptionVisual({
         width={photo.width}
         height={photo.height}
         sizes={sizes}
-        className="absolute inset-0 size-full object-cover"
+        className={`absolute inset-0 size-full ${kind === "tipo" ? "object-contain" : "object-cover"}`}
       />
     );
   }

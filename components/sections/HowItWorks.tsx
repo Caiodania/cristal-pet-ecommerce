@@ -5,15 +5,16 @@ import { Accent, Section, SectionHeader } from "@/components/ui/Section";
 import { passos, previewsPerAccount } from "@/content/estatua";
 
 const icons = [FaCamera, FaWandMagicSparkles, FaWhatsapp];
+const iconColors = ["bg-gold text-navy", "bg-pink-deep text-white", "bg-navy text-gold"];
 
 /**
  * "Como funciona": os três passos da compra, em cartões brancos soltos sobre a
- * faixa prata, ligados por uma linha pontilhada no desktop. Cada passo tem
+ * faixa rosa suave, ligados por uma linha pontilhada no desktop. Cada passo tem
  * o seu ícone e o número em marca-d'água.
  */
 export function HowItWorks() {
   return (
-    <Section id="como-funciona" tone="silver" wave="snow" labelledBy="como-funciona-titulo" className="overflow-hidden">
+    <Section id="como-funciona" tone="pink" wave="snow" labelledBy="como-funciona-titulo" className="overflow-hidden">
       <Bubbles className="-right-24 -top-20 w-80 opacity-30" />
       <Bubbles className="-bottom-24 -left-24 w-72 opacity-25" />
       <div className="relative">
@@ -30,7 +31,7 @@ export function HowItWorks() {
         <div className="relative mt-16">
           <span
             aria-hidden="true"
-            className="absolute left-[17%] right-[17%] top-9 hidden border-t-4 border-dashed border-white/80 lg:block"
+            className="absolute left-[17%] right-[17%] top-9 hidden border-t-4 border-dashed border-pink/25 lg:block"
           />
           <ol className="relative grid gap-8 lg:grid-cols-3">
             {passos.map((passo, index) => {
@@ -44,13 +45,13 @@ export function HowItWorks() {
                 >
                   <span
                     aria-hidden="true"
-                    className="absolute right-5 top-1 font-display text-8xl font-extrabold leading-none text-navy/10"
+                    className="absolute right-5 top-1 font-display text-8xl font-extrabold leading-none text-gold/30"
                   >
                     {passo.number}
                   </span>
                   <span
                     aria-hidden="true"
-                    className="absolute left-1/2 top-0 grid size-[4.5rem] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-2xl bg-navy text-3xl text-white shadow-lift transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110 motion-safe:rotate-3"
+                    className={`absolute left-1/2 top-0 grid size-[4.5rem] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-2xl text-3xl shadow-lift transition-transform duration-300 group-hover:rotate-6 group-hover:scale-110 motion-safe:rotate-3 ${iconColors[index]}`}
                   >
                     <Icon />
                   </span>

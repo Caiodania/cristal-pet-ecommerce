@@ -50,5 +50,5 @@ No site gerado, cada espaço reservado leva `data-todo="…"` no HTML e aparece 
   Para acrescentar mais: gerar a imagem com os prompts de [`docs/prompts-esculturas.md`](prompts-esculturas.md),
   salvar em `public/images/esculturas/_originais/<id>.png` (ou .jpg) e rodar `npm run esculturas`.
   **Autorização dos tutores** (`TODO-CLIENTE`): confirmar o uso da foto e do nome de cada pet na vitrine; os nomes de Duque, Sol, Nina, Neve e Pipoca são de demonstração.
-- **Imagens das opções do configurador** (cor, tipo, exemplo do nome): hoje são provisórias, derivadas da escultura da Mel (cores recoloridas por computador). Falta `tipo-na-pose`. Para trocar por reais, veja o fim de [`prompts-esculturas.md`](prompts-esculturas.md).
+- **Imagens das opções do configurador**: os três tipos já usam as fotos fornecidas pelo cliente — Luna (pose da foto), Apolo (sentado) e Toby (busto). As cores e o exemplo do nome continuam como referências provisórias da Mel. Para atualizar, veja o fim de [`prompts-esculturas.md`](prompts-esculturas.md).
 - Logo em alta resolução: o do cliente tem 1254 px e fundo branco; peça o arquivo vetorial (SVG/PDF) ou um PNG com fundo transparente maior, se tiver, e troque em `assets/marca/` (`npm run marca` refaz tudo). A imagem de compartilhamento (OG) e o favicon já saem do logo.

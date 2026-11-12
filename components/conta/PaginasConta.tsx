@@ -21,7 +21,7 @@ import { QuotaMeter } from "./QuotaMeter";
 // <Suspense>). Tudo aqui roda no navegador: a conta vive no cookie da sessão.
 
 function AuthCard({ children }: { children: React.ReactNode }) {
-  return <Card className="mx-auto w-full max-w-lg rounded-3xl shadow-lift">{children}</Card>;
+  return <Card className="mx-auto w-full max-w-lg rounded-3xl border-t-4 border-t-gold shadow-lift">{children}</Card>;
 }
 
 /** Quem já está logado não precisa ver o formulário: vai direto para onde ia. */
@@ -208,11 +208,11 @@ export function MinhaContaCorpo() {
   const noMore = quota?.remaining === 0;
   return (
     <div className="mx-auto grid max-w-3xl gap-6">
-      <Card className="rounded-3xl shadow-lift">
+      <Card className="rounded-3xl border-t-4 border-t-gold shadow-lift">
         <div className="flex flex-wrap items-center gap-4">
           <span
             aria-hidden="true"
-            className="grid size-16 place-items-center rounded-full bg-navy font-display text-3xl font-extrabold text-white shadow-soft"
+            className="grid size-16 place-items-center rounded-full bg-gold font-display text-3xl font-extrabold text-navy shadow-soft"
           >
             {(user.name ?? user.email).trim().charAt(0).toUpperCase()}
           </span>
@@ -253,7 +253,7 @@ export function MinhaContaCorpo() {
       </Card>
 
       {user.isAdmin && (
-        <Card className="rounded-3xl border-navy/40">
+        <Card className="rounded-3xl border-gold/60">
           <h2 className="font-display text-xl font-extrabold">Painel do dono</h2>
           <p className="mt-1 text-ink-soft">Pedidos, dados de envio, artes dos quadros e arquivos 3D das esculturas.</p>
           <div className="mt-4">
@@ -275,7 +275,7 @@ export function MinhaContaCorpo() {
       </Card>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/politica-de-privacidade" className="inline-flex min-h-11 items-center text-sm font-semibold text-navy underline underline-offset-4">
+        <Link href="/politica-de-privacidade" className="inline-flex min-h-11 items-center text-sm font-semibold text-pink-deep underline underline-offset-4">
           Política de privacidade
         </Link>
         <Button

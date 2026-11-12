@@ -110,7 +110,7 @@ function Sent({ order, token }: { order: OrderDto; token: string; items: CartIte
       <Alert tone="success">Pedido registrado!</Alert>
       <div>
         <p className="text-ink-soft">O código do seu pedido é</p>
-        <p className="font-display text-5xl font-extrabold text-navy">{order.code}</p>
+        <p className="font-display text-5xl font-extrabold text-pink-deep">{order.code}</p>
       </div>
       <p className="text-lead text-ink-soft">
         Falta só um passo: toque no botão abaixo e envie o pedido pelo WhatsApp. Lá combinamos o pagamento e a
@@ -125,7 +125,7 @@ function Sent({ order, token }: { order: OrderDto; token: string; items: CartIte
         </Button>
       </div>
       <p className="text-sm text-ink-soft">
-        Guarde o código. O pedido também fica em <Link href="/meus-pedidos" className="font-semibold text-navy underline underline-offset-4">Meus pedidos</Link>, na sua conta, em qualquer aparelho.
+        Guarde o código. O pedido também fica em <Link href="/meus-pedidos" className="font-semibold text-pink-deep underline underline-offset-4">Meus pedidos</Link>, na sua conta, em qualquer aparelho.
       </p>
     </div>
   );
@@ -267,7 +267,7 @@ export function CartView() {
         ref={formRef}
         onSubmit={submit}
         noValidate
-        className="grid gap-5 rounded-card border border-line bg-white p-5 shadow-soft sm:p-6"
+        className="grid gap-5 rounded-card border border-line border-t-4 border-t-gold bg-white p-5 shadow-soft sm:p-6"
       >
         <h2 className="font-display text-2xl font-extrabold">Enviar o pedido</h2>
 
@@ -329,7 +329,7 @@ export function CartView() {
               <Link
                 href="/politica-de-privacidade"
                 target="_blank"
-                className="font-semibold text-navy underline underline-offset-4"
+                className="font-semibold text-pink-deep underline underline-offset-4"
               >
                 política de privacidade
                 <span className="sr-only"> (abre em nova aba)</span>

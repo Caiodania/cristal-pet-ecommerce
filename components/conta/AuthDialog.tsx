@@ -24,7 +24,7 @@ function Body({ request }: { request: AuthDialogRequest }) {
   }
 
   return (
-    <div className="p-6 sm:p-8">
+    <div className="border-t-4 border-gold p-6 sm:p-8">
       <div className="flex items-start justify-between gap-4">
         <h2 id="auth-dialog-titulo" className="font-display text-2xl font-extrabold sm:text-3xl">
           {TITLES[tab]}
@@ -33,20 +33,20 @@ function Body({ request }: { request: AuthDialogRequest }) {
           type="button"
           onClick={closeAuth}
           aria-label="Fechar"
-          className="-mr-2 -mt-1 grid size-11 shrink-0 place-items-center rounded-full text-ink hover:bg-pearl"
+          className="-mr-2 -mt-1 grid size-11 shrink-0 place-items-center rounded-full text-ink hover:bg-pink-mist"
         >
           <CloseIcon className="text-2xl" />
         </button>
       </div>
 
       {request.reason && (
-        <p role="note" className="mt-3 rounded-soft bg-silver-mist p-3 font-semibold">
+        <p role="note" className="mt-3 rounded-soft bg-gold-mist p-3 font-semibold">
           {request.reason}
         </p>
       )}
 
       {tab !== "forgot" && (
-        <div role="tablist" aria-label="Entrar ou criar conta" className="mt-5 grid grid-cols-2 rounded-full bg-pearl p-1">
+        <div role="tablist" aria-label="Entrar ou criar conta" className="mt-5 grid grid-cols-2 rounded-full bg-pink-mist p-1">
           {(["login", "signup"] as const).map((id) => (
             <button
               key={id}
@@ -56,7 +56,7 @@ function Body({ request }: { request: AuthDialogRequest }) {
               onClick={() => setTab(id)}
               className={cn(
                 "min-h-11 rounded-full font-bold transition-colors",
-                tab === id ? "bg-white text-ink shadow-soft" : "text-ink-soft hover:text-ink",
+                tab === id ? "bg-pink-deep text-white shadow-soft" : "text-ink-soft hover:text-pink-deep",
               )}
             >
               {id === "login" ? "Entrar" : "Criar conta"}

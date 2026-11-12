@@ -11,13 +11,13 @@ import { catalog } from "@/content/estatua";
 import { optionImage } from "@/content/opcoes";
 import { cn } from "@/lib/cn";
 import { estimate, formatCents } from "@/lib/loja/estimativa";
+import { SculpturePreview } from "./SculpturePreview";
 
 const legend = "mb-3 font-display text-lg font-extrabold";
 
 /**
- * "Monte a sua": uma prévia ao vivo na vitrine. Troque tamanho, tipo e cor e a
- * escultura muda na hora (as fotos de cor são ilustrativas); o botão leva ao
- * configurador já com as escolhas. É um gostinho: nome e foto vêm depois.
+ * "Monte a sua": tipo e cor mudam na foto, preservando o cenário. As escolhas
+ * seguem para o configurador, onde entram nome e foto do pet.
  */
 export function Playground() {
   const [sizeId, setSizeId] = useState("media");
@@ -28,8 +28,7 @@ export function Playground() {
   const size = catalog.sizes.find((s) => s.id === sizeId) ?? catalog.sizes[0];
   const pose = catalog.poses.find((p) => p.id === poseId) ?? catalog.poses[0];
   const total = estimate([{ sizeId, poseId, colorId }]).totalCents;
-  const bust = poseId === "busto";
-  const hasPhoto = Boolean(optionImage("cor", colorId, ""));
+  const photo = optionImage("tipo", poseId, "");
 
   const href = `/personalizar?tamanho=${sizeId}&tipo=${poseId}&cor=${colorId}`;
 
@@ -39,29 +38,15 @@ export function Playground() {
       <div className="relative mx-auto w-full max-w-md">
         <TiltedOutline rotate={-3} x={-12} y={12} className="rounded-[2rem]" />
         <figure className="relative aspect-[4/5] overflow-hidden rounded-[2rem] border-4 border-white bg-pearl shadow-lift">
-          {catalog.colors.map((c) => {
-            const photo = optionImage("cor", c.id, "");
-            if (!photo) return null;
-            return (
-              <Image
-                key={c.id}
-                src={photo.src}
-                alt=""
-                width={photo.width}
-                height={photo.height}
-                sizes="(max-width: 640px) 90vw, 440px"
-                aria-hidden="true"
-                className={cn(
-                  "absolute inset-0 size-full object-cover transition-[opacity,scale] duration-700 ease-out",
-                  c.id === colorId ? "opacity-100" : "opacity-0",
-                  // busto: aproxima do rosto (a foto de cada cor é da peça sentada)
-                  bust ? "origin-[50%_22%] scale-[1.55]" : "scale-100",
-                )}
-              />
-            );
-          })}
-          {!hasPhoto && (
-            <span className="absolute inset-0 grid place-items-center bg-gradient-to-b from-silver-mist to-pearl p-8">
+          {photo ? (
+            <SculpturePreview
+              photo={photo}
+              poseId={poseId}
+              tint={color.swatch}
+              label={`Modelo de escultura: ${pose.label.toLowerCase()}, na cor ${color.label.toLowerCase()}`}
+            />
+          ) : (
+            <span className="absolute inset-0 grid place-items-center bg-gradient-to-b from-gold-mist to-pearl p-8">
               <SculptureIllustration pose={poseId} tint={color.swatch} />
             </span>
           )}
@@ -76,12 +61,15 @@ export function Playground() {
               {size.label} · {pose.label} · {color.label}
             </span>
             <span className="rounded-full bg-ink px-3 py-1.5 text-xs font-bold text-white">
-              Imagem ilustrativa
+              Simulação ilustrativa
             </span>
           </figcaption>
         </figure>
+        <p className="mt-4 text-center text-sm text-ink-soft">
+          Simulação de formato e cor. O tom final pode variar com o material e a luz.
+        </p>
         {poseId === "na-pose" && (
-          <p className="mt-4 text-center text-sm font-semibold text-ink-soft">
+          <p className="mt-2 text-center text-sm font-semibold text-ink-soft">
             Aqui a pose segue a da foto que você enviar.
           </p>
         )}
@@ -105,8 +93,8 @@ export function Playground() {
                 <span
                   className={cn(
                     "relative grid h-full justify-items-center gap-1 rounded-2xl border-2 border-line bg-white p-3 text-center shadow-soft",
-                    "transition-[border-color,box-shadow,translate] duration-200 hover:border-navy/50 motion-safe:hover:-translate-y-0.5",
-                    "peer-checked:border-navy peer-checked:shadow-lift",
+                    "transition-[border-color,box-shadow,background-color,translate] duration-200 hover:border-pink-deep/60 motion-safe:hover:-translate-y-0.5",
+                    "peer-checked:border-pink-deep peer-checked:bg-pink-mist peer-checked:shadow-lift",
                     "peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-navy",
                     "[&_.ok]:scale-50 [&_.ok]:opacity-0 peer-checked:[&_.ok]:scale-100 peer-checked:[&_.ok]:opacity-100",
                   )}
@@ -122,7 +110,7 @@ export function Playground() {
                   </span>
                   <span
                     aria-hidden="true"
-                    className="ok absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-navy text-white transition duration-200"
+                    className="ok absolute right-2 top-2 grid size-5 place-items-center rounded-full bg-pink-deep text-white transition duration-200"
                   >
                     <CheckIcon className="text-xs" />
                   </span>
@@ -150,8 +138,8 @@ export function Playground() {
                   <span
                     className={cn(
                       "flex min-h-12 items-center gap-3 rounded-full border-2 border-line bg-white py-1.5 pl-1.5 pr-5 font-bold shadow-soft",
-                      "transition-[border-color,box-shadow,background-color] duration-200 hover:border-navy/50",
-                      "peer-checked:border-navy peer-checked:bg-navy peer-checked:text-white peer-checked:shadow-lift",
+                      "transition-[border-color,box-shadow,background-color] duration-200 hover:border-pink-deep/60",
+                      "peer-checked:border-pink-deep peer-checked:bg-pink-mist peer-checked:text-pink-deep peer-checked:shadow-lift",
                       "peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-2 peer-focus-visible:outline-navy",
                     )}
                   >
@@ -166,7 +154,7 @@ export function Playground() {
                           className="size-full object-cover"
                         />
                       ) : (
-                        <span className="grid size-full place-items-center bg-silver-mist">
+                        <span className="grid size-full place-items-center bg-gold-mist">
                           <span className="block w-7">
                             <SculptureIllustration pose={p.id} tint="#d6c9b3" />
                           </span>
@@ -200,7 +188,7 @@ export function Playground() {
                   className={cn(
                     "grid size-14 place-items-center rounded-full border-4 border-white shadow-soft ring-2 ring-line",
                     "transition-[box-shadow,scale] duration-200 group-hover:scale-110",
-                    "peer-checked:ring-4 peer-checked:ring-navy",
+                    "peer-checked:ring-4 peer-checked:ring-pink-deep",
                     "peer-focus-visible:outline-[3px] peer-focus-visible:outline-offset-4 peer-focus-visible:outline-navy",
                     "[&_.ok]:opacity-0 peer-checked:[&_.ok]:opacity-100",
                   )}
@@ -219,7 +207,7 @@ export function Playground() {
           </div>
         </fieldset>
 
-        <div className="rounded-3xl bg-white p-5 shadow-soft sm:flex sm:items-center sm:justify-between sm:gap-6">
+        <div className="rounded-3xl border border-gold/60 bg-white p-5 shadow-soft sm:flex sm:items-center sm:justify-between sm:gap-6">
           <div>
             <p className="text-sm font-semibold text-ink-soft">Sua escolha</p>
             <p className="font-display text-xl font-extrabold">

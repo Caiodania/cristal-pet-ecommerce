@@ -21,6 +21,12 @@ export const metadata: Metadata = {
 const swatchClass: Record<PaletteName, string> = {
   snow: "bg-snow",
   pearl: "bg-pearl",
+  gold: "bg-gold",
+  "gold-deep": "bg-gold-deep",
+  "gold-mist": "bg-gold-mist",
+  pink: "bg-pink",
+  "pink-deep": "bg-pink-deep",
+  "pink-mist": "bg-pink-mist",
   "silver-mist": "bg-silver-mist",
   line: "bg-line",
   silver: "bg-silver",
@@ -35,6 +41,17 @@ const pairs: Array<{ fg: PaletteName | "white"; bg: PaletteName | "white"; note:
   { fg: "ink", bg: "snow", note: "texto principal" },
   { fg: "ink-soft", bg: "snow", note: "texto secundário" },
   { fg: "ink-soft", bg: "pearl", note: "texto secundário em seção tonal" },
+  { fg: "navy", bg: "gold", note: "botão principal dourado" },
+  { fg: "ink-soft", bg: "gold-mist", note: "texto sobre dourado suave" },
+  { fg: "gold-deep", bg: "gold-mist", note: "ícone e texto dourado no claro" },
+  { fg: "pink-deep", bg: "snow", note: "links e detalhes pink" },
+  { fg: "pink-deep", bg: "gold-mist", note: "destaque pink no título da vitrine" },
+  { fg: "pink-deep", bg: "pink-mist", note: "opção selecionada" },
+  { fg: "white", bg: "pink-deep", note: "botão pink" },
+  { fg: "gold", bg: "navy", note: "destaques em faixa marinho" },
+  { fg: "gold", bg: "ink", note: "destaques em faixa escura" },
+  { fg: "gold", bg: "snow", note: "dourado vivo como texto (NÃO USAR)" },
+  { fg: "pink", bg: "snow", note: "pink vivo: somente decoração ou texto grande" },
   { fg: "ink-soft", bg: "silver", note: "texto secundário na faixa prata" },
   { fg: "navy", bg: "snow", note: "links e palavra de destaque" },
   { fg: "navy", bg: "silver-mist", note: "texto sobre tinta prata" },
@@ -96,7 +113,7 @@ export default function StyleGuide() {
               Paleta com <Accent>contraste medido</Accent>
             </>
           }
-          description="O prata puro não serve para texto: só entra em faixas, preenchimentos e ícones, sempre com texto marinho ou escuro por cima."
+          description="Dourado nas ações principais, pink nos detalhes e azul marinho na leitura. Nos fundos claros, use gold-deep e pink-deep para texto; as cores vivas ficam nos preenchimentos e enfeites."
         />
 
         <ul className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
@@ -369,7 +386,7 @@ export default function StyleGuide() {
               Especialistas em <Accent>filhotes</Accent>
             </>
           }
-          description="O destaque troca para prata e o foco também, mantendo o contraste acima de 7:1."
+          description="O destaque e o foco ficam dourados sobre o fundo escuro. O botão pink usa texto branco para manter a leitura."
         />
         <div className="mt-10 flex justify-center">
           <Button variant="accent" size="lg">

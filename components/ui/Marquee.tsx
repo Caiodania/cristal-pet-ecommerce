@@ -18,14 +18,14 @@ export function Marquee({ items, className }: MarqueeProps) {
       {items.map((item) => (
         <li key={item} className="flex items-center whitespace-nowrap font-display text-lg font-extrabold tracking-wide">
           <span className="px-6">{item}</span>
-          <FaPaw className="text-base opacity-80" />
+          <FaPaw className="text-base text-pink" />
         </li>
       ))}
     </ul>
   );
 
   return (
-    <div aria-hidden="true" className={cn("marquee bg-navy py-3 text-white", className)}>
+    <div aria-hidden="true" className={cn("marquee bg-navy py-3 text-gold-mist", className)}>
       <div className="marquee-track">
         {row(1)}
         {row(2)}

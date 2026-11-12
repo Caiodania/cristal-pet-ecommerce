@@ -23,7 +23,7 @@ export function SculptureCard({ item, priority = false }: { item: Exemplo; prior
             priority={priority}
             className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
-          <span className="absolute left-3 top-3 rounded-full bg-navy px-3 py-1 text-xs font-bold text-white">
+          <span className="absolute left-3 top-3 rounded-full bg-gold px-3 py-1 text-xs font-bold text-navy">
             Escultura 3D
           </span>
         </>

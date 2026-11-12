@@ -6,15 +6,13 @@ import {
 } from "@/lib/loja/tipos";
 import { cn } from "@/lib/cn";
 
-// Pares de cor já medidos (texto sobre fundo): novo 15,6 · confirmado 12,7 ·
-// produção 15,6 · pronto 11,3 · entregue 8 · cancelado 8. Cada status tem um
-// desenho próprio (cheio, tinta, contorno, prata, cinza, tracejado), então não
-// dependem só da cor para serem distinguidos.
+// Cada status tem rótulo e desenho próprio (cheio, tinta, contorno, dourado,
+// neutro, riscado), sem depender só da cor para ser distinguido.
 const tone: Record<OrderStatus, string> = {
   new: "bg-navy text-white",
-  confirmed: "bg-silver-mist text-navy ring-1 ring-inset ring-navy/30",
+  confirmed: "bg-pink-mist text-pink-deep ring-1 ring-inset ring-pink-deep/30",
   in_production: "bg-white text-navy ring-2 ring-inset ring-navy",
-  ready: "bg-silver text-ink",
+  ready: "bg-gold text-navy",
   delivered: "bg-pearl text-ink-soft ring-1 ring-inset ring-ink-soft/30",
   canceled: "bg-white text-ink-soft ring-1 ring-inset ring-ink-soft/40 line-through",
 };
@@ -65,7 +63,7 @@ export function Timeline({
               aria-hidden="true"
               className={cn(
                 "absolute left-0 top-1.5 size-3 rounded-full",
-                index === events.length - 1 ? "bg-navy" : "bg-field",
+                index === events.length - 1 ? "bg-pink-deep" : "bg-field",
               )}
             />
             {index < events.length - 1 && (
@@ -105,8 +103,8 @@ export function Alert({
 }) {
   const styles = {
     error: "border-danger bg-white text-danger",
-    info: "border-navy bg-silver-mist text-ink",
-    success: "border-navy bg-silver-mist text-ink",
+    info: "border-gold-deep bg-gold-mist text-ink",
+    success: "border-navy bg-pearl text-ink",
   } as const;
   return (
     <div

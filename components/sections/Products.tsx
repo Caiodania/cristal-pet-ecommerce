@@ -17,7 +17,7 @@ export function Products() {
             Escolha, veja como fica e <Accent>peça</Accent>
           </>
         }
-        description="Mude o tamanho, o tipo e a cor e a escultura muda na hora. É só um gostinho: o nome e a foto do seu pet vêm no próximo passo."
+        description="Escolha o tamanho e veja o tipo e a cor mudarem na escultura. Depois, personalize com o nome e a foto do seu pet."
       />
       <Playground />
     </Section>

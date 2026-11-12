@@ -2,7 +2,7 @@ import type { ElementType, ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { HeartMark, WaveDivider } from "./decor";
 
-export type SectionTone = "snow" | "pearl" | "mist" | "silver" | "navy" | "ink";
+export type SectionTone = "snow" | "pearl" | "mist" | "silver" | "gold" | "pink" | "navy" | "ink";
 
 // Pares de cor já medidos (texto sobre fundo): ink/snow 17,7 · ink/silver 11,3 ·
 // branco/navy 15,6 · snow/ink 17,7.
@@ -11,14 +11,18 @@ const tones: Record<SectionTone, string> = {
   pearl: "bg-pearl text-ink",
   mist: "bg-silver-mist text-ink",
   silver: "bg-silver-sheen text-ink",
+  gold: "bg-gold-sheen text-ink",
+  pink: "bg-pink-mist text-ink",
   navy: "bg-navy text-white",
   ink: "bg-ink text-snow",
 };
 
 // Faixas coloridas trocam a cor do foco, do destaque do título e dos botões.
-const surfaces: Partial<Record<SectionTone, "dark" | "silver" | "navy">> = {
+const surfaces: Partial<Record<SectionTone, "dark" | "silver" | "gold" | "pink" | "navy">> = {
   ink: "dark",
   silver: "silver",
+  gold: "gold",
+  pink: "pink",
   navy: "navy",
 };
 
@@ -93,9 +97,8 @@ export function SectionHeader({
         <p
           className={cn(
             "mb-3 flex items-center gap-2 text-eyebrow font-extrabold uppercase",
-            // eyebrow pequeno precisa de 4,5:1: navy no claro, ink no prata,
-            // branco no marinho, prata no escuro
-            "text-navy [[data-surface=silver]_&]:text-ink [[data-surface=navy]_&]:text-white [[data-surface=dark]_&]:text-silver",
+            // Pink profundo nos claros; dourado nos fundos escuros.
+            "text-pink-deep [[data-surface=silver]_&]:text-ink [[data-surface=navy]_&]:text-gold [[data-surface=dark]_&]:text-gold",
             centered && "justify-center",
           )}
         >
@@ -125,19 +128,18 @@ export function SectionHeader({
 }
 
 /**
- * Palavra de destaque do título. No fundo claro: texto marinho sobre um "marca-texto"
- * prateado; na faixa prata, uma etiqueta marinho com texto branco (15,6:1); na faixa
- * marinho, texto branco com sublinhado ondulado prateado; no escuro, texto prata.
+ * Destaque dourado nos títulos claros, pink sobre creme e dourado no escuro.
  */
 export function Accent({ children }: { children: ReactNode }) {
   return (
     <em
       className={cn(
         "font-extrabold not-italic text-navy",
-        "px-1 [box-decoration-break:clone] bg-[linear-gradient(transparent_62%,var(--color-silver)_62%,var(--color-silver)_94%,transparent_94%)]",
+        "px-1 [box-decoration-break:clone] bg-[linear-gradient(transparent_62%,var(--color-gold)_62%,var(--color-gold)_94%,transparent_94%)]",
         "[[data-surface=silver]_&]:rounded-xl [[data-surface=silver]_&]:bg-navy [[data-surface=silver]_&]:bg-none [[data-surface=silver]_&]:px-2 [[data-surface=silver]_&]:text-white",
-        "[[data-surface=dark]_&]:bg-none [[data-surface=dark]_&]:text-silver",
-        "[[data-surface=navy]_&]:bg-none [[data-surface=navy]_&]:px-0 [[data-surface=navy]_&]:text-white [[data-surface=navy]_&]:underline [[data-surface=navy]_&]:decoration-wavy [[data-surface=navy]_&]:decoration-silver [[data-surface=navy]_&]:decoration-2 [[data-surface=navy]_&]:underline-offset-8",
+        "[[data-surface=gold]_&]:bg-none [[data-surface=gold]_&]:text-pink-deep",
+        "[[data-surface=dark]_&]:bg-none [[data-surface=dark]_&]:text-gold",
+        "[[data-surface=navy]_&]:bg-none [[data-surface=navy]_&]:px-0 [[data-surface=navy]_&]:text-gold [[data-surface=navy]_&]:underline [[data-surface=navy]_&]:decoration-wavy [[data-surface=navy]_&]:decoration-pink [[data-surface=navy]_&]:decoration-2 [[data-surface=navy]_&]:underline-offset-8",
       )}
     >
       {children}

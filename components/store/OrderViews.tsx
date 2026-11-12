@@ -117,10 +117,10 @@ export function OrderView() {
         <p className="-mt-4 text-sm text-ink-soft">O valor final é combinado com você no WhatsApp.</p>
       </div>
 
-      <aside className="grid gap-6 rounded-card border border-line bg-white p-5 shadow-soft sm:p-6">
+      <aside className="grid gap-6 rounded-card border border-line border-t-4 border-t-gold bg-white p-5 shadow-soft sm:p-6">
         <div>
           <p className="text-sm text-ink-soft">Pedido</p>
-          <p className="font-display text-3xl font-extrabold text-navy">{o.code}</p>
+          <p className="font-display text-3xl font-extrabold text-pink-deep">{o.code}</p>
         </div>
         <div>
           <h2 className="mb-3 font-display text-xl font-extrabold">Andamento</h2>
@@ -141,7 +141,7 @@ function OrderRow({ order: ref }: { order: OrderRef }) {
   return (
     <Card as="li" className="flex flex-wrap items-center justify-between gap-4">
       <div className="grid gap-1">
-        <p className="font-display text-2xl font-extrabold text-navy">{ref.code}</p>
+        <p className="font-display text-2xl font-extrabold text-pink-deep">{ref.code}</p>
         <p className="text-sm text-ink-soft">
           {formatDateTime(ref.createdAt)} · {ref.itemCount} {ref.itemCount === 1 ? "item" : "itens"}
           {loaded.state === "ok" && ` · ${formatCents(loaded.order.estimateCents)}`}
@@ -164,7 +164,7 @@ function AccountOrderRow({ order }: { order: MyOrderDto }) {
   return (
     <Card as="li" className="flex flex-wrap items-center justify-between gap-4">
       <div className="grid gap-1">
-        <p className="font-display text-2xl font-extrabold text-navy">{order.code}</p>
+        <p className="font-display text-2xl font-extrabold text-pink-deep">{order.code}</p>
         <p className="text-sm text-ink-soft">
           {formatDateTime(order.createdAt)} · {order.itemCount} {order.itemCount === 1 ? "item" : "itens"} ·{" "}
           {formatCents(order.estimateCents)}
@@ -264,7 +264,7 @@ export function MyOrders() {
       {user && (
         <p className="text-sm text-ink-soft">
           Para tirar dúvidas, fale com a gente pelo{" "}
-          <Link href="/contato" className="font-semibold text-navy underline underline-offset-4">
+          <Link href="/contato" className="font-semibold text-pink-deep underline underline-offset-4">
             contato
           </Link>
           .

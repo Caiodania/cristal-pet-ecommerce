@@ -67,7 +67,7 @@ function PasswordField({
         type="button"
         aria-pressed={visible}
         onClick={() => setVisible((v) => !v)}
-        className="min-h-11 justify-self-end rounded-full px-3 text-sm font-semibold text-navy underline underline-offset-4"
+        className="min-h-11 justify-self-end rounded-full px-3 text-sm font-semibold text-pink-deep underline underline-offset-4"
       >
         {visible ? "Ocultar senha" : "Mostrar senha"}
       </button>
@@ -240,20 +240,20 @@ export function LoginForm({
       </Button>
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         {onForgot ? (
-          <button type="button" onClick={onForgot} className="min-h-11 font-semibold text-navy underline underline-offset-4">
+          <button type="button" onClick={onForgot} className="min-h-11 font-semibold text-pink-deep underline underline-offset-4">
             Esqueci a minha senha
           </button>
         ) : (
-          <Link href="/esqueci-a-senha" className="inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4">
+          <Link href="/esqueci-a-senha" className="inline-flex min-h-11 items-center font-semibold text-pink-deep underline underline-offset-4">
             Esqueci a minha senha
           </Link>
         )}
         {onCreate ? (
-          <button type="button" onClick={onCreate} className="min-h-11 font-semibold text-navy underline underline-offset-4">
+          <button type="button" onClick={onCreate} className="min-h-11 font-semibold text-pink-deep underline underline-offset-4">
             Criar conta
           </button>
         ) : (
-          <Link href="/criar-conta" className="inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4">
+          <Link href="/criar-conta" className="inline-flex min-h-11 items-center font-semibold text-pink-deep underline underline-offset-4">
             Criar conta
           </Link>
         )}
@@ -325,7 +325,7 @@ export function SignupForm({
 
   return (
     <form ref={firstError} onSubmit={submit} noValidate className="grid gap-4">
-      <p className="rounded-soft bg-silver-mist p-3 text-sm font-semibold">
+      <p className="rounded-soft bg-gold-mist p-3 text-sm font-semibold">
         Grátis: cada conta gera até {config?.previewsPerAccount ?? previewsPerAccount} prévias, compartilhadas entre esculturas e quadros.
       </p>
       <GoogleButton next={next} />
@@ -354,12 +354,12 @@ export function SignupForm({
         label={
           <>
             Li e concordo com a{" "}
-            <Link href="/politica-de-privacidade" target="_blank" className="font-semibold text-navy underline underline-offset-4">
+            <Link href="/politica-de-privacidade" target="_blank" className="font-semibold text-pink-deep underline underline-offset-4">
               Política de privacidade
               <span className="sr-only"> (abre em nova aba)</span>
             </Link>{" "}
             e os{" "}
-            <Link href="/termos-de-uso" target="_blank" className="font-semibold text-navy underline underline-offset-4">
+            <Link href="/termos-de-uso" target="_blank" className="font-semibold text-pink-deep underline underline-offset-4">
               Termos de uso
               <span className="sr-only"> (abre em nova aba)</span>
             </Link>
@@ -375,11 +375,11 @@ export function SignupForm({
       <p className="text-center text-sm text-ink-soft">
         Já tem conta?{" "}
         {onLogin ? (
-          <button type="button" onClick={onLogin} className="min-h-11 font-semibold text-navy underline underline-offset-4">
+          <button type="button" onClick={onLogin} className="min-h-11 font-semibold text-pink-deep underline underline-offset-4">
             Entrar
           </button>
         ) : (
-          <Link href="/entrar" className="inline-flex min-h-11 items-center font-semibold text-navy underline underline-offset-4">
+          <Link href="/entrar" className="inline-flex min-h-11 items-center font-semibold text-pink-deep underline underline-offset-4">
             Entrar
           </Link>
         )}
@@ -457,7 +457,7 @@ export function ForgotForm({ onBack }: { onBack?: () => void }) {
           Voltar
         </Button>
       ) : (
-        <Link href="/entrar" className="inline-flex min-h-11 items-center justify-center font-semibold text-navy underline underline-offset-4">
+        <Link href="/entrar" className="inline-flex min-h-11 items-center justify-center font-semibold text-pink-deep underline underline-offset-4">
           Voltar para entrar
         </Link>
       )}

@@ -16,18 +16,18 @@ export const metadata: Metadata = {
 export default function QuadrosPage() {
   return (
     <main id="conteudo">
-      <Section tone="silver" wave="snow" labelledBy="quadros-titulo">
+      <Section tone="gold" wave="snow" labelledBy="quadros-titulo">
         <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_.9fr]">
           <div>
-            <p className="mb-5 inline-flex rounded-full bg-white/75 px-4 py-2 text-eyebrow font-extrabold uppercase">Quadros personalizados</p>
+            <p className="mb-5 inline-flex rounded-full bg-pink-mist px-4 py-2 text-eyebrow font-extrabold uppercase text-pink-deep">Quadros personalizados</p>
             <h1 id="quadros-titulo" className="text-display font-extrabold">O jeitinho dele.<br /><Accent>Na sua parede.</Accent></h1>
             <p className="mt-6 max-w-xl text-lead text-ink/85">Aquele olhar que você conhece tão bem, transformado em arte. Escolha como retratar o seu pet e veja a prévia antes de fazer o pedido.</p>
             <div className="mt-8 flex flex-wrap gap-3"><Button href="/quadros/personalizar" size="lg">Criar meu quadro</Button><Button href="#estilos" variant="inverse" size="lg">Explorar os estilos</Button></div>
-            <ul className="mt-7 grid gap-2 text-sm font-bold">{["Arte criada a partir da foto do seu pet", "Tamanho e moldura do seu jeito", "Pagamento e entrega combinados pelo WhatsApp"].map((text) => <li key={text} className="flex items-center gap-2"><CheckIcon className="shrink-0" />{text}</li>)}</ul>
+            <ul className="mt-7 grid gap-2 text-sm font-bold">{["Arte criada a partir da foto do seu pet", "Tamanho e moldura do seu jeito", "Pagamento e entrega combinados pelo WhatsApp"].map((text) => <li key={text} className="flex items-center gap-2"><CheckIcon className="shrink-0 text-pink-deep" />{text}</li>)}</ul>
           </div>
           <figure className="relative mx-auto w-full max-w-sm rotate-2">
             <PortraitVisual photoUrl="/images/exemplos/mel.webp" frameId="natural" className="rounded-card bg-white/40 p-8!" />
-            <span className="absolute -left-2 top-6 rounded-full bg-navy px-4 py-2 text-sm font-bold text-white shadow-soft">Um retrato só dele</span>
+            <span className="absolute -left-2 top-6 rounded-full bg-pink-deep px-4 py-2 text-sm font-bold text-white shadow-soft">Um retrato só dele</span>
             <figcaption className="mt-3 text-center text-xs text-ink">Foto ilustrativa em uma simulação de moldura.</figcaption>
           </figure>
         </div>
@@ -42,13 +42,13 @@ export default function QuadrosPage() {
         <p className="mt-4 text-center text-xs text-ink-soft">Ilustrações de referência. A sua prévia será criada com a foto do seu pet.</p>
       </Section>
 
-      <Section tone="mist" labelledBy="quadros-como">
+      <Section tone="pink" labelledBy="quadros-como">
         <SectionHeader titleId="quadros-como" eyebrow="Da foto ao seu lar" title={<>Você escolhe. A gente <Accent>cuida do pedido.</Accent></>} />
         <div className="mt-10 grid gap-6 md:grid-cols-3">{[
           ["01", "Personalize", "Escolha tamanho, estilo e moldura. Depois, envie uma foto nítida do seu pet."],
           ["02", "Confira a prévia", `Crie sua conta grátis para gerar a arte. São ${previewsPerAccount} prévias por conta, compartilhadas entre quadros e esculturas.`],
           ["03", "Peça pelo WhatsApp", "Gostou? Adicione ao carrinho. Confirmamos valor, acabamento e prazo antes de encaminhar a produção ao parceiro."],
-        ].map(([number, title, text]) => <article key={number} className="rounded-card bg-white p-6 shadow-soft"><span className="font-display text-3xl font-extrabold text-navy">{number}</span><h3 className="mt-4 text-xl font-extrabold">{title}</h3><p className="mt-3 text-ink-soft">{text}</p></article>)}</div>
+        ].map(([number, title, text]) => <article key={number} className="rounded-card bg-white p-6 shadow-soft"><span className="font-display text-3xl font-extrabold text-pink-deep">{number}</span><h3 className="mt-4 text-xl font-extrabold">{title}</h3><p className="mt-3 text-ink-soft">{text}</p></article>)}</div>
       </Section>
 
       <Section labelledBy="quadros-acabamento">
@@ -61,7 +61,7 @@ export default function QuadrosPage() {
         </div>
       </Section>
 
-      <Section tone="mist" labelledBy="quadros-duvidas">
+      <Section tone="pearl" labelledBy="quadros-duvidas">
         <SectionHeader titleId="quadros-duvidas" title={<>Antes de criar, <Accent>tire suas dúvidas.</Accent></>} />
         <div className="mx-auto mt-8 max-w-3xl"><Accordion name="quadros-duvidas" items={[
           { question: "O quadro é impresso em 3D?", answer: "Não. O quadro é uma arte impressa e emoldurada por um parceiro. As esculturas são produzidas separadamente, em impressora 3D." },
@@ -71,7 +71,7 @@ export default function QuadrosPage() {
         ]} /></div>
       </Section>
 
-      <Section tone="navy" labelledBy="quadros-final"><div className="text-center"><h2 id="quadros-final" className="text-title font-extrabold">A próxima arte da casa tem nome. O do seu pet.</h2><p className="mx-auto mt-4 max-w-xl text-lead">Comece pela foto que você mais ama. O resto a gente cria junto.</p><div className="mt-7 flex flex-wrap justify-center gap-3"><Button href="/quadros/personalizar" variant="inverse" size="lg">Criar meu quadro</Button><Button href="/personalizar" variant="secondary" size="lg">Criar uma escultura</Button></div></div></Section>
+      <Section tone="navy" wave="gold" labelledBy="quadros-final"><div className="text-center"><h2 id="quadros-final" className="text-title font-extrabold">A próxima arte da casa tem nome. O do seu pet.</h2><p className="mx-auto mt-4 max-w-xl text-lead">Comece pela foto que você mais ama. O resto a gente cria junto.</p><div className="mt-7 flex flex-wrap justify-center gap-3"><Button href="/quadros/personalizar" size="lg">Criar meu quadro</Button><Button href="/personalizar" variant="secondary" size="lg">Criar uma escultura</Button></div></div></Section>
     </main>
   );
 }

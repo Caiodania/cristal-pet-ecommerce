@@ -42,25 +42,22 @@ const sizes: Record<Size, string> = {
   lg: "min-h-14 px-9 text-base",
 };
 
-// Pares de cor já medidos: primary (branco sobre marinho) 15,6:1 · accent (ink
-// sobre prata) 11,3:1 · inverse (ink sobre branco) 17,7:1. O marinho é a cor de
-// ação da marca. Sobre uma faixa marinho o botão principal inverte (marinho
-// sobre branco) para não sumir.
+// Ação principal dourada com texto marinho; pink profundo mantém o contraste
+// do texto branco. As duas variantes também se destacam nas faixas escuras.
 const variants: Record<Variant, string> = {
   primary:
-    "btn-sheen bg-navy text-white shadow-soft hover:brightness-110 hover:shadow-lift " +
-    "[[data-surface=navy]_&]:bg-white [[data-surface=navy]_&]:text-navy",
-  accent: "btn-sheen bg-silver text-ink hover:brightness-95 hover:shadow-soft",
+    "btn-sheen bg-gold text-navy shadow-soft ring-1 ring-inset ring-gold-deep/20 hover:brightness-105 hover:shadow-lift",
+  accent: "btn-sheen bg-pink-deep text-white hover:brightness-95 hover:shadow-soft",
   secondary:
     "border-2 border-ink text-ink hover:bg-ink hover:text-snow " +
     "[[data-surface=dark]_&]:border-snow [[data-surface=dark]_&]:text-snow " +
     "[[data-surface=dark]_&]:hover:bg-snow [[data-surface=dark]_&]:hover:text-ink " +
     "[[data-surface=navy]_&]:border-white [[data-surface=navy]_&]:text-white " +
     "[[data-surface=navy]_&]:hover:bg-white [[data-surface=navy]_&]:hover:text-navy",
-  inverse: "bg-white text-ink shadow-soft hover:bg-snow hover:shadow-lift",
+  inverse: "bg-white text-ink shadow-soft hover:bg-pink-mist hover:shadow-lift",
   ghost:
-    "text-navy underline decoration-2 underline-offset-4 hover:decoration-silver-deep " +
-    "[[data-surface=dark]_&]:text-silver [[data-surface=silver]_&]:text-ink " +
+    "text-pink-deep underline decoration-2 underline-offset-4 hover:decoration-pink " +
+    "[[data-surface=dark]_&]:text-gold [[data-surface=silver]_&]:text-ink " +
     "[[data-surface=navy]_&]:text-white",
 };
 

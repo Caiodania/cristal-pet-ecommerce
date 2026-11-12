@@ -15,7 +15,7 @@ import { NavLink } from "./NavLink";
  */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-snow/90 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-gold/45 bg-snow/95 backdrop-blur-md">
       <div className="container-page flex h-16 items-center justify-between gap-4">
         <Link href="/" className="flex min-w-0 items-center gap-2 rounded-full py-1 sm:shrink-0 sm:gap-3 sm:pr-2">
           {/* o emblema do logo (coração com o cão e o gato) + o nome em texto de verdade: nítido em qualquer tamanho.
@@ -32,7 +32,7 @@ export function SiteHeader() {
             <span className="font-display text-[0.9375rem] font-extrabold leading-tight tracking-tight text-navy min-[400px]:text-base sm:whitespace-nowrap sm:text-xl sm:leading-none">
               {site.name}
             </span>
-            <span className="sr-only whitespace-nowrap text-[0.6875rem] font-bold uppercase tracking-[0.28em] text-ink-soft sm:not-sr-only">{site.descriptor}</span>
+            <span className="sr-only whitespace-nowrap text-[0.6875rem] font-bold uppercase tracking-[0.28em] text-pink-deep sm:not-sr-only">{site.descriptor}</span>
             <span className="sr-only"> — {site.tagline}</span>
           </span>
         </Link>
@@ -43,8 +43,8 @@ export function SiteHeader() {
               <li key={item.href}>
                 <NavLink
                   href={item.href}
-                  className="inline-flex min-h-11 items-center rounded-full px-4 whitespace-nowrap text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-pearl hover:text-ink"
-                  activeClassName="bg-pearl text-ink"
+                  className="inline-flex min-h-11 items-center rounded-full px-4 whitespace-nowrap text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-pink-mist hover:text-pink-deep"
+                  activeClassName="bg-gold-mist text-navy"
                 >
                   {item.label}
                 </NavLink>
@@ -56,8 +56,8 @@ export function SiteHeader() {
         <div className="flex items-center gap-1">
           <NavLink
             href="/meus-pedidos"
-            className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-4 text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-pearl hover:text-ink 2xl:inline-flex"
-            activeClassName="bg-pearl text-ink"
+            className="hidden min-h-11 items-center whitespace-nowrap rounded-full px-4 text-[0.9375rem] font-semibold text-ink-soft transition-colors hover:bg-pink-mist hover:text-pink-deep 2xl:inline-flex"
+            activeClassName="bg-gold-mist text-navy"
           >
             Meus pedidos
           </NavLink>

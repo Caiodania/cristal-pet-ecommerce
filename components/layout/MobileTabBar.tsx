@@ -24,7 +24,7 @@ const itemClass =
   "relative flex min-h-16 flex-1 flex-col items-center justify-center gap-1 px-1 " +
   "text-xs font-semibold text-ink-soft transition-colors hover:text-ink";
 const activeClass =
-  "text-navy after:absolute after:inset-x-5 after:top-0 after:h-0.5 after:rounded-full after:bg-navy";
+  "text-pink-deep after:absolute after:inset-x-5 after:top-0 after:h-0.5 after:rounded-full after:bg-pink-deep";
 
 /**
  * Barra de abas fixa no rodapé, só no celular. "Ajuda" abre o WhatsApp, então

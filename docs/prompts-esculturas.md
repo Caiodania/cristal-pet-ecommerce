@@ -65,7 +65,9 @@ O configurador mostra uma imagem em cada opção, para o cliente ter noção do 
 | `cor-branco`, `cor-bege`, `cor-cinza`, `cor-preto`, `cor-marrom` | passo "Cor" | **a mesma escultura e a mesma cena**, só mudando a cor do material |
 | `nome-exemplo` | passo "Nome" | close da base com o nome em alto-relevo |
 
-**Hoje são provisórias.** `node scripts/opcoes-ilustrativas.mjs` gera `tipo-sentado`, `tipo-busto`, `nome-exemplo` e as cinco cores a partir da escultura da Mel (as cores são recoloridas por computador: simulam o tom, não são peças reais). Falta o `tipo-na-pose`: enquanto não existe, o cartão mostra uma ilustração.
+**Tipos atualizados com as imagens do cliente:** Luna deitada em `tipo-na-pose`, Apolo sentado em `tipo-sentado` e busto de Toby em `tipo-busto`. O processamento preserva as fotos completas em WebP 640×800, sem cortar a escultura ou a base. `node scripts/opcoes-ilustrativas.mjs` mantém os tipos já existentes; `nome-exemplo` e as cinco cores continuam como referências provisórias da Mel (os recolores simulam o tom, não são peças reais).
+
+Na vitrine, `SculpturePreview` aplica a cor do material apenas na escultura e na base, usando as máscaras vetoriais em `public/images/opcoes/mascaras/`. Ao substituir uma foto de tipo, alinhe novamente sua máscara ao WebP final de 640×800 e ajuste a faixa de luminosidade do componente. O cenário usa sempre a fotografia original, sem filtro.
 
 **Para trocar por imagens de verdade:** gere no Gemini com a escultura da Mel anexada como referência de estilo, salve com o **mesmo nome** e rode `npm run esculturas`. Para as cores ficarem comparáveis, use o mesmo cachorro e a mesma cena nas cinco; só troque a cor no prompt:
 
